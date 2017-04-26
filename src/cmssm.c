@@ -65,7 +65,6 @@ typedef struct {
 
 typedef struct {
 
-    cmsContext ContextID;
     cmsGDBPoint Gamut[SECTORS][SECTORS];
 
 } cmsGDB;
@@ -98,9 +97,10 @@ typedef struct {
 // ATAN2() which always returns degree positive numbers
 
 static
-cmsFloat64Number _cmsAtan2(cmsFloat64Number y, cmsFloat64Number x)
+cmsFloat64Number _cmsAtan2(cmsContext ContextID, cmsFloat64Number y, cmsFloat64Number x)
 {
     cmsFloat64Number a;
+    cmsUNUSED_PARAMETER(ContextID);
 
     // Deal with undefined case
     if (x == 0.0 && y == 0.0) return 0;
@@ -116,7 +116,7 @@ cmsFloat64Number _cmsAtan2(cmsFloat64Number y, cmsFloat64Number x)
 
 // Convert to spherical coordinates
 static
-void ToSpherical(cmsSpherical* sp, const cmsVEC3* v)
+void ToSpherical(cmsContext ContextID, cmsSpherical* sp, const cmsVEC3* v)
 {
 
     cmsFloat64Number L, a, b;
@@ -132,20 +132,21 @@ void ToSpherical(cmsSpherical* sp, const cmsVEC3* v)
         return;
     }
 
-    sp ->alpha = _cmsAtan2(a, b);
-    sp ->theta = _cmsAtan2(sqrt(a*a + b*b), L);
+    sp ->alpha = _cmsAtan2(ContextID, a, b);
+    sp ->theta = _cmsAtan2(ContextID, sqrt(a*a + b*b), L);
 }
 
 
 // Convert to cartesian from spherical
 static
-void ToCartesian(cmsVEC3* v, const cmsSpherical* sp)
+void ToCartesian(cmsContext ContextID, cmsVEC3* v, const cmsSpherical* sp)
 {
     cmsFloat64Number sin_alpha;
     cmsFloat64Number cos_alpha;
     cmsFloat64Number sin_theta;
     cmsFloat64Number cos_theta;
     cmsFloat64Number L, a, b;
+    cmsUNUSED_PARAMETER(ContextID);
 
     sin_alpha = sin((M_PI * sp ->alpha) / 180.0);
     cos_alpha = cos((M_PI * sp ->alpha) / 180.0);
@@ -165,8 +166,9 @@ void ToCartesian(cmsVEC3* v, const cmsSpherical* sp)
 // Quantize sector of a spherical coordinate. Saturate 360, 180 to last sector
 // The limits are the centers of each sector, so
 static
-void QuantizeToSector(const cmsSpherical* sp, int* alpha, int* theta)
+void QuantizeToSector(cmsContext ContextID, const cmsSpherical* sp, int* alpha, int* theta)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     *alpha = (int) floor(((sp->alpha * (SECTORS)) / 360.0) );
     *theta = (int) floor(((sp->theta * (SECTORS)) / 180.0) );
 
@@ -179,11 +181,11 @@ void QuantizeToSector(const cmsSpherical* sp, int* alpha, int* theta)
 
 // Line determined by 2 points
 static
-void LineOf2Points(cmsLine* line, cmsVEC3* a, cmsVEC3* b)
+void LineOf2Points(cmsContext ContextID, cmsLine* line, cmsVEC3* a, cmsVEC3* b)
 {
 
-    _cmsVEC3init(&line ->a, a ->n[VX], a ->n[VY], a ->n[VZ]);
-    _cmsVEC3init(&line ->u, b ->n[VX] - a ->n[VX],
+    _cmsVEC3init(ContextID, &line ->a, a ->n[VX], a ->n[VY], a ->n[VZ]);
+    _cmsVEC3init(ContextID, &line ->u, b ->n[VX] - a ->n[VX],
                             b ->n[VY] - a ->n[VY],
                             b ->n[VZ] - a ->n[VZ]);
 }
@@ -191,8 +193,9 @@ void LineOf2Points(cmsLine* line, cmsVEC3* a, cmsVEC3* b)
 
 // Evaluate parametric line
 static
-void GetPointOfLine(cmsVEC3* p, const cmsLine* line, cmsFloat64Number t)
+void GetPointOfLine(cmsContext ContextID, cmsVEC3* p, const cmsLine* line, cmsFloat64Number t)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     p ->n[VX] = line ->a.n[VX] + t * line->u.n[VX];
     p ->n[VY] = line ->a.n[VY] + t * line->u.n[VY];
     p ->n[VZ] = line ->a.n[VZ] + t * line->u.n[VZ];
@@ -214,7 +217,7 @@ void GetPointOfLine(cmsVEC3* p, const cmsLine* line, cmsFloat64Number t)
 */
 
 static
-cmsBool ClosestLineToLine(cmsVEC3* r, const cmsLine* line1, const cmsLine* line2)
+cmsBool ClosestLineToLine(cmsContext ContextID, cmsVEC3* r, const cmsLine* line1, const cmsLine* line2)
 {
     cmsFloat64Number a, b, c, d, e, D;
     cmsFloat64Number sc, sN, sD;
@@ -222,13 +225,13 @@ cmsBool ClosestLineToLine(cmsVEC3* r, const cmsLine* line1, const cmsLine* line2
     cmsFloat64Number tN, tD;
     cmsVEC3 w0;
 
-    _cmsVEC3minus(&w0, &line1 ->a, &line2 ->a);
+    _cmsVEC3minus(ContextID, &w0, &line1 ->a, &line2 ->a);
 
-    a  = _cmsVEC3dot(&line1 ->u, &line1 ->u);
-    b  = _cmsVEC3dot(&line1 ->u, &line2 ->u);
-    c  = _cmsVEC3dot(&line2 ->u, &line2 ->u);
-    d  = _cmsVEC3dot(&line1 ->u, &w0);
-    e  = _cmsVEC3dot(&line2 ->u, &w0);
+    a  = _cmsVEC3dot(ContextID, &line1 ->u, &line1 ->u);
+    b  = _cmsVEC3dot(ContextID, &line1 ->u, &line2 ->u);
+    c  = _cmsVEC3dot(ContextID, &line2 ->u, &line2 ->u);
+    d  = _cmsVEC3dot(ContextID, &line1 ->u, &w0);
+    e  = _cmsVEC3dot(ContextID, &line2 ->u, &w0);
 
     D  = a*c - b * b;      // Denominator
     sD = tD = D;           // default sD = D >= 0
@@ -289,7 +292,7 @@ cmsBool ClosestLineToLine(cmsVEC3* r, const cmsLine* line1, const cmsLine* line2
     sc = (fabs(sN) < MATRIX_DET_TOLERANCE ? 0.0 : sN / sD);
     //tc = (fabs(tN) < MATRIX_DET_TOLERANCE ? 0.0 : tN / tD); // left for future use.
 
-    GetPointOfLine(r, line1, sc);
+    GetPointOfLine(ContextID, r, line1, sc);
     return TRUE;
 }
 
@@ -304,23 +307,21 @@ cmsHANDLE  CMSEXPORT cmsGBDAlloc(cmsContext ContextID)
     cmsGDB* gbd = (cmsGDB*) _cmsMallocZero(ContextID, sizeof(cmsGDB));
     if (gbd == NULL) return NULL;
 
-    gbd -> ContextID = ContextID;
-
     return (cmsHANDLE) gbd;
 }
 
 
-void CMSEXPORT cmsGBDFree(cmsHANDLE hGBD)
+void CMSEXPORT cmsGBDFree(cmsContext ContextID, cmsHANDLE hGBD)
 {
     cmsGDB* gbd = (cmsGDB*) hGBD;
     if (hGBD != NULL)
-        _cmsFree(gbd->ContextID, (void*) gbd);
+        _cmsFree(ContextID, (void*) gbd);
 }
 
 
 // Auxiliary to retrieve a pointer to the segmentr containing the Lab value
 static
-cmsGDBPoint* GetPoint(cmsGDB* gbd, const cmsCIELab* Lab, cmsSpherical* sp)
+cmsGDBPoint* GetPoint(cmsContext ContextID, cmsGDB* gbd, const cmsCIELab* Lab, cmsSpherical* sp)
 {
     cmsVEC3 v;
     int alpha, theta;
@@ -331,21 +332,21 @@ cmsGDBPoint* GetPoint(cmsGDB* gbd, const cmsCIELab* Lab, cmsSpherical* sp)
     _cmsAssert(sp != NULL);
 
     // Center L* by subtracting half of its domain, that's 50
-    _cmsVEC3init(&v, Lab ->L - 50.0, Lab ->a, Lab ->b);
+    _cmsVEC3init(ContextID, &v, Lab ->L - 50.0, Lab ->a, Lab ->b);
 
     // Convert to spherical coordinates
-    ToSpherical(sp, &v);
+    ToSpherical(ContextID, sp, &v);
 
     if (sp ->r < 0 || sp ->alpha < 0 || sp->theta < 0) {
-         cmsSignalError(gbd ->ContextID, cmsERROR_RANGE, "spherical value out of range");
+         cmsSignalError(ContextID, cmsERROR_RANGE, "spherical value out of range");
          return NULL;
     }
 
     // On which sector it falls?
-    QuantizeToSector(sp, &alpha, &theta);
+    QuantizeToSector(ContextID, sp, &alpha, &theta);
 
     if (alpha < 0 || theta < 0 || alpha >= SECTORS || theta >= SECTORS) {
-         cmsSignalError(gbd ->ContextID, cmsERROR_RANGE, " quadrant out of range");
+         cmsSignalError(ContextID, cmsERROR_RANGE, " quadrant out of range");
          return NULL;
     }
 
@@ -355,7 +356,7 @@ cmsGDBPoint* GetPoint(cmsGDB* gbd, const cmsCIELab* Lab, cmsSpherical* sp)
 
 // Add a point to gamut descriptor. Point to add is in Lab color space.
 // GBD is centered on a=b=0 and L*=50
-cmsBool CMSEXPORT cmsGDBAddPoint(cmsHANDLE hGBD, const cmsCIELab* Lab)
+cmsBool CMSEXPORT cmsGDBAddPoint(cmsContext ContextID, cmsHANDLE hGBD, const cmsCIELab* Lab)
 {
     cmsGDB* gbd = (cmsGDB*) hGBD;
     cmsGDBPoint* ptr;
@@ -363,7 +364,7 @@ cmsBool CMSEXPORT cmsGDBAddPoint(cmsHANDLE hGBD, const cmsCIELab* Lab)
 
 
     // Get pointer to the sector
-    ptr = GetPoint(gbd, Lab, &sp);
+    ptr = GetPoint(ContextID, gbd, Lab, &sp);
     if (ptr == NULL) return FALSE;
 
     // If no samples at this sector, add it
@@ -387,14 +388,14 @@ cmsBool CMSEXPORT cmsGDBAddPoint(cmsHANDLE hGBD, const cmsCIELab* Lab)
 }
 
 // Check if a given point falls inside gamut
-cmsBool CMSEXPORT cmsGDBCheckPoint(cmsHANDLE hGBD, const cmsCIELab* Lab)
+cmsBool CMSEXPORT cmsGDBCheckPoint(cmsContext ContextID, cmsHANDLE hGBD, const cmsCIELab* Lab)
 {
     cmsGDB* gbd = (cmsGDB*) hGBD;
     cmsGDBPoint* ptr;
     cmsSpherical sp;
 
     // Get pointer to the sector
-    ptr = GetPoint(gbd, Lab, &sp);
+    ptr = GetPoint(ContextID, gbd, Lab, &sp);
     if (ptr == NULL) return FALSE;
 
     // If no samples at this sector, return no data
@@ -437,12 +438,13 @@ const struct _spiral {
 #define NSTEPS (sizeof(Spiral) / sizeof(struct _spiral))
 
 static
-int FindNearSectors(cmsGDB* gbd, int alpha, int theta, cmsGDBPoint* Close[])
+int FindNearSectors(cmsContext ContextID, cmsGDB* gbd, int alpha, int theta, cmsGDBPoint* Close[])
 {
     int nSectors = 0;
     int a, t;
     cmsUInt32Number i;
     cmsGDBPoint* pt;
+    cmsUNUSED_PARAMETER(ContextID);
 
     for (i=0; i < NSTEPS; i++) {
 
@@ -471,7 +473,7 @@ int FindNearSectors(cmsGDB* gbd, int alpha, int theta, cmsGDBPoint* Close[])
 
 // Interpolate a missing sector. Method identifies whatever this is top, bottom or mid
 static
-cmsBool InterpolateMissingSector(cmsGDB* gbd, int alpha, int theta)
+cmsBool InterpolateMissingSector(cmsContext ContextID, cmsGDB* gbd, int alpha, int theta)
 {
     cmsSpherical sp;
     cmsVEC3 Lab;
@@ -487,7 +489,7 @@ cmsBool InterpolateMissingSector(cmsGDB* gbd, int alpha, int theta)
     if (gbd ->Gamut[theta][alpha].Type != GP_EMPTY) return TRUE;
 
     // Fill close points
-    nCloseSectors = FindNearSectors(gbd, alpha, theta, Close);
+    nCloseSectors = FindNearSectors(ContextID, gbd, alpha, theta, Close);
 
 
     // Find a central point on the sector
@@ -496,11 +498,11 @@ cmsBool InterpolateMissingSector(cmsGDB* gbd, int alpha, int theta)
     sp.r     = 50.0;
 
     // Convert to Cartesian
-    ToCartesian(&Lab, &sp);
+    ToCartesian(ContextID, &Lab, &sp);
 
     // Create a ray line from centre to this point
-    _cmsVEC3init(&Centre, 50.0, 0, 0);
-    LineOf2Points(&ray, &Lab, &Centre);
+    _cmsVEC3init(ContextID, &Centre, 50.0, 0, 0);
+    LineOf2Points(ContextID, &ray, &Lab, &Centre);
 
     // For all close sectors
     closel.r = 0.0;
@@ -514,16 +516,16 @@ cmsBool InterpolateMissingSector(cmsGDB* gbd, int alpha, int theta)
             cmsVEC3 temp, a1, a2;
 
             // A line from sector to sector
-            ToCartesian(&a1, &Close[k]->p);
-            ToCartesian(&a2, &Close[m]->p);
+            ToCartesian(ContextID, &a1, &Close[k]->p);
+            ToCartesian(ContextID, &a2, &Close[m]->p);
 
-            LineOf2Points(&edge, &a1, &a2);
+            LineOf2Points(ContextID, &edge, &a1, &a2);
 
             // Find a line
-            ClosestLineToLine(&temp, &ray, &edge);
+            ClosestLineToLine(ContextID, &temp, &ray, &edge);
 
             // Convert to spherical
-            ToSpherical(&templ, &temp);
+            ToSpherical(ContextID, &templ, &temp);
 
 
             if ( templ.r > closel.r &&
@@ -547,7 +549,7 @@ cmsBool InterpolateMissingSector(cmsGDB* gbd, int alpha, int theta)
 
 // Interpolate missing parts. The algorithm fist computes slices at
 // theta=0 and theta=Max.
-cmsBool CMSEXPORT cmsGDBCompute(cmsHANDLE hGBD, cmsUInt32Number dwFlags)
+cmsBool CMSEXPORT cmsGDBCompute(cmsContext ContextID, cmsHANDLE hGBD, cmsUInt32Number dwFlags)
 {
     int alpha, theta;
     cmsGDB* gbd = (cmsGDB*) hGBD;
@@ -557,13 +559,13 @@ cmsBool CMSEXPORT cmsGDBCompute(cmsHANDLE hGBD, cmsUInt32Number dwFlags)
     // Interpolate black
     for (alpha = 0; alpha < SECTORS; alpha++) {
 
-        if (!InterpolateMissingSector(gbd, alpha, 0)) return FALSE;
+        if (!InterpolateMissingSector(ContextID, gbd, alpha, 0)) return FALSE;
     }
 
     // Interpolate white
     for (alpha = 0; alpha < SECTORS; alpha++) {
 
-        if (!InterpolateMissingSector(gbd, alpha, SECTORS-1)) return FALSE;
+        if (!InterpolateMissingSector(ContextID, gbd, alpha, SECTORS-1)) return FALSE;
     }
 
 
@@ -571,7 +573,7 @@ cmsBool CMSEXPORT cmsGDBCompute(cmsHANDLE hGBD, cmsUInt32Number dwFlags)
     for (theta = 1; theta < SECTORS; theta++) {
         for (alpha = 0; alpha < SECTORS; alpha++) {
 
-            if (!InterpolateMissingSector(gbd, alpha, theta)) return FALSE;
+            if (!InterpolateMissingSector(ContextID, gbd, alpha, theta)) return FALSE;
         }
     }
 

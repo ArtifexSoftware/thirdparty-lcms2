@@ -91,9 +91,6 @@ typedef struct {
 
 // Curves, optimization is shared between 8 and 16 bits
 typedef struct {
-
-    cmsContext ContextID;
-
     int nCurves;                  // Number of curves
     int nElements;                // Elements in curves
     cmsUInt16Number** Curves;     // Points to a dynamically  allocated array
@@ -106,17 +103,17 @@ typedef struct {
 
 // Remove an element in linked chain
 static
-void _RemoveElement(cmsStage** head)
+void _RemoveElement(cmsContext ContextID, cmsStage** head)
 {
     cmsStage* mpe = *head;
     cmsStage* next = mpe ->Next;
     *head = next;
-    cmsStageFree(mpe);
+    cmsStageFree(ContextID, mpe);
 }
 
 // Remove all identities in chain. Note that pt actually is a double pointer to the element that holds the pointer.
 static
-cmsBool _Remove1Op(cmsPipeline* Lut, cmsStageSignature UnaryOp)
+cmsBool _Remove1Op(cmsContext ContextID, cmsPipeline* Lut, cmsStageSignature UnaryOp)
 {
     cmsStage** pt = &Lut ->Elements;
     cmsBool AnyOpt = FALSE;
@@ -124,7 +121,7 @@ cmsBool _Remove1Op(cmsPipeline* Lut, cmsStageSignature UnaryOp)
     while (*pt != NULL) {
 
         if ((*pt) ->Implements == UnaryOp) {
-            _RemoveElement(pt);
+            _RemoveElement(ContextID, pt);
             AnyOpt = TRUE;
         }
         else
@@ -136,7 +133,7 @@ cmsBool _Remove1Op(cmsPipeline* Lut, cmsStageSignature UnaryOp)
 
 // Same, but only if two adjacent elements are found
 static
-cmsBool _Remove2Op(cmsPipeline* Lut, cmsStageSignature Op1, cmsStageSignature Op2)
+cmsBool _Remove2Op(cmsContext ContextID, cmsPipeline* Lut, cmsStageSignature Op1, cmsStageSignature Op2)
 {
     cmsStage** pt1;
     cmsStage** pt2;
@@ -151,8 +148,8 @@ cmsBool _Remove2Op(cmsPipeline* Lut, cmsStageSignature Op1, cmsStageSignature Op
         if (*pt2 == NULL) return AnyOpt;
 
         if ((*pt1) ->Implements == Op1 && (*pt2) ->Implements == Op2) {
-            _RemoveElement(pt2);
-            _RemoveElement(pt1);
+            _RemoveElement(ContextID, pt2);
+            _RemoveElement(ContextID, pt1);
             AnyOpt = TRUE;
         }
         else
@@ -170,12 +167,12 @@ cmsBool CloseEnoughFloat(cmsFloat64Number a, cmsFloat64Number b)
 }
 
 static
-cmsBool  isFloatMatrixIdentity(const cmsMAT3* a)
+cmsBool  isFloatMatrixIdentity(cmsContext ContextID, const cmsMAT3* a)
 {
        cmsMAT3 Identity;
        int i, j;
 
-       _cmsMAT3identity(&Identity);
+       _cmsMAT3identity(ContextID, &Identity);
 
        for (i = 0; i < 3; i++)
               for (j = 0; j < 3; j++)
@@ -183,9 +180,9 @@ cmsBool  isFloatMatrixIdentity(const cmsMAT3* a)
 
        return TRUE;
 }
-// if two adjacent matrices are found, multiply them. 
+// if two adjacent matrices are found, multiply them.
 static
-cmsBool _MultiplyMatrix(cmsPipeline* Lut)
+cmsBool _MultiplyMatrix(cmsContext ContextID, cmsPipeline* Lut)
 {
        cmsStage** pt1;
        cmsStage** pt2;
@@ -203,31 +200,31 @@ cmsBool _MultiplyMatrix(cmsPipeline* Lut)
               if ((*pt1)->Implements == cmsSigMatrixElemType && (*pt2)->Implements == cmsSigMatrixElemType) {
 
                      // Get both matrices
-                     _cmsStageMatrixData* m1 = (_cmsStageMatrixData*) cmsStageData(*pt1);
-                     _cmsStageMatrixData* m2 = (_cmsStageMatrixData*) cmsStageData(*pt2);
+                     _cmsStageMatrixData* m1 = (_cmsStageMatrixData*) cmsStageData(ContextID, *pt1);
+                     _cmsStageMatrixData* m2 = (_cmsStageMatrixData*) cmsStageData(ContextID, *pt2);
                      cmsMAT3 res;
-                     
+
                      // Input offset and output offset should be zero to use this optimization
-                     if (m1->Offset != NULL || m2 ->Offset != NULL || 
-                            cmsStageInputChannels(*pt1) != 3 || cmsStageOutputChannels(*pt1) != 3 ||                            
-                            cmsStageInputChannels(*pt2) != 3 || cmsStageOutputChannels(*pt2) != 3)
+                     if (m1->Offset != NULL || m2 ->Offset != NULL ||
+                            cmsStageInputChannels(ContextID, *pt1) != 3 || cmsStageOutputChannels(ContextID, *pt1) != 3 ||
+                            cmsStageInputChannels(ContextID, *pt2) != 3 || cmsStageOutputChannels(ContextID, *pt2) != 3)
                             return FALSE;
 
                      // Multiply both matrices to get the result
-                     _cmsMAT3per(&res, (cmsMAT3*)m2->Double, (cmsMAT3*)m1->Double);
+                     _cmsMAT3per(ContextID, &res, (cmsMAT3*)m2->Double, (cmsMAT3*)m1->Double);
 
                      // Get the next in chain after the matrices
                      chain = (*pt2)->Next;
 
                      // Remove both matrices
-                     _RemoveElement(pt2);
-                     _RemoveElement(pt1);
+                     _RemoveElement(ContextID, pt2);
+                     _RemoveElement(ContextID, pt1);
 
-                     // Now what if the result is a plain identity?                     
-                     if (!isFloatMatrixIdentity(&res)) {
+                     // Now what if the result is a plain identity?
+                     if (!isFloatMatrixIdentity(ContextID, &res)) {
 
-                            // We can not get rid of full matrix                            
-                            cmsStage* Multmat = cmsStageAllocMatrix(Lut->ContextID, 3, 3, (const cmsFloat64Number*) &res, NULL);
+                            // We can not get rid of full matrix
+                            cmsStage* Multmat = cmsStageAllocMatrix(ContextID, 3, 3, (const cmsFloat64Number*) &res, NULL);
                             if (Multmat == NULL) return FALSE;  // Should never happen
 
                             // Recover the chain
@@ -248,7 +245,7 @@ cmsBool _MultiplyMatrix(cmsPipeline* Lut)
 // Preoptimize just gets rif of no-ops coming paired. Conversion from v2 to v4 followed
 // by a v4 to v2 and vice-versa. The elements are then discarded.
 static
-cmsBool PreOptimize(cmsPipeline* Lut)
+cmsBool PreOptimize(cmsContext ContextID, cmsPipeline* Lut)
 {
     cmsBool AnyOpt = FALSE, Opt;
 
@@ -257,28 +254,28 @@ cmsBool PreOptimize(cmsPipeline* Lut)
         Opt = FALSE;
 
         // Remove all identities
-        Opt |= _Remove1Op(Lut, cmsSigIdentityElemType);
+        Opt |= _Remove1Op(ContextID, Lut, cmsSigIdentityElemType);
 
         // Remove XYZ2Lab followed by Lab2XYZ
-        Opt |= _Remove2Op(Lut, cmsSigXYZ2LabElemType, cmsSigLab2XYZElemType);
+        Opt |= _Remove2Op(ContextID, Lut, cmsSigXYZ2LabElemType, cmsSigLab2XYZElemType);
 
         // Remove Lab2XYZ followed by XYZ2Lab
-        Opt |= _Remove2Op(Lut, cmsSigLab2XYZElemType, cmsSigXYZ2LabElemType);
+        Opt |= _Remove2Op(ContextID, Lut, cmsSigLab2XYZElemType, cmsSigXYZ2LabElemType);
 
         // Remove V4 to V2 followed by V2 to V4
-        Opt |= _Remove2Op(Lut, cmsSigLabV4toV2, cmsSigLabV2toV4);
+        Opt |= _Remove2Op(ContextID, Lut, cmsSigLabV4toV2, cmsSigLabV2toV4);
 
         // Remove V2 to V4 followed by V4 to V2
-        Opt |= _Remove2Op(Lut, cmsSigLabV2toV4, cmsSigLabV4toV2);
+        Opt |= _Remove2Op(ContextID, Lut, cmsSigLabV2toV4, cmsSigLabV4toV2);
 
         // Remove float pcs Lab conversions
-        Opt |= _Remove2Op(Lut, cmsSigLab2FloatPCS, cmsSigFloatPCS2Lab);
+        Opt |= _Remove2Op(ContextID, Lut, cmsSigLab2FloatPCS, cmsSigFloatPCS2Lab);
 
         // Remove float pcs Lab conversions
-        Opt |= _Remove2Op(Lut, cmsSigXYZ2FloatPCS, cmsSigFloatPCS2XYZ);
+        Opt |= _Remove2Op(ContextID, Lut, cmsSigXYZ2FloatPCS, cmsSigFloatPCS2XYZ);
 
-        // Simplify matrix. 
-        Opt |= _MultiplyMatrix(Lut);
+        // Simplify matrix.
+        Opt |= _MultiplyMatrix(ContextID, Lut);
 
         if (Opt) AnyOpt = TRUE;
 
@@ -288,17 +285,18 @@ cmsBool PreOptimize(cmsPipeline* Lut)
 }
 
 static
-void Eval16nop1D(register const cmsUInt16Number Input[],
+void Eval16nop1D(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const struct _cms_interp_struc* p)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     Output[0] = Input[0];
 
     cmsUNUSED_PARAMETER(p);
 }
 
 static
-void PrelinEval16(register const cmsUInt16Number Input[],
+void PrelinEval16(cmsContext ContextID, register const cmsUInt16Number Input[],
                   register cmsUInt16Number Output[],
                   register const void* D)
 {
@@ -309,14 +307,14 @@ void PrelinEval16(register const cmsUInt16Number Input[],
 
     for (i=0; i < p16 ->nInputs; i++) {
 
-        p16 ->EvalCurveIn16[i](&Input[i], &StageABC[i], p16 ->ParamsCurveIn16[i]);
+        p16 ->EvalCurveIn16[i](ContextID, &Input[i], &StageABC[i], p16 ->ParamsCurveIn16[i]);
     }
 
-    p16 ->EvalCLUT(StageABC, StageDEF, p16 ->CLUTparams);
+    p16 ->EvalCLUT(ContextID, StageABC, StageDEF, p16 ->CLUTparams);
 
     for (i=0; i < p16 ->nOutputs; i++) {
 
-        p16 ->EvalCurveOut16[i](&StageDEF[i], &Output[i], p16 ->ParamsCurveOut16[i]);
+        p16 ->EvalCurveOut16[i](ContextID, &StageDEF[i], &Output[i], p16 ->ParamsCurveOut16[i]);
     }
 }
 
@@ -406,7 +404,7 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-int XFormSampler16(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int XFormSampler16(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
 {
     cmsPipeline* Lut = (cmsPipeline*) Cargo;
     cmsFloat32Number InFloat[cmsMAXCHANNELS], OutFloat[cmsMAXCHANNELS];
@@ -420,7 +418,7 @@ int XFormSampler16(register const cmsUInt16Number In[], register cmsUInt16Number
         InFloat[i] = (cmsFloat32Number) (In[i] / 65535.0);
 
     // Evaluate in floating point
-    cmsPipelineEvalFloat(InFloat, OutFloat, Lut);
+    cmsPipelineEvalFloat(ContextID, InFloat, OutFloat, Lut);
 
     // Back to 16 bits representation
     for (i=0; i < Lut ->OutputChannels; i++)
@@ -432,7 +430,7 @@ int XFormSampler16(register const cmsUInt16Number In[], register cmsUInt16Number
 
 // Try to see if the curves of a given MPE are linear
 static
-cmsBool AllCurvesAreLinear(cmsStage* mpe)
+cmsBool AllCurvesAreLinear(cmsContext ContextID, cmsStage* mpe)
 {
     cmsToneCurve** Curves;
     cmsUInt32Number i, n;
@@ -440,10 +438,10 @@ cmsBool AllCurvesAreLinear(cmsStage* mpe)
     Curves = _cmsStageGetPtrToCurveSet(mpe);
     if (Curves == NULL) return FALSE;
 
-    n = cmsStageOutputChannels(mpe);
+    n = cmsStageOutputChannels(ContextID, mpe);
 
     for (i=0; i < n; i++) {
-        if (!cmsIsToneCurveLinear(Curves[i])) return FALSE;
+        if (!cmsIsToneCurveLinear(ContextID, Curves[i])) return FALSE;
     }
 
     return TRUE;
@@ -452,7 +450,7 @@ cmsBool AllCurvesAreLinear(cmsStage* mpe)
 // This function replaces a specific node placed in "At" by the "Value" numbers. Its purpose
 // is to fix scum dot on broken profiles/transforms. Works on 1, 3 and 4 channels
 static
-cmsBool  PatchLUT(cmsStage* CLUT, cmsUInt16Number At[], cmsUInt16Number Value[],
+cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cmsUInt16Number Value[],
                   int nChannelsOut, int nChannelsIn)
 {
     _cmsStageCLutData* Grid = (_cmsStageCLutData*) CLUT ->Data;
@@ -462,7 +460,7 @@ cmsBool  PatchLUT(cmsStage* CLUT, cmsUInt16Number At[], cmsUInt16Number Value[],
     int        i, index;
 
     if (CLUT -> Type != cmsSigCLutElemType) {
-        cmsSignalError(CLUT->ContextID, cmsERROR_INTERNAL, "(internal) Attempt to PatchLUT on non-lut stage");
+        cmsSignalError(ContextID, cmsERROR_INTERNAL, "(internal) Attempt to PatchLUT on non-lut stage");
         return FALSE;
     }
 
@@ -494,11 +492,11 @@ cmsBool  PatchLUT(cmsStage* CLUT, cmsUInt16Number At[], cmsUInt16Number Value[],
             px = ((cmsFloat64Number) At[0] * (p16->Domain[0])) / 65535.0;
             py = ((cmsFloat64Number) At[1] * (p16->Domain[1])) / 65535.0;
             pz = ((cmsFloat64Number) At[2] * (p16->Domain[2])) / 65535.0;
-           
+
             x0 = (int) floor(px);
             y0 = (int) floor(py);
             z0 = (int) floor(pz);
-           
+
             if (((px - x0) != 0) ||
                 ((py - y0) != 0) ||
                 ((pz - z0) != 0)) return FALSE;  // Not on exact node
@@ -511,15 +509,15 @@ cmsBool  PatchLUT(cmsStage* CLUT, cmsUInt16Number At[], cmsUInt16Number Value[],
             if (nChannelsIn == 1) {
 
                 px = ((cmsFloat64Number) At[0] * (p16->Domain[0])) / 65535.0;
-                
+
                 x0 = (int) floor(px);
-                
+
                 if (((px - x0) != 0)) return FALSE; // Not on exact node
 
                 index = p16 -> opta[0] * x0;
             }
             else {
-                cmsSignalError(CLUT->ContextID, cmsERROR_INTERNAL, "(internal) %d Channels are not supported on PatchLUT", nChannelsIn);
+                cmsSignalError(ContextID, cmsERROR_INTERNAL, "(internal) %d Channels are not supported on PatchLUT", nChannelsIn);
                 return FALSE;
             }
 
@@ -546,7 +544,7 @@ cmsBool WhitesAreEqual(int n, cmsUInt16Number White1[], cmsUInt16Number White2[]
 
 // Locate the node for the white point and fix it to pure white in order to avoid scum dot.
 static
-cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColorSpace, cmsColorSpaceSignature ExitColorSpace)
+cmsBool FixWhiteMisalignment(cmsContext ContextID, cmsPipeline* Lut, cmsColorSpaceSignature EntryColorSpace, cmsColorSpaceSignature ExitColorSpace)
 {
     cmsUInt16Number *WhitePointIn, *WhitePointOut;
     cmsUInt16Number  WhiteIn[cmsMAXCHANNELS], WhiteOut[cmsMAXCHANNELS], ObtainedOut[cmsMAXCHANNELS];
@@ -563,15 +561,15 @@ cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColor
     if (Lut ->InputChannels != nIns) return FALSE;
     if (Lut ->OutputChannels != nOuts) return FALSE;
 
-    cmsPipelineEval16(WhitePointIn, ObtainedOut, Lut);
+    cmsPipelineEval16(ContextID, WhitePointIn, ObtainedOut, Lut);
 
     if (WhitesAreEqual(nOuts, WhitePointOut, ObtainedOut)) return TRUE; // whites already match
 
     // Check if the LUT comes as Prelin, CLUT or Postlin. We allow all combinations
-    if (!cmsPipelineCheckAndRetreiveStages(Lut, 3, cmsSigCurveSetElemType, cmsSigCLutElemType, cmsSigCurveSetElemType, &PreLin, &CLUT, &PostLin))
-        if (!cmsPipelineCheckAndRetreiveStages(Lut, 2, cmsSigCurveSetElemType, cmsSigCLutElemType, &PreLin, &CLUT))
-            if (!cmsPipelineCheckAndRetreiveStages(Lut, 2, cmsSigCLutElemType, cmsSigCurveSetElemType, &CLUT, &PostLin))
-                if (!cmsPipelineCheckAndRetreiveStages(Lut, 1, cmsSigCLutElemType, &CLUT))
+    if (!cmsPipelineCheckAndRetreiveStages(ContextID, Lut, 3, cmsSigCurveSetElemType, cmsSigCLutElemType, cmsSigCurveSetElemType, &PreLin, &CLUT, &PostLin))
+        if (!cmsPipelineCheckAndRetreiveStages(ContextID, Lut, 2, cmsSigCurveSetElemType, cmsSigCLutElemType, &PreLin, &CLUT))
+            if (!cmsPipelineCheckAndRetreiveStages(ContextID, Lut, 2, cmsSigCLutElemType, cmsSigCurveSetElemType, &CLUT, &PostLin))
+                if (!cmsPipelineCheckAndRetreiveStages(ContextID, Lut, 1, cmsSigCLutElemType, &CLUT))
                     return FALSE;
 
     // We need to interpolate white points of both, pre and post curves
@@ -580,7 +578,7 @@ cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColor
         cmsToneCurve** Curves = _cmsStageGetPtrToCurveSet(PreLin);
 
         for (i=0; i < nIns; i++) {
-            WhiteIn[i] = cmsEvalToneCurve16(Curves[i], WhitePointIn[i]);
+            WhiteIn[i] = cmsEvalToneCurve16(ContextID, Curves[i], WhitePointIn[i]);
         }
     }
     else {
@@ -596,14 +594,14 @@ cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColor
 
         for (i=0; i < nOuts; i++) {
 
-            cmsToneCurve* InversePostLin = cmsReverseToneCurve(Curves[i]);
+            cmsToneCurve* InversePostLin = cmsReverseToneCurve(ContextID, Curves[i]);
             if (InversePostLin == NULL) {
-                WhiteOut[i] = WhitePointOut[i];    
+                WhiteOut[i] = WhitePointOut[i];
 
             } else {
 
-                WhiteOut[i] = cmsEvalToneCurve16(InversePostLin, WhitePointOut[i]);
-                cmsFreeToneCurve(InversePostLin);
+                WhiteOut[i] = cmsEvalToneCurve16(ContextID, InversePostLin, WhitePointOut[i]);
+                cmsFreeToneCurve(ContextID, InversePostLin);
             }
         }
     }
@@ -613,7 +611,7 @@ cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColor
     }
 
     // Ok, proceed with patching. May fail and we don't care if it fails
-    PatchLUT(CLUT, WhiteIn, WhiteOut, nOuts, nIns);
+    PatchLUT(ContextID, CLUT, WhiteIn, WhiteOut, nOuts, nIns);
 
     return TRUE;
 }
@@ -628,7 +626,7 @@ cmsBool FixWhiteMisalignment(cmsPipeline* Lut, cmsColorSpaceSignature EntryColor
 // -----------------------------------------------------------------------------------------------------------------------------------------------
 
 static
-cmsBool OptimizeByResampling(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
+cmsBool OptimizeByResampling(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
 {
     cmsPipeline* Src = NULL;
     cmsPipeline* Dest = NULL;
@@ -647,62 +645,62 @@ cmsBool OptimizeByResampling(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
     // This is a loosy optimization! does not apply in floating-point cases
     if (_cmsFormatterIsFloat(*InputFormat) || _cmsFormatterIsFloat(*OutputFormat)) return FALSE;
 
-    ColorSpace       = _cmsICCcolorSpace(T_COLORSPACE(*InputFormat));
-    OutputColorSpace = _cmsICCcolorSpace(T_COLORSPACE(*OutputFormat));
+    ColorSpace       = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*InputFormat));
+    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
 
     // Color space must be specified
     if (ColorSpace == (cmsColorSpaceSignature)-1 ||
         OutputColorSpace == (cmsColorSpaceSignature)-1) return FALSE;
 
-    nGridPoints      = _cmsReasonableGridpointsByColorspace(ColorSpace, *dwFlags);
+    nGridPoints      = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
 
     // For empty LUTs, 2 points are enough
-    if (cmsPipelineStageCount(*Lut) == 0)
+    if (cmsPipelineStageCount(ContextID, *Lut) == 0)
         nGridPoints = 2;
 
     Src = *Lut;
 
     // Named color pipelines cannot be optimized either
-    for (mpe = cmsPipelineGetPtrToFirstStage(Src);
+    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, Src);
         mpe != NULL;
-        mpe = cmsStageNext(mpe)) {
-            if (cmsStageType(mpe) == cmsSigNamedColorElemType) return FALSE;
+        mpe = cmsStageNext(ContextID, mpe)) {
+            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
     // Allocate an empty LUT
-    Dest =  cmsPipelineAlloc(Src ->ContextID, Src ->InputChannels, Src ->OutputChannels);
+    Dest =  cmsPipelineAlloc(ContextID, Src ->InputChannels, Src ->OutputChannels);
     if (!Dest) return FALSE;
 
     // Prelinearization tables are kept unless indicated by flags
     if (*dwFlags & cmsFLAGS_CLUT_PRE_LINEARIZATION) {
 
         // Get a pointer to the prelinearization element
-        cmsStage* PreLin = cmsPipelineGetPtrToFirstStage(Src);
+        cmsStage* PreLin = cmsPipelineGetPtrToFirstStage(ContextID, Src);
 
         // Check if suitable
         if (PreLin && PreLin ->Type == cmsSigCurveSetElemType) {
 
             // Maybe this is a linear tram, so we can avoid the whole stuff
-            if (!AllCurvesAreLinear(PreLin)) {
+            if (!AllCurvesAreLinear(ContextID, PreLin)) {
 
                 // All seems ok, proceed.
-                NewPreLin = cmsStageDup(PreLin);
-                if(!cmsPipelineInsertStage(Dest, cmsAT_BEGIN, NewPreLin))
+                NewPreLin = cmsStageDup(ContextID, PreLin);
+                if(!cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, NewPreLin))
                     goto Error;
 
                 // Remove prelinearization. Since we have duplicated the curve
                 // in destination LUT, the sampling should be applied after this stage.
-                cmsPipelineUnlinkStage(Src, cmsAT_BEGIN, &KeepPreLin);
+                cmsPipelineUnlinkStage(ContextID, Src, cmsAT_BEGIN, &KeepPreLin);
             }
         }
     }
 
     // Allocate the CLUT
-    CLUT = cmsStageAllocCLut16bit(Src ->ContextID, nGridPoints, Src ->InputChannels, Src->OutputChannels, NULL);
+    CLUT = cmsStageAllocCLut16bit(ContextID, nGridPoints, Src ->InputChannels, Src->OutputChannels, NULL);
     if (CLUT == NULL) goto Error;
 
     // Add the CLUT to the destination LUT
-    if (!cmsPipelineInsertStage(Dest, cmsAT_END, CLUT)) {
+    if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, CLUT)) {
         goto Error;
     }
 
@@ -710,49 +708,49 @@ cmsBool OptimizeByResampling(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
     if (*dwFlags & cmsFLAGS_CLUT_POST_LINEARIZATION) {
 
         // Get a pointer to the postlinearization if present
-        cmsStage* PostLin = cmsPipelineGetPtrToLastStage(Src);
+        cmsStage* PostLin = cmsPipelineGetPtrToLastStage(ContextID, Src);
 
         // Check if suitable
-        if (PostLin && cmsStageType(PostLin) == cmsSigCurveSetElemType) {
+        if (PostLin && cmsStageType(ContextID, PostLin) == cmsSigCurveSetElemType) {
 
             // Maybe this is a linear tram, so we can avoid the whole stuff
-            if (!AllCurvesAreLinear(PostLin)) {
+            if (!AllCurvesAreLinear(ContextID, PostLin)) {
 
                 // All seems ok, proceed.
-                NewPostLin = cmsStageDup(PostLin);
-                if (!cmsPipelineInsertStage(Dest, cmsAT_END, NewPostLin))
+                NewPostLin = cmsStageDup(ContextID, PostLin);
+                if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, NewPostLin))
                     goto Error;
 
                 // In destination LUT, the sampling should be applied after this stage.
-                cmsPipelineUnlinkStage(Src, cmsAT_END, &KeepPostLin);
+                cmsPipelineUnlinkStage(ContextID, Src, cmsAT_END, &KeepPostLin);
             }
         }
     }
 
     // Now its time to do the sampling. We have to ignore pre/post linearization
     // The source LUT without pre/post curves is passed as parameter.
-    if (!cmsStageSampleCLut16bit(CLUT, XFormSampler16, (void*) Src, 0)) {
+    if (!cmsStageSampleCLut16bit(ContextID, CLUT, XFormSampler16, (void*) Src, 0)) {
 Error:
         // Ops, something went wrong, Restore stages
         if (KeepPreLin != NULL) {
-            if (!cmsPipelineInsertStage(Src, cmsAT_BEGIN, KeepPreLin)) {
+            if (!cmsPipelineInsertStage(ContextID, Src, cmsAT_BEGIN, KeepPreLin)) {
                 _cmsAssert(0); // This never happens
             }
         }
         if (KeepPostLin != NULL) {
-            if (!cmsPipelineInsertStage(Src, cmsAT_END,   KeepPostLin)) {
+            if (!cmsPipelineInsertStage(ContextID, Src, cmsAT_END,   KeepPostLin)) {
                 _cmsAssert(0); // This never happens
             }
         }
-        cmsPipelineFree(Dest);
+        cmsPipelineFree(ContextID, Dest);
         return FALSE;
     }
 
     // Done.
 
-    if (KeepPreLin != NULL) cmsStageFree(KeepPreLin);
-    if (KeepPostLin != NULL) cmsStageFree(KeepPostLin);
-    cmsPipelineFree(Src);
+    if (KeepPreLin != NULL) cmsStageFree(ContextID, KeepPreLin);
+    if (KeepPostLin != NULL) cmsStageFree(ContextID, KeepPostLin);
+    cmsPipelineFree(ContextID, Src);
 
     DataCLUT = (_cmsStageCLutData*) CLUT ->Data;
 
@@ -765,18 +763,18 @@ Error:
 
     if (DataSetIn == NULL && DataSetOut == NULL) {
 
-        _cmsPipelineSetOptimizationParameters(Dest, (_cmsOPTeval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsOPTeval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
     }
     else {
 
-        p16 = PrelinOpt16alloc(Dest ->ContextID,
+        p16 = PrelinOpt16alloc(ContextID,
             DataCLUT ->Params,
             Dest ->InputChannels,
             DataSetIn,
             Dest ->OutputChannels,
             DataSetOut);
 
-        _cmsPipelineSetOptimizationParameters(Dest, PrelinEval16, (void*) p16, PrelinOpt16free, Prelin16dup);
+        _cmsPipelineSetOptimizationParameters(ContextID, Dest, PrelinEval16, (void*) p16, PrelinOpt16free, Prelin16dup);
     }
 
 
@@ -786,7 +784,7 @@ Error:
 
     if (!(*dwFlags & cmsFLAGS_NOWHITEONWHITEFIXUP)) {
 
-        FixWhiteMisalignment(Dest, ColorSpace, OutputColorSpace);
+        FixWhiteMisalignment(ContextID, Dest, ColorSpace, OutputColorSpace);
     }
 
     *Lut = Dest;
@@ -806,7 +804,7 @@ Error:
 // Normalize endpoints by slope limiting max and min. This assures endpoints as well.
 // Descending curves are handled as well.
 static
-void SlopeLimiting(cmsToneCurve* g)
+void SlopeLimiting(cmsContext ContextID, cmsToneCurve* g)
 {
     int BeginVal, EndVal;
     int AtBegin = (int) floor((cmsFloat64Number) g ->nEntries * 0.02 + 0.5);   // Cutoff at 2%
@@ -814,7 +812,7 @@ void SlopeLimiting(cmsToneCurve* g)
     cmsFloat64Number Val, Slope, beta;
     int i;
 
-    if (cmsIsToneCurveDescending(g)) {
+    if (cmsIsToneCurveDescending(ContextID, g)) {
         BeginVal = 0xffff; EndVal = 0;
     }
     else {
@@ -859,9 +857,9 @@ Prelin8Data* PrelinOpt8alloc(cmsContext ContextID, const cmsInterpParams* p, cms
         if (G != NULL) {
 
             // Get 16-bit representation
-            Input[0] = cmsEvalToneCurve16(G[0], FROM_8_TO_16(i));
-            Input[1] = cmsEvalToneCurve16(G[1], FROM_8_TO_16(i));
-            Input[2] = cmsEvalToneCurve16(G[2], FROM_8_TO_16(i));
+            Input[0] = cmsEvalToneCurve16(ContextID, G[0], FROM_8_TO_16(i));
+            Input[1] = cmsEvalToneCurve16(ContextID, G[1], FROM_8_TO_16(i));
+            Input[2] = cmsEvalToneCurve16(ContextID, G[2], FROM_8_TO_16(i));
         }
         else {
             Input[0] = FROM_8_TO_16(i);
@@ -909,11 +907,11 @@ void* Prelin8dup(cmsContext ContextID, const void* ptr)
 // A optimized interpolation for 8-bit input.
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static
-void PrelinEval8(register const cmsUInt16Number Input[],
+void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
                   register cmsUInt16Number Output[],
                   register const void* D)
 {
-
+    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt8Number         r, g, b;
     cmsS15Fixed16Number    rx, ry, rz;
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
@@ -1025,7 +1023,7 @@ cmsBool IsDegenerated(const cmsToneCurve* g)
 // We need xput over here
 
 static
-cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
+cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
 {
     cmsPipeline* OriginalLut;
     int nGridPoints;
@@ -1060,15 +1058,15 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
     OriginalLut = *Lut;
 
    // Named color pipelines cannot be optimized either
-   for (mpe = cmsPipelineGetPtrToFirstStage(OriginalLut);
+   for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, OriginalLut);
          mpe != NULL;
-         mpe = cmsStageNext(mpe)) {
-            if (cmsStageType(mpe) == cmsSigNamedColorElemType) return FALSE;
+         mpe = cmsStageNext(ContextID, mpe)) {
+            if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
-    ColorSpace       = _cmsICCcolorSpace(T_COLORSPACE(*InputFormat));
-    OutputColorSpace = _cmsICCcolorSpace(T_COLORSPACE(*OutputFormat));
-    nGridPoints      = _cmsReasonableGridpointsByColorspace(ColorSpace, *dwFlags);
+    ColorSpace       = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*InputFormat));
+    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
+    nGridPoints      = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
 
     // Empty gamma containers
     memset(Trans, 0, sizeof(Trans));
@@ -1076,13 +1074,13 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
 
     // If the last stage of the original lut are curves, and those curves are
     // degenerated, it is likely the transform is squeezing and clipping
-    // the output from previous CLUT. We cannot optimize this case     
+    // the output from previous CLUT. We cannot optimize this case
     {
-        cmsStage* last = cmsPipelineGetPtrToLastStage(OriginalLut);
+        cmsStage* last = cmsPipelineGetPtrToLastStage(ContextID, OriginalLut);
 
-        if (cmsStageType(last) == cmsSigCurveSetElemType) {
+        if (cmsStageType(ContextID, last) == cmsSigCurveSetElemType) {
 
-            _cmsStageToneCurvesData* Data = (_cmsStageToneCurvesData*)cmsStageData(last);
+            _cmsStageToneCurvesData* Data = (_cmsStageToneCurvesData*)cmsStageData(ContextID, last);
             for (i = 0; i < Data->nCurves; i++) {
                 if (IsDegenerated(Data->TheCurves[i]))
                     goto Error;
@@ -1091,7 +1089,7 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
     }
 
     for (t = 0; t < OriginalLut ->InputChannels; t++) {
-        Trans[t] = cmsBuildTabulatedToneCurve16(OriginalLut ->ContextID, PRELINEARIZATION_POINTS, NULL);
+        Trans[t] = cmsBuildTabulatedToneCurve16(ContextID, PRELINEARIZATION_POINTS, NULL);
         if (Trans[t] == NULL) goto Error;
     }
 
@@ -1105,7 +1103,7 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
             In[t] = v;
 
         // Evaluate the gray value
-        cmsPipelineEvalFloat(In, Out, OriginalLut);
+        cmsPipelineEvalFloat(ContextID, In, Out, OriginalLut);
 
         // Store result in curve
         for (t=0; t < OriginalLut ->InputChannels; t++)
@@ -1114,7 +1112,7 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
 
     // Slope-limit the obtained curves
     for (t = 0; t < OriginalLut ->InputChannels; t++)
-        SlopeLimiting(Trans[t]);
+        SlopeLimiting(ContextID, Trans[t]);
 
     // Check for validity
     lIsSuitable = TRUE;
@@ -1122,11 +1120,11 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
     for (t=0; (lIsSuitable && (t < OriginalLut ->InputChannels)); t++) {
 
         // Exclude if already linear
-        if (!cmsIsToneCurveLinear(Trans[t]))
+        if (!cmsIsToneCurveLinear(ContextID, Trans[t]))
             lIsLinear = FALSE;
 
         // Exclude if non-monotonic
-        if (!cmsIsToneCurveMonotonic(Trans[t]))
+        if (!cmsIsToneCurveMonotonic(ContextID, Trans[t]))
             lIsSuitable = FALSE;
 
         if (IsDegenerated(Trans[t]))
@@ -1138,45 +1136,45 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
 
     // Invert curves if possible
     for (t = 0; t < OriginalLut ->InputChannels; t++) {
-        TransReverse[t] = cmsReverseToneCurveEx(PRELINEARIZATION_POINTS, Trans[t]);
+        TransReverse[t] = cmsReverseToneCurveEx(ContextID, PRELINEARIZATION_POINTS, Trans[t]);
         if (TransReverse[t] == NULL) goto Error;
     }
 
     // Now inset the reversed curves at the begin of transform
-    LutPlusCurves = cmsPipelineDup(OriginalLut);
+    LutPlusCurves = cmsPipelineDup(ContextID, OriginalLut);
     if (LutPlusCurves == NULL) goto Error;
 
-    if (!cmsPipelineInsertStage(LutPlusCurves, cmsAT_BEGIN, cmsStageAllocToneCurves(OriginalLut ->ContextID, OriginalLut ->InputChannels, TransReverse)))
+    if (!cmsPipelineInsertStage(ContextID, LutPlusCurves, cmsAT_BEGIN, cmsStageAllocToneCurves(ContextID, OriginalLut ->InputChannels, TransReverse)))
         goto Error;
 
     // Create the result LUT
-    OptimizedLUT = cmsPipelineAlloc(OriginalLut ->ContextID, OriginalLut ->InputChannels, OriginalLut ->OutputChannels);
+    OptimizedLUT = cmsPipelineAlloc(ContextID, OriginalLut ->InputChannels, OriginalLut ->OutputChannels);
     if (OptimizedLUT == NULL) goto Error;
 
-    OptimizedPrelinMpe = cmsStageAllocToneCurves(OriginalLut ->ContextID, OriginalLut ->InputChannels, Trans);
+    OptimizedPrelinMpe = cmsStageAllocToneCurves(ContextID, OriginalLut ->InputChannels, Trans);
 
     // Create and insert the curves at the beginning
-    if (!cmsPipelineInsertStage(OptimizedLUT, cmsAT_BEGIN, OptimizedPrelinMpe))
+    if (!cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_BEGIN, OptimizedPrelinMpe))
         goto Error;
 
     // Allocate the CLUT for result
-    OptimizedCLUTmpe = cmsStageAllocCLut16bit(OriginalLut ->ContextID, nGridPoints, OriginalLut ->InputChannels, OriginalLut ->OutputChannels, NULL);
+    OptimizedCLUTmpe = cmsStageAllocCLut16bit(ContextID, nGridPoints, OriginalLut ->InputChannels, OriginalLut ->OutputChannels, NULL);
 
     // Add the CLUT to the destination LUT
-    if (!cmsPipelineInsertStage(OptimizedLUT, cmsAT_END, OptimizedCLUTmpe))
+    if (!cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_END, OptimizedCLUTmpe))
         goto Error;
 
     // Resample the LUT
-    if (!cmsStageSampleCLut16bit(OptimizedCLUTmpe, XFormSampler16, (void*) LutPlusCurves, 0)) goto Error;
+    if (!cmsStageSampleCLut16bit(ContextID, OptimizedCLUTmpe, XFormSampler16, (void*) LutPlusCurves, 0)) goto Error;
 
     // Free resources
     for (t = 0; t < OriginalLut ->InputChannels; t++) {
 
-        if (Trans[t]) cmsFreeToneCurve(Trans[t]);
-        if (TransReverse[t]) cmsFreeToneCurve(TransReverse[t]);
+        if (Trans[t]) cmsFreeToneCurve(ContextID, Trans[t]);
+        if (TransReverse[t]) cmsFreeToneCurve(ContextID, TransReverse[t]);
     }
 
-    cmsPipelineFree(LutPlusCurves);
+    cmsPipelineFree(ContextID, LutPlusCurves);
 
 
     OptimizedPrelinCurves = _cmsStageGetPtrToCurveSet(OptimizedPrelinMpe);
@@ -1185,22 +1183,22 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
     // Set the evaluator if 8-bit
     if (_cmsFormatterIs8bit(*InputFormat)) {
 
-        Prelin8Data* p8 = PrelinOpt8alloc(OptimizedLUT ->ContextID,
+        Prelin8Data* p8 = PrelinOpt8alloc(ContextID,
                                                 OptimizedPrelinCLUT ->Params,
                                                 OptimizedPrelinCurves);
         if (p8 == NULL) return FALSE;
 
-        _cmsPipelineSetOptimizationParameters(OptimizedLUT, PrelinEval8, (void*) p8, Prelin8free, Prelin8dup);
+        _cmsPipelineSetOptimizationParameters(ContextID, OptimizedLUT, PrelinEval8, (void*) p8, Prelin8free, Prelin8dup);
 
     }
     else
     {
-        Prelin16Data* p16 = PrelinOpt16alloc(OptimizedLUT ->ContextID,
+        Prelin16Data* p16 = PrelinOpt16alloc(ContextID,
             OptimizedPrelinCLUT ->Params,
             3, OptimizedPrelinCurves, 3, NULL);
         if (p16 == NULL) return FALSE;
 
-        _cmsPipelineSetOptimizationParameters(OptimizedLUT, PrelinEval16, (void*) p16, PrelinOpt16free, Prelin16dup);
+        _cmsPipelineSetOptimizationParameters(ContextID, OptimizedLUT, PrelinEval16, (void*) p16, PrelinOpt16free, Prelin16dup);
 
     }
 
@@ -1210,7 +1208,7 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
 
     if (!(*dwFlags & cmsFLAGS_NOWHITEONWHITEFIXUP)) {
 
-        if (!FixWhiteMisalignment(OptimizedLUT, ColorSpace, OutputColorSpace)) {
+        if (!FixWhiteMisalignment(ContextID, OptimizedLUT, ColorSpace, OutputColorSpace)) {
 
             return FALSE;
         }
@@ -1218,7 +1216,7 @@ cmsBool OptimizeByComputingLinearization(cmsPipeline** Lut, cmsUInt32Number Inte
 
     // And return the obtained LUT
 
-    cmsPipelineFree(OriginalLut);
+    cmsPipelineFree(ContextID, OriginalLut);
     *Lut = OptimizedLUT;
     return TRUE;
 
@@ -1226,12 +1224,12 @@ Error:
 
     for (t = 0; t < OriginalLut ->InputChannels; t++) {
 
-        if (Trans[t]) cmsFreeToneCurve(Trans[t]);
-        if (TransReverse[t]) cmsFreeToneCurve(TransReverse[t]);
+        if (Trans[t]) cmsFreeToneCurve(ContextID, Trans[t]);
+        if (TransReverse[t]) cmsFreeToneCurve(ContextID, TransReverse[t]);
     }
 
-    if (LutPlusCurves != NULL) cmsPipelineFree(LutPlusCurves);
-    if (OptimizedLUT != NULL) cmsPipelineFree(OptimizedLUT);
+    if (LutPlusCurves != NULL) cmsPipelineFree(ContextID, LutPlusCurves);
+    if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
 
     return FALSE;
 
@@ -1307,13 +1305,13 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, int nCurves, int nElements, cmsT
 
             for (j=0; j < nElements; j++) {
 
-                c16 ->Curves[i][j] = cmsEvalToneCurve16(G[i], FROM_8_TO_16(j));
+                c16 ->Curves[i][j] = cmsEvalToneCurve16(ContextID, G[i], FROM_8_TO_16(j));
             }
         }
         else {
 
             for (j=0; j < nElements; j++) {
-                c16 ->Curves[i][j] = cmsEvalToneCurve16(G[i], (cmsUInt16Number) j);
+                c16 ->Curves[i][j] = cmsEvalToneCurve16(ContextID, G[i], (cmsUInt16Number) j);
             }
         }
     }
@@ -1322,13 +1320,14 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, int nCurves, int nElements, cmsT
 }
 
 static
-void FastEvaluateCurves8(register const cmsUInt16Number In[],
+void FastEvaluateCurves8(cmsContext ContextID, register const cmsUInt16Number In[],
                           register cmsUInt16Number Out[],
                           register const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     cmsUInt8Number x;
     int i;
+    cmsUNUSED_PARAMETER(ContextID);
 
     for (i=0; i < Data ->nCurves; i++) {
 
@@ -1339,12 +1338,13 @@ void FastEvaluateCurves8(register const cmsUInt16Number In[],
 
 
 static
-void FastEvaluateCurves16(register const cmsUInt16Number In[],
+void FastEvaluateCurves16(cmsContext ContextID, register const cmsUInt16Number In[],
                           register cmsUInt16Number Out[],
                           register const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
     int i;
+    cmsUNUSED_PARAMETER(ContextID);
 
     for (i=0; i < Data ->nCurves; i++) {
          Out[i] = Data -> Curves[i][In[i]];
@@ -1353,12 +1353,13 @@ void FastEvaluateCurves16(register const cmsUInt16Number In[],
 
 
 static
-void FastIdentity16(register const cmsUInt16Number In[],
+void FastIdentity16(cmsContext ContextID, register const cmsUInt16Number In[],
                     register cmsUInt16Number Out[],
                     register const void* D)
 {
     cmsPipeline* Lut = (cmsPipeline*) D;
     cmsUInt32Number i;
+    cmsUNUSED_PARAMETER(ContextID);
 
     for (i=0; i < Lut ->InputChannels; i++) {
          Out[i] = In[i];
@@ -1369,7 +1370,7 @@ void FastIdentity16(register const cmsUInt16Number In[],
 // If the target LUT holds only curves, the optimization procedure is to join all those
 // curves together. That only works on curves and does not work on matrices.
 static
-cmsBool OptimizeByJoiningCurves(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
+cmsBool OptimizeByJoiningCurves(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
 {
     cmsToneCurve** GammaTables = NULL;
     cmsFloat32Number InFloat[cmsMAXCHANNELS], OutFloat[cmsMAXCHANNELS];
@@ -1384,22 +1385,22 @@ cmsBool OptimizeByJoiningCurves(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUI
     if (_cmsFormatterIsFloat(*InputFormat) || _cmsFormatterIsFloat(*OutputFormat)) return FALSE;
 
     //  Only curves in this LUT?
-    for (mpe = cmsPipelineGetPtrToFirstStage(Src);
+    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, Src);
          mpe != NULL;
-         mpe = cmsStageNext(mpe)) {
-            if (cmsStageType(mpe) != cmsSigCurveSetElemType) return FALSE;
+         mpe = cmsStageNext(ContextID, mpe)) {
+            if (cmsStageType(ContextID, mpe) != cmsSigCurveSetElemType) return FALSE;
     }
 
     // Allocate an empty LUT
-    Dest =  cmsPipelineAlloc(Src ->ContextID, Src ->InputChannels, Src ->OutputChannels);
+    Dest =  cmsPipelineAlloc(ContextID, Src ->InputChannels, Src ->OutputChannels);
     if (Dest == NULL) return FALSE;
 
     // Create target curves
-    GammaTables = (cmsToneCurve**) _cmsCalloc(Src ->ContextID, Src ->InputChannels, sizeof(cmsToneCurve*));
+    GammaTables = (cmsToneCurve**) _cmsCalloc(ContextID, Src ->InputChannels, sizeof(cmsToneCurve*));
     if (GammaTables == NULL) goto Error;
 
     for (i=0; i < Src ->InputChannels; i++) {
-        GammaTables[i] = cmsBuildTabulatedToneCurve16(Src ->ContextID, PRELINEARIZATION_POINTS, NULL);
+        GammaTables[i] = cmsBuildTabulatedToneCurve16(ContextID, PRELINEARIZATION_POINTS, NULL);
         if (GammaTables[i] == NULL) goto Error;
     }
 
@@ -1409,82 +1410,82 @@ cmsBool OptimizeByJoiningCurves(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUI
         for (j=0; j < Src ->InputChannels; j++)
             InFloat[j] = (cmsFloat32Number) ((cmsFloat64Number) i / (PRELINEARIZATION_POINTS - 1));
 
-        cmsPipelineEvalFloat(InFloat, OutFloat, Src);
+        cmsPipelineEvalFloat(ContextID, InFloat, OutFloat, Src);
 
         for (j=0; j < Src ->InputChannels; j++)
             GammaTables[j] -> Table16[i] = _cmsQuickSaturateWord(OutFloat[j] * 65535.0);
     }
 
-    ObtainedCurves = cmsStageAllocToneCurves(Src ->ContextID, Src ->InputChannels, GammaTables);
+    ObtainedCurves = cmsStageAllocToneCurves(ContextID, Src ->InputChannels, GammaTables);
     if (ObtainedCurves == NULL) goto Error;
 
     for (i=0; i < Src ->InputChannels; i++) {
-        cmsFreeToneCurve(GammaTables[i]);
+        cmsFreeToneCurve(ContextID, GammaTables[i]);
         GammaTables[i] = NULL;
     }
 
     if (GammaTables != NULL) {
-        _cmsFree(Src->ContextID, GammaTables);
+        _cmsFree(ContextID, GammaTables);
         GammaTables = NULL;
     }
 
     // Maybe the curves are linear at the end
-    if (!AllCurvesAreLinear(ObtainedCurves)) {
+    if (!AllCurvesAreLinear(ContextID, ObtainedCurves)) {
 
-        if (!cmsPipelineInsertStage(Dest, cmsAT_BEGIN, ObtainedCurves))
+        if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, ObtainedCurves))
             goto Error;
 
         // If the curves are to be applied in 8 bits, we can save memory
         if (_cmsFormatterIs8bit(*InputFormat)) {
 
             _cmsStageToneCurvesData* Data = (_cmsStageToneCurvesData*) ObtainedCurves ->Data;
-             Curves16Data* c16 = CurvesAlloc(Dest ->ContextID, Data ->nCurves, 256, Data ->TheCurves);
+             Curves16Data* c16 = CurvesAlloc(ContextID, Data ->nCurves, 256, Data ->TheCurves);
 
-             if (c16 == NULL) goto Error; 
+             if (c16 == NULL) goto Error;
              *dwFlags |= cmsFLAGS_NOCACHE;
-            _cmsPipelineSetOptimizationParameters(Dest, FastEvaluateCurves8, c16, CurvesFree, CurvesDup);
+            _cmsPipelineSetOptimizationParameters(ContextID, Dest, FastEvaluateCurves8, c16, CurvesFree, CurvesDup);
 
         }
         else {
 
-            _cmsStageToneCurvesData* Data = (_cmsStageToneCurvesData*) cmsStageData(ObtainedCurves);
-             Curves16Data* c16 = CurvesAlloc(Dest ->ContextID, Data ->nCurves, 65536, Data ->TheCurves);
+            _cmsStageToneCurvesData* Data = (_cmsStageToneCurvesData*) cmsStageData(ContextID, ObtainedCurves);
+             Curves16Data* c16 = CurvesAlloc(ContextID, Data ->nCurves, 65536, Data ->TheCurves);
 
-             if (c16 == NULL) goto Error; 
+             if (c16 == NULL) goto Error;
              *dwFlags |= cmsFLAGS_NOCACHE;
-            _cmsPipelineSetOptimizationParameters(Dest, FastEvaluateCurves16, c16, CurvesFree, CurvesDup);
+            _cmsPipelineSetOptimizationParameters(ContextID, Dest, FastEvaluateCurves16, c16, CurvesFree, CurvesDup);
         }
     }
     else {
 
         // LUT optimizes to nothing. Set the identity LUT
-        cmsStageFree(ObtainedCurves);
+        cmsStageFree(ContextID, ObtainedCurves);
         ObtainedCurves = NULL;
 
-        if (!cmsPipelineInsertStage(Dest, cmsAT_BEGIN, cmsStageAllocIdentity(Dest ->ContextID, Src ->InputChannels)))
+        if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageAllocIdentity(ContextID, Src ->InputChannels)))
             goto Error;
 
         *dwFlags |= cmsFLAGS_NOCACHE;
-        _cmsPipelineSetOptimizationParameters(Dest, FastIdentity16, (void*) Dest, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, Dest, FastIdentity16, (void*) Dest, NULL, NULL);
     }
 
     // We are done.
-    cmsPipelineFree(Src);
+    cmsPipelineFree(ContextID, Src);
     *Lut = Dest;
     return TRUE;
 
 Error:
 
-    if (ObtainedCurves != NULL) cmsStageFree(ObtainedCurves);
+    if (ObtainedCurves != NULL) cmsStageFree(ContextID, ObtainedCurves);
     if (GammaTables != NULL) {
         for (i=0; i < Src ->InputChannels; i++) {
-            if (GammaTables[i] != NULL) cmsFreeToneCurve(GammaTables[i]);
+            if (GammaTables[i] != NULL) cmsFreeToneCurve(ContextID, GammaTables[i]);
         }
 
-        _cmsFree(Src ->ContextID, GammaTables);
+        _cmsFree(ContextID, GammaTables);
     }
 
-    if (Dest != NULL) cmsPipelineFree(Dest);
+    if (Dest != NULL) cmsPipelineFree(ContextID, Dest);
     return FALSE;
 
     cmsUNUSED_PARAMETER(Intent);
@@ -1514,13 +1515,14 @@ void* DupMatShaper(cmsContext ContextID, const void* Data)
 // to accomplish some performance. Actually it takes 256x3 16 bits tables and 16385 x 3 tables of 8 bits,
 // in total about 50K, and the performance boost is huge!
 static
-void MatShaperEval16(register const cmsUInt16Number In[],
+void MatShaperEval16(cmsContext ContextID, register const cmsUInt16Number In[],
                      register cmsUInt16Number Out[],
                      register const void* D)
 {
     MatShaper8Data* p = (MatShaper8Data*) D;
     cmsS1Fixed14Number l1, l2, l3, r, g, b;
     cmsUInt32Number ri, gi, bi;
+    cmsUNUSED_PARAMETER(ContextID);
 
     // In this case (and only in this case!) we can use this simplification since
     // In[] is assured to come from a 8 bit number. (a << 8 | a)
@@ -1552,7 +1554,7 @@ void MatShaperEval16(register const cmsUInt16Number In[],
 
 // This table converts from 8 bits to 1.14 after applying the curve
 static
-void FillFirstShaper(cmsS1Fixed14Number* Table, cmsToneCurve* Curve)
+void FillFirstShaper(cmsContext ContextID, cmsS1Fixed14Number* Table, cmsToneCurve* Curve)
 {
     int i;
     cmsFloat32Number R, y;
@@ -1560,7 +1562,7 @@ void FillFirstShaper(cmsS1Fixed14Number* Table, cmsToneCurve* Curve)
     for (i=0; i < 256; i++) {
 
         R   = (cmsFloat32Number) (i / 255.0);
-        y   = cmsEvalToneCurveFloat(Curve, R);
+        y   = cmsEvalToneCurveFloat(ContextID, Curve, R);
 
         if (y < 131072.0)
             Table[i] = DOUBLE_TO_1FIXED14(y);
@@ -1571,7 +1573,7 @@ void FillFirstShaper(cmsS1Fixed14Number* Table, cmsToneCurve* Curve)
 
 // This table converts form 1.14 (being 0x4000 the last entry) to 8 bits after applying the curve
 static
-void FillSecondShaper(cmsUInt16Number* Table, cmsToneCurve* Curve, cmsBool Is8BitsOutput)
+void FillSecondShaper(cmsContext ContextID, cmsUInt16Number* Table, cmsToneCurve* Curve, cmsBool Is8BitsOutput)
 {
     int i;
     cmsFloat32Number R, Val;
@@ -1579,7 +1581,7 @@ void FillSecondShaper(cmsUInt16Number* Table, cmsToneCurve* Curve, cmsBool Is8Bi
     for (i=0; i < 16385; i++) {
 
         R   = (cmsFloat32Number) (i / 16384.0);
-        Val = cmsEvalToneCurveFloat(Curve, R);    // Val comes 0..1.0
+        Val = cmsEvalToneCurveFloat(ContextID, Curve, R);    // Val comes 0..1.0
 
         if (Val < 0)
             Val = 0;
@@ -1604,28 +1606,26 @@ void FillSecondShaper(cmsUInt16Number* Table, cmsToneCurve* Curve, cmsBool Is8Bi
 
 // Compute the matrix-shaper structure
 static
-cmsBool SetMatShaper(cmsPipeline* Dest, cmsToneCurve* Curve1[3], cmsMAT3* Mat, cmsVEC3* Off, cmsToneCurve* Curve2[3], cmsUInt32Number* OutputFormat)
+cmsBool SetMatShaper(cmsContext ContextID, cmsPipeline* Dest, cmsToneCurve* Curve1[3], cmsMAT3* Mat, cmsVEC3* Off, cmsToneCurve* Curve2[3], cmsUInt32Number* OutputFormat)
 {
     MatShaper8Data* p;
     int i, j;
     cmsBool Is8Bits = _cmsFormatterIs8bit(*OutputFormat);
 
     // Allocate a big chuck of memory to store precomputed tables
-    p = (MatShaper8Data*) _cmsMalloc(Dest ->ContextID, sizeof(MatShaper8Data));
+    p = (MatShaper8Data*) _cmsMalloc(ContextID, sizeof(MatShaper8Data));
     if (p == NULL) return FALSE;
 
-    p -> ContextID = Dest -> ContextID;
-
     // Precompute tables
-    FillFirstShaper(p ->Shaper1R, Curve1[0]);
-    FillFirstShaper(p ->Shaper1G, Curve1[1]);
-    FillFirstShaper(p ->Shaper1B, Curve1[2]);
+    FillFirstShaper(ContextID, p ->Shaper1R, Curve1[0]);
+    FillFirstShaper(ContextID, p ->Shaper1G, Curve1[1]);
+    FillFirstShaper(ContextID, p ->Shaper1B, Curve1[2]);
 
-    FillSecondShaper(p ->Shaper2R, Curve2[0], Is8Bits);
-    FillSecondShaper(p ->Shaper2G, Curve2[1], Is8Bits);
-    FillSecondShaper(p ->Shaper2B, Curve2[2], Is8Bits);
+    FillSecondShaper(ContextID, p ->Shaper2R, Curve2[0], Is8Bits);
+    FillSecondShaper(ContextID, p ->Shaper2G, Curve2[1], Is8Bits);
+    FillSecondShaper(ContextID, p ->Shaper2B, Curve2[2], Is8Bits);
 
-    // Convert matrix to nFixed14. Note that those values may take more than 16 bits 
+    // Convert matrix to nFixed14. Note that those values may take more than 16 bits
     for (i=0; i < 3; i++) {
         for (j=0; j < 3; j++) {
             p ->Mat[i][j] = DOUBLE_TO_1FIXED14(Mat->v[i].n[j]);
@@ -1647,13 +1647,13 @@ cmsBool SetMatShaper(cmsPipeline* Dest, cmsToneCurve* Curve1[3], cmsMAT3* Mat, c
         *OutputFormat |= OPTIMIZED_SH(1);
 
     // Fill function pointers
-    _cmsPipelineSetOptimizationParameters(Dest, MatShaperEval16, (void*) p, FreeMatShaper, DupMatShaper);
+    _cmsPipelineSetOptimizationParameters(ContextID, Dest, MatShaperEval16, (void*) p, FreeMatShaper, DupMatShaper);
     return TRUE;
 }
 
 //  8 bits on input allows matrix-shaper boot up to 25 Mpixels per second on RGB. That's fast!
 static
-cmsBool OptimizeMatrixShaper(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
+cmsBool OptimizeMatrixShaper(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
 {
        cmsStage* Curve1, *Curve2;
        cmsStage* Matrix1, *Matrix2;
@@ -1672,33 +1672,33 @@ cmsBool OptimizeMatrixShaper(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
        Src = *Lut;
 
        // Check for:
-       // 
-       //    shaper-matrix-matrix-shaper 
+       //
+       //    shaper-matrix-matrix-shaper
        //    shaper-matrix-shaper
-       // 
-       // Both of those constructs are possible (first because abs. colorimetric). 
+       //
+       // Both of those constructs are possible (first because abs. colorimetric).
        // additionally, In the first case, the input matrix offset should be zero.
 
        IdentityMat = FALSE;
-       if (cmsPipelineCheckAndRetreiveStages(Src, 4,
+       if (cmsPipelineCheckAndRetreiveStages(ContextID, Src, 4,
               cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
               &Curve1, &Matrix1, &Matrix2, &Curve2)) {
 
               // Get both matrices
-              _cmsStageMatrixData* Data1 = (_cmsStageMatrixData*)cmsStageData(Matrix1);
-              _cmsStageMatrixData* Data2 = (_cmsStageMatrixData*)cmsStageData(Matrix2);
+              _cmsStageMatrixData* Data1 = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix1);
+              _cmsStageMatrixData* Data2 = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix2);
 
               // Input offset should be zero
               if (Data1->Offset != NULL) return FALSE;
 
               // Multiply both matrices to get the result
-              _cmsMAT3per(&res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
+              _cmsMAT3per(ContextID, &res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
 
-              // Only 2nd matrix has offset, or it is zero 
+              // Only 2nd matrix has offset, or it is zero
               Offset = Data2->Offset;
 
               // Now the result is in res + Data2 -> Offset. Maybe is a plain identity?
-              if (_cmsMAT3isIdentity(&res) && Offset == NULL) {
+              if (_cmsMAT3isIdentity(ContextID, &res) && Offset == NULL) {
 
                      // We can get rid of full matrix
                      IdentityMat = TRUE;
@@ -1707,11 +1707,11 @@ cmsBool OptimizeMatrixShaper(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
        }
        else {
 
-              if (cmsPipelineCheckAndRetreiveStages(Src, 3,
+              if (cmsPipelineCheckAndRetreiveStages(ContextID, Src, 3,
                      cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
                      &Curve1, &Matrix1, &Curve2)) {
 
-                     _cmsStageMatrixData* Data = (_cmsStageMatrixData*)cmsStageData(Matrix1);
+                     _cmsStageMatrixData* Data = (_cmsStageMatrixData*)cmsStageData(ContextID, Matrix1);
 
                      // Copy the matrix to our result
                      memcpy(&res, Data->Double, sizeof(res));
@@ -1719,7 +1719,7 @@ cmsBool OptimizeMatrixShaper(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
                      // Preserve the Odffset (may be NULL as a zero offset)
                      Offset = Data->Offset;
 
-                     if (_cmsMAT3isIdentity(&res) && Offset == NULL) {
+                     if (_cmsMAT3isIdentity(ContextID, &res) && Offset == NULL) {
 
                             // We can get rid of full matrix
                             IdentityMat = TRUE;
@@ -1731,45 +1731,45 @@ cmsBool OptimizeMatrixShaper(cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt3
        }
 
       // Allocate an empty LUT
-    Dest =  cmsPipelineAlloc(Src ->ContextID, Src ->InputChannels, Src ->OutputChannels);
+    Dest =  cmsPipelineAlloc(ContextID, Src ->InputChannels, Src ->OutputChannels);
     if (!Dest) return FALSE;
 
     // Assamble the new LUT
-    if (!cmsPipelineInsertStage(Dest, cmsAT_BEGIN, cmsStageDup(Curve1)))
+    if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageDup(ContextID, Curve1)))
         goto Error;
 
     if (!IdentityMat) {
 
-           if (!cmsPipelineInsertStage(Dest, cmsAT_END, cmsStageAllocMatrix(Dest->ContextID, 3, 3, (const cmsFloat64Number*)&res, Offset)))
+           if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, cmsStageAllocMatrix(ContextID, 3, 3, (const cmsFloat64Number*)&res, Offset)))
                   goto Error;
     }
 
-    if (!cmsPipelineInsertStage(Dest, cmsAT_END, cmsStageDup(Curve2)))
+    if (!cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, cmsStageDup(ContextID, Curve2)))
         goto Error;
 
     // If identity on matrix, we can further optimize the curves, so call the join curves routine
     if (IdentityMat) {
 
-        OptimizeByJoiningCurves(&Dest, Intent, InputFormat, OutputFormat, dwFlags);
+        OptimizeByJoiningCurves(ContextID, &Dest, Intent, InputFormat, OutputFormat, dwFlags);
     }
     else {
-        _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(Curve1);
-        _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(Curve2);
+        _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve1);
+        _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
 
         // In this particular optimization, caché does not help as it takes more time to deal with
         // the caché that with the pixel handling
         *dwFlags |= cmsFLAGS_NOCACHE;
 
         // Setup the optimizarion routines
-        SetMatShaper(Dest, mpeC1 ->TheCurves, &res, (cmsVEC3*) Offset, mpeC2->TheCurves, OutputFormat);
+        SetMatShaper(ContextID, Dest, mpeC1 ->TheCurves, &res, (cmsVEC3*) Offset, mpeC2->TheCurves, OutputFormat);
     }
 
-    cmsPipelineFree(Src);
+    cmsPipelineFree(ContextID, Src);
     *Lut = Dest;
     return TRUE;
 Error:
     // Leave Src unchanged
-    cmsPipelineFree(Dest);
+    cmsPipelineFree(ContextID, Dest);
     return FALSE;
 }
 
@@ -1802,7 +1802,7 @@ _cmsOptimizationPluginChunkType _cmsOptimizationPluginChunk = { NULL };
 
 // Duplicates the zone of memory used by the plug-in in the new context
 static
-void DupPluginOptimizationList(struct _cmsContext_struct* ctx, 
+void DupPluginOptimizationList(struct _cmsContext_struct* ctx,
                                const struct _cmsContext_struct* src)
 {
    _cmsOptimizationPluginChunkType newHead = { NULL };
@@ -1819,15 +1819,15 @@ void DupPluginOptimizationList(struct _cmsContext_struct* ctx,
         entry = entry ->Next) {
 
             _cmsOptimizationCollection *newEntry = ( _cmsOptimizationCollection *) _cmsSubAllocDup(ctx ->MemPool, entry, sizeof(_cmsOptimizationCollection));
-   
-            if (newEntry == NULL) 
+
+            if (newEntry == NULL)
                 return;
 
             // We want to keep the linked list order, so this is a little bit tricky
             newEntry -> Next = NULL;
             if (Anterior)
                 Anterior -> Next = newEntry;
-     
+
             Anterior = newEntry;
 
             if (newHead.OptimizationCollection == NULL)
@@ -1837,7 +1837,7 @@ void DupPluginOptimizationList(struct _cmsContext_struct* ctx,
   ctx ->chunks[OptimizationPlugin] = _cmsSubAllocDup(ctx->MemPool, &newHead, sizeof(_cmsOptimizationPluginChunkType));
 }
 
-void  _cmsAllocOptimizationPluginChunk(struct _cmsContext_struct* ctx, 
+void  _cmsAllocOptimizationPluginChunk(struct _cmsContext_struct* ctx,
                                          const struct _cmsContext_struct* src)
 {
   if (src != NULL) {
@@ -1899,22 +1899,22 @@ cmsBool _cmsOptimizePipeline(cmsContext ContextID,
     // A CLUT is being asked, so force this specific optimization
     if (*dwFlags & cmsFLAGS_FORCE_CLUT) {
 
-        PreOptimize(*PtrLut);
-        return OptimizeByResampling(PtrLut, Intent, InputFormat, OutputFormat, dwFlags);
+        PreOptimize(ContextID, *PtrLut);
+        return OptimizeByResampling(ContextID, PtrLut, Intent, InputFormat, OutputFormat, dwFlags);
     }
 
     // Anything to optimize?
     if ((*PtrLut) ->Elements == NULL) {
-        _cmsPipelineSetOptimizationParameters(*PtrLut, FastIdentity16, (void*) *PtrLut, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, *PtrLut, FastIdentity16, (void*) *PtrLut, NULL, NULL);
         return TRUE;
     }
 
     // Try to get rid of identities and trivial conversions.
-    AnySuccess = PreOptimize(*PtrLut);
+    AnySuccess = PreOptimize(ContextID, *PtrLut);
 
     // After removal do we end with an identity?
     if ((*PtrLut) ->Elements == NULL) {
-        _cmsPipelineSetOptimizationParameters(*PtrLut, FastIdentity16, (void*) *PtrLut, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, *PtrLut, FastIdentity16, (void*) *PtrLut, NULL, NULL);
         return TRUE;
     }
 
@@ -1922,26 +1922,26 @@ cmsBool _cmsOptimizePipeline(cmsContext ContextID,
     if (*dwFlags & cmsFLAGS_NOOPTIMIZE)
         return FALSE;
 
-    // Try plug-in optimizations 
+    // Try plug-in optimizations
     for (Opts = ctx->OptimizationCollection;
          Opts != NULL;
          Opts = Opts ->Next) {
 
             // If one schema succeeded, we are done
-            if (Opts ->OptimizePtr(PtrLut, Intent, InputFormat, OutputFormat, dwFlags)) {
+            if (Opts ->OptimizePtr(ContextID, PtrLut, Intent, InputFormat, OutputFormat, dwFlags)) {
 
                 return TRUE;    // Optimized!
             }
     }
 
-   // Try built-in optimizations 
+   // Try built-in optimizations
     for (Opts = DefaultOptimization;
          Opts != NULL;
          Opts = Opts ->Next) {
 
-            if (Opts ->OptimizePtr(PtrLut, Intent, InputFormat, OutputFormat, dwFlags)) {
+            if (Opts ->OptimizePtr(ContextID, PtrLut, Intent, InputFormat, OutputFormat, dwFlags)) {
 
-                return TRUE;  
+                return TRUE;
             }
     }
 

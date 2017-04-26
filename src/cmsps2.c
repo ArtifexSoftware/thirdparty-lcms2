@@ -311,14 +311,14 @@ cmsUInt8Number L2Byte(cmsUInt16Number w)
 // Write a cooked byte
 
 static
-void WriteByte(cmsIOHANDLER* m, cmsUInt8Number b)
+void WriteByte(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt8Number b)
 {
-    _cmsIOPrintf(m, "%02x", b);
+    _cmsIOPrintf(ContextID, m, "%02x", b);
     _cmsPSActualColumn += 2;
 
     if (_cmsPSActualColumn > MAXPSCOLS) {
 
-        _cmsIOPrintf(m, "\n");
+        _cmsIOPrintf(ContextID, m, "\n");
         _cmsPSActualColumn = 0;
     }
 }
@@ -328,10 +328,11 @@ void WriteByte(cmsIOHANDLER* m, cmsUInt8Number b)
 
 // Removes offending Carriage returns
 static
-char* RemoveCR(const char* txt)
+char* RemoveCR(cmsContext ContextID, const char* txt)
 {
     static char Buffer[2048];
     char* pt;
+    cmsUNUSED_PARAMETER(ContextID);
 
     strncpy(Buffer, txt, 2047);
     Buffer[2047] = 0;
@@ -343,7 +344,7 @@ char* RemoveCR(const char* txt)
 }
 
 static
-void EmitHeader(cmsIOHANDLER* m, const char* Title, cmsHPROFILE hProfile)
+void EmitHeader(cmsContext ContextID, cmsIOHANDLER* m, const char* Title, cmsHPROFILE hProfile)
 {
     time_t timer;
     cmsMLU *Description, *Copyright;
@@ -351,23 +352,23 @@ void EmitHeader(cmsIOHANDLER* m, const char* Title, cmsHPROFILE hProfile)
 
     time(&timer);
 
-    Description = (cmsMLU*) cmsReadTag(hProfile, cmsSigProfileDescriptionTag);
-    Copyright   = (cmsMLU*) cmsReadTag(hProfile, cmsSigCopyrightTag);
+    Description = (cmsMLU*) cmsReadTag(ContextID, hProfile, cmsSigProfileDescriptionTag);
+    Copyright   = (cmsMLU*) cmsReadTag(ContextID, hProfile, cmsSigCopyrightTag);
 
     DescASCII[0] = DescASCII[255] = 0;
     CopyrightASCII[0] = CopyrightASCII[255] = 0;
 
-    if (Description != NULL) cmsMLUgetASCII(Description,  cmsNoLanguage, cmsNoCountry, DescASCII,       255);
-    if (Copyright != NULL)   cmsMLUgetASCII(Copyright,    cmsNoLanguage, cmsNoCountry, CopyrightASCII,  255);
+    if (Description != NULL) cmsMLUgetASCII(ContextID, Description,  cmsNoLanguage, cmsNoCountry, DescASCII,       255);
+    if (Copyright != NULL)   cmsMLUgetASCII(ContextID, Copyright,    cmsNoLanguage, cmsNoCountry, CopyrightASCII,  255);
 
-    _cmsIOPrintf(m, "%%!PS-Adobe-3.0\n");
-    _cmsIOPrintf(m, "%%\n");
-    _cmsIOPrintf(m, "%% %s\n", Title);
-    _cmsIOPrintf(m, "%% Source: %s\n", RemoveCR(DescASCII));
-    _cmsIOPrintf(m, "%%         %s\n", RemoveCR(CopyrightASCII));
-    _cmsIOPrintf(m, "%% Created: %s", ctime(&timer)); // ctime appends a \n!!!
-    _cmsIOPrintf(m, "%%\n");
-    _cmsIOPrintf(m, "%%%%BeginResource\n");
+    _cmsIOPrintf(ContextID, m, "%%!PS-Adobe-3.0\n");
+    _cmsIOPrintf(ContextID, m, "%%\n");
+    _cmsIOPrintf(ContextID, m, "%% %s\n", Title);
+    _cmsIOPrintf(ContextID, m, "%% Source: %s\n", RemoveCR(ContextID, DescASCII));
+    _cmsIOPrintf(ContextID, m, "%%         %s\n", RemoveCR(ContextID, CopyrightASCII));
+    _cmsIOPrintf(ContextID, m, "%% Created: %s", ctime(&timer)); // ctime appends a \n!!!
+    _cmsIOPrintf(ContextID, m, "%%\n");
+    _cmsIOPrintf(ContextID, m, "%%%%BeginResource\n");
 
 }
 
@@ -376,23 +377,23 @@ void EmitHeader(cmsIOHANDLER* m, const char* Title, cmsHPROFILE hProfile)
 // Black point adapted to D50.
 
 static
-void EmitWhiteBlackD50(cmsIOHANDLER* m, cmsCIEXYZ* BlackPoint)
+void EmitWhiteBlackD50(cmsContext ContextID, cmsIOHANDLER* m, cmsCIEXYZ* BlackPoint)
 {
 
-    _cmsIOPrintf(m, "/BlackPoint [%f %f %f]\n", BlackPoint -> X,
+    _cmsIOPrintf(ContextID, m, "/BlackPoint [%f %f %f]\n", BlackPoint -> X,
                                           BlackPoint -> Y,
                                           BlackPoint -> Z);
 
-    _cmsIOPrintf(m, "/WhitePoint [%f %f %f]\n", cmsD50_XYZ()->X,
-                                          cmsD50_XYZ()->Y,
-                                          cmsD50_XYZ()->Z);
+    _cmsIOPrintf(ContextID, m, "/WhitePoint [%f %f %f]\n", cmsD50_XYZ(ContextID)->X,
+                                          cmsD50_XYZ(ContextID)->Y,
+                                          cmsD50_XYZ(ContextID)->Z);
 }
 
 
 static
-void EmitRangeCheck(cmsIOHANDLER* m)
+void EmitRangeCheck(cmsContext ContextID, cmsIOHANDLER* m)
 {
-    _cmsIOPrintf(m, "dup 0.0 lt { pop 0.0 } if "
+    _cmsIOPrintf(ContextID, m, "dup 0.0 lt { pop 0.0 } if "
                     "dup 1.0 gt { pop 1.0 } if ");
 
 }
@@ -400,7 +401,7 @@ void EmitRangeCheck(cmsIOHANDLER* m)
 // Does write the intent
 
 static
-void EmitIntent(cmsIOHANDLER* m, int RenderingIntent)
+void EmitIntent(cmsContext ContextID, cmsIOHANDLER* m, int RenderingIntent)
 {
     const char *intent;
 
@@ -414,7 +415,7 @@ void EmitIntent(cmsIOHANDLER* m, int RenderingIntent)
         default: intent = "Undefined"; break;
     }
 
-    _cmsIOPrintf(m, "/RenderingIntent (%s)\n", intent );
+    _cmsIOPrintf(ContextID, m, "/RenderingIntent (%s)\n", intent );
 }
 
 //
@@ -428,7 +429,7 @@ void EmitIntent(cmsIOHANDLER* m, int RenderingIntent)
 static
 void EmitL2Y(cmsIOHANDLER* m)
 {
-    _cmsIOPrintf(m,
+    _cmsIOPrintf(ContextID, m,
             "{ "
                 "100 mul 16 add 116 div "               // (L * 100 + 16) / 116
                  "dup 6 29 div ge "                     // >= 6 / 29 ?
@@ -442,21 +443,21 @@ void EmitL2Y(cmsIOHANDLER* m)
 // Lab -> XYZ, see the discussion above
 
 static
-void EmitLab2XYZ(cmsIOHANDLER* m)
+void EmitLab2XYZ(cmsContext ContextID, cmsIOHANDLER* m)
 {
-    _cmsIOPrintf(m, "/RangeABC [ 0 1 0 1 0 1]\n");
-    _cmsIOPrintf(m, "/DecodeABC [\n");
-    _cmsIOPrintf(m, "{100 mul  16 add 116 div } bind\n");
-    _cmsIOPrintf(m, "{255 mul 128 sub 500 div } bind\n");
-    _cmsIOPrintf(m, "{255 mul 128 sub 200 div } bind\n");
-    _cmsIOPrintf(m, "]\n");
-    _cmsIOPrintf(m, "/MatrixABC [ 1 1 1 1 0 0 0 0 -1]\n");
-    _cmsIOPrintf(m, "/RangeLMN [ -0.236 1.254 0 1 -0.635 1.640 ]\n");
-    _cmsIOPrintf(m, "/DecodeLMN [\n");
-    _cmsIOPrintf(m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse 0.964200 mul} bind\n");
-    _cmsIOPrintf(m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse } bind\n");
-    _cmsIOPrintf(m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse 0.824900 mul} bind\n");
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, "/RangeABC [ 0 1 0 1 0 1]\n");
+    _cmsIOPrintf(ContextID, m, "/DecodeABC [\n");
+    _cmsIOPrintf(ContextID, m, "{100 mul  16 add 116 div } bind\n");
+    _cmsIOPrintf(ContextID, m, "{255 mul 128 sub 500 div } bind\n");
+    _cmsIOPrintf(ContextID, m, "{255 mul 128 sub 200 div } bind\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
+    _cmsIOPrintf(ContextID, m, "/MatrixABC [ 1 1 1 1 0 0 0 0 -1]\n");
+    _cmsIOPrintf(ContextID, m, "/RangeLMN [ -0.236 1.254 0 1 -0.635 1.640 ]\n");
+    _cmsIOPrintf(ContextID, m, "/DecodeLMN [\n");
+    _cmsIOPrintf(ContextID, m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse 0.964200 mul} bind\n");
+    _cmsIOPrintf(ContextID, m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse } bind\n");
+    _cmsIOPrintf(ContextID, m, "{dup 6 29 div ge {dup dup mul mul} {4 29 div sub 108 841 div mul} ifelse 0.824900 mul} bind\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 }
 
 
@@ -464,7 +465,7 @@ void EmitLab2XYZ(cmsIOHANDLER* m)
 // Outputs a table of words. It does use 16 bits
 
 static
-void Emit1Gamma(cmsIOHANDLER* m, cmsToneCurve* Table)
+void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
 {
     cmsUInt32Number i;
     cmsFloat64Number gamma;
@@ -474,68 +475,69 @@ void Emit1Gamma(cmsIOHANDLER* m, cmsToneCurve* Table)
     if (Table ->nEntries <= 0) return;  // Empty table
 
     // Suppress whole if identity
-    if (cmsIsToneCurveLinear(Table)) return;
+    if (cmsIsToneCurveLinear(ContextID, Table)) return;
 
     // Check if is really an exponential. If so, emit "exp"
-    gamma = cmsEstimateGamma(Table, 0.001);
+    gamma = cmsEstimateGamma(ContextID, Table, 0.001);
      if (gamma > 0) {
-            _cmsIOPrintf(m, "{ %g exp } bind ", gamma);
+            _cmsIOPrintf(ContextID, m, "{ %g exp } bind ", gamma);
             return;
      }
 
-    _cmsIOPrintf(m, "{ ");
+    _cmsIOPrintf(ContextID, m, "{ ");
 
     // Bounds check
-    EmitRangeCheck(m);
+    EmitRangeCheck(ContextID, m);
 
     // Emit intepolation code
 
     // PostScript code                      Stack
     // ===============                      ========================
                                             // v
-    _cmsIOPrintf(m, " [");
+    _cmsIOPrintf(ContextID, m, " [");
 
     for (i=0; i < Table->nEntries; i++) {
-        _cmsIOPrintf(m, "%d ", Table->Table16[i]);
+        _cmsIOPrintf(ContextID, m, "%d ", Table->Table16[i]);
     }
 
-    _cmsIOPrintf(m, "] ");                        // v tab
+    _cmsIOPrintf(ContextID, m, "] ");                        // v tab
 
-    _cmsIOPrintf(m, "dup ");                      // v tab tab
-    _cmsIOPrintf(m, "length 1 sub ");             // v tab dom
-    _cmsIOPrintf(m, "3 -1 roll ");                // tab dom v
-    _cmsIOPrintf(m, "mul ");                      // tab val2
-    _cmsIOPrintf(m, "dup ");                      // tab val2 val2
-    _cmsIOPrintf(m, "dup ");                      // tab val2 val2 val2
-    _cmsIOPrintf(m, "floor cvi ");                // tab val2 val2 cell0
-    _cmsIOPrintf(m, "exch ");                     // tab val2 cell0 val2
-    _cmsIOPrintf(m, "ceiling cvi ");              // tab val2 cell0 cell1
-    _cmsIOPrintf(m, "3 index ");                  // tab val2 cell0 cell1 tab
-    _cmsIOPrintf(m, "exch ");                     // tab val2 cell0 tab cell1
-    _cmsIOPrintf(m, "get ");                      // tab val2 cell0 y1
-    _cmsIOPrintf(m, "4 -1 roll ");                // val2 cell0 y1 tab
-    _cmsIOPrintf(m, "3 -1 roll ");                // val2 y1 tab cell0
-    _cmsIOPrintf(m, "get ");                      // val2 y1 y0
-    _cmsIOPrintf(m, "dup ");                      // val2 y1 y0 y0
-    _cmsIOPrintf(m, "3 1 roll ");                 // val2 y0 y1 y0
-    _cmsIOPrintf(m, "sub ");                      // val2 y0 (y1-y0)
-    _cmsIOPrintf(m, "3 -1 roll ");                // y0 (y1-y0) val2
-    _cmsIOPrintf(m, "dup ");                      // y0 (y1-y0) val2 val2
-    _cmsIOPrintf(m, "floor cvi ");                // y0 (y1-y0) val2 floor(val2)
-    _cmsIOPrintf(m, "sub ");                      // y0 (y1-y0) rest
-    _cmsIOPrintf(m, "mul ");                      // y0 t1
-    _cmsIOPrintf(m, "add ");                      // y
-    _cmsIOPrintf(m, "65535 div ");                // result
+    _cmsIOPrintf(ContextID, m, "dup ");                      // v tab tab
+    _cmsIOPrintf(ContextID, m, "length 1 sub ");             // v tab dom
+    _cmsIOPrintf(ContextID, m, "3 -1 roll ");                // tab dom v
+    _cmsIOPrintf(ContextID, m, "mul ");                      // tab val2
+    _cmsIOPrintf(ContextID, m, "dup ");                      // tab val2 val2
+    _cmsIOPrintf(ContextID, m, "dup ");                      // tab val2 val2 val2
+    _cmsIOPrintf(ContextID, m, "floor cvi ");                // tab val2 val2 cell0
+    _cmsIOPrintf(ContextID, m, "exch ");                     // tab val2 cell0 val2
+    _cmsIOPrintf(ContextID, m, "ceiling cvi ");              // tab val2 cell0 cell1
+    _cmsIOPrintf(ContextID, m, "3 index ");                  // tab val2 cell0 cell1 tab
+    _cmsIOPrintf(ContextID, m, "exch ");                     // tab val2 cell0 tab cell1
+    _cmsIOPrintf(ContextID, m, "get ");                      // tab val2 cell0 y1
+    _cmsIOPrintf(ContextID, m, "4 -1 roll ");                // val2 cell0 y1 tab
+    _cmsIOPrintf(ContextID, m, "3 -1 roll ");                // val2 y1 tab cell0
+    _cmsIOPrintf(ContextID, m, "get ");                      // val2 y1 y0
+    _cmsIOPrintf(ContextID, m, "dup ");                      // val2 y1 y0 y0
+    _cmsIOPrintf(ContextID, m, "3 1 roll ");                 // val2 y0 y1 y0
+    _cmsIOPrintf(ContextID, m, "sub ");                      // val2 y0 (y1-y0)
+    _cmsIOPrintf(ContextID, m, "3 -1 roll ");                // y0 (y1-y0) val2
+    _cmsIOPrintf(ContextID, m, "dup ");                      // y0 (y1-y0) val2 val2
+    _cmsIOPrintf(ContextID, m, "floor cvi ");                // y0 (y1-y0) val2 floor(val2)
+    _cmsIOPrintf(ContextID, m, "sub ");                      // y0 (y1-y0) rest
+    _cmsIOPrintf(ContextID, m, "mul ");                      // y0 t1
+    _cmsIOPrintf(ContextID, m, "add ");                      // y
+    _cmsIOPrintf(ContextID, m, "65535 div ");                // result
 
-    _cmsIOPrintf(m, " } bind ");
+    _cmsIOPrintf(ContextID, m, " } bind ");
 }
 
 
 // Compare gamma table
 
 static
-cmsBool GammaTableEquals(cmsUInt16Number* g1, cmsUInt16Number* g2, int nEntries)
+cmsBool GammaTableEquals(cmsContext ContextID, cmsUInt16Number* g1, cmsUInt16Number* g2, int nEntries)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     return memcmp(g1, g2, nEntries* sizeof(cmsUInt16Number)) == 0;
 }
 
@@ -543,7 +545,7 @@ cmsBool GammaTableEquals(cmsUInt16Number* g1, cmsUInt16Number* g2, int nEntries)
 // Does write a set of gamma curves
 
 static
-void EmitNGamma(cmsIOHANDLER* m, int n, cmsToneCurve* g[])
+void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, int n, cmsToneCurve* g[])
 {
     int i;
 
@@ -551,12 +553,12 @@ void EmitNGamma(cmsIOHANDLER* m, int n, cmsToneCurve* g[])
     {
         if (g[i] == NULL) return; // Error
 
-        if (i > 0 && GammaTableEquals(g[i-1]->Table16, g[i]->Table16, g[i]->nEntries)) {
+        if (i > 0 && GammaTableEquals(ContextID, g[i-1]->Table16, g[i]->Table16, g[i]->nEntries)) {
 
-            _cmsIOPrintf(m, "dup ");
+            _cmsIOPrintf(ContextID, m, "dup ");
         }
         else {
-            Emit1Gamma(m, g[i]);
+            Emit1Gamma(ContextID, m, g[i]);
         }
     }
 
@@ -582,7 +584,7 @@ void EmitNGamma(cmsIOHANDLER* m, int n, cmsToneCurve* g[])
 //  component. -1 is used to mark beginning of whole block.
 
 static
-int OutputValueSampler(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int OutputValueSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
 {
     cmsPsSamplerCargo* sc = (cmsPsSamplerCargo*) Cargo;
     cmsUInt32Number i;
@@ -617,15 +619,15 @@ int OutputValueSampler(register const cmsUInt16Number In[], register cmsUInt16Nu
 
             if (sc ->FirstComponent != -1) {
 
-                    _cmsIOPrintf(sc ->m, sc ->PostMin);
+                    _cmsIOPrintf(ContextID, sc ->m, sc ->PostMin);
                     sc ->SecondComponent = -1;
-                    _cmsIOPrintf(sc ->m, sc ->PostMaj);
+                    _cmsIOPrintf(ContextID, sc ->m, sc ->PostMaj);
             }
 
             // Begin block
             _cmsPSActualColumn = 0;
 
-            _cmsIOPrintf(sc ->m, sc ->PreMaj);
+            _cmsIOPrintf(ContextID, sc ->m, sc ->PreMaj);
             sc ->FirstComponent = In[0];
     }
 
@@ -634,10 +636,10 @@ int OutputValueSampler(register const cmsUInt16Number In[], register cmsUInt16Nu
 
             if (sc ->SecondComponent != -1) {
 
-                    _cmsIOPrintf(sc ->m, sc ->PostMin);
+                    _cmsIOPrintf(ContextID, sc ->m, sc ->PostMin);
             }
 
-            _cmsIOPrintf(sc ->m, sc ->PreMin);
+            _cmsIOPrintf(ContextID, sc ->m, sc ->PreMin);
             sc ->SecondComponent = In[1];
     }
 
@@ -652,7 +654,7 @@ int OutputValueSampler(register const cmsUInt16Number In[], register cmsUInt16Nu
           // We always deal with Lab4
 
           wByteOut = Word2Byte(wWordOut);
-          WriteByte(sc -> m, wByteOut);
+          WriteByte(ContextID, sc -> m, wByteOut);
       }
 
       return 1;
@@ -661,7 +663,7 @@ int OutputValueSampler(register const cmsUInt16Number In[], register cmsUInt16Nu
 // Writes a Pipeline on memstream. Could be 8 or 16 bits based
 
 static
-void WriteCLUT(cmsIOHANDLER* m, cmsStage* mpe, const char* PreMaj,
+void WriteCLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsStage* mpe, const char* PreMaj,
                                              const char* PostMaj,
                                              const char* PreMin,
                                              const char* PostMin,
@@ -683,18 +685,18 @@ void WriteCLUT(cmsIOHANDLER* m, cmsStage* mpe, const char* PreMaj,
     sc.FixWhite = FixWhite;
     sc.ColorSpace = ColorSpace;
 
-    _cmsIOPrintf(m, "[");
+    _cmsIOPrintf(ContextID, m, "[");
 
     for (i=0; i < sc.Pipeline->Params->nInputs; i++)
-        _cmsIOPrintf(m, " %d ", sc.Pipeline->Params->nSamples[i]);
+        _cmsIOPrintf(ContextID, m, " %d ", sc.Pipeline->Params->nSamples[i]);
 
-    _cmsIOPrintf(m, " [\n");
+    _cmsIOPrintf(ContextID, m, " [\n");
 
-    cmsStageSampleCLut16bit(mpe, OutputValueSampler, (void*) &sc, SAMPLER_INSPECT);
+    cmsStageSampleCLut16bit(ContextID, mpe, OutputValueSampler, (void*) &sc, SAMPLER_INSPECT);
 
-    _cmsIOPrintf(m, PostMin);
-    _cmsIOPrintf(m, PostMaj);
-    _cmsIOPrintf(m, "] ");
+    _cmsIOPrintf(ContextID, m, PostMin);
+    _cmsIOPrintf(ContextID, m, PostMaj);
+    _cmsIOPrintf(ContextID, m, "] ");
 
 }
 
@@ -702,26 +704,26 @@ void WriteCLUT(cmsIOHANDLER* m, cmsStage* mpe, const char* PreMaj,
 // Dumps CIEBasedA Color Space Array
 
 static
-int EmitCIEBasedA(cmsIOHANDLER* m, cmsToneCurve* Curve, cmsCIEXYZ* BlackPoint)
+int EmitCIEBasedA(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Curve, cmsCIEXYZ* BlackPoint)
 {
 
-    _cmsIOPrintf(m, "[ /CIEBasedA\n");
-    _cmsIOPrintf(m, "  <<\n");
+    _cmsIOPrintf(ContextID, m, "[ /CIEBasedA\n");
+    _cmsIOPrintf(ContextID, m, "  <<\n");
 
-    _cmsIOPrintf(m, "/DecodeA ");
+    _cmsIOPrintf(ContextID, m, "/DecodeA ");
 
-    Emit1Gamma(m, Curve);
+    Emit1Gamma(ContextID, m, Curve);
 
-    _cmsIOPrintf(m, " \n");
+    _cmsIOPrintf(ContextID, m, " \n");
 
-    _cmsIOPrintf(m, "/MatrixA [ 0.9642 1.0000 0.8249 ]\n");
-    _cmsIOPrintf(m, "/RangeLMN [ 0.0 0.9642 0.0 1.0000 0.0 0.8249 ]\n");
+    _cmsIOPrintf(ContextID, m, "/MatrixA [ 0.9642 1.0000 0.8249 ]\n");
+    _cmsIOPrintf(ContextID, m, "/RangeLMN [ 0.0 0.9642 0.0 1.0000 0.0 0.8249 ]\n");
 
-    EmitWhiteBlackD50(m, BlackPoint);
-    EmitIntent(m, INTENT_PERCEPTUAL);
+    EmitWhiteBlackD50(ContextID, m, BlackPoint);
+    EmitIntent(ContextID, m, INTENT_PERCEPTUAL);
 
-    _cmsIOPrintf(m, ">>\n");
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, ">>\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
     return 1;
 }
@@ -730,37 +732,37 @@ int EmitCIEBasedA(cmsIOHANDLER* m, cmsToneCurve* Curve, cmsCIEXYZ* BlackPoint)
 // Dumps CIEBasedABC Color Space Array
 
 static
-int EmitCIEBasedABC(cmsIOHANDLER* m, cmsFloat64Number* Matrix, cmsToneCurve** CurveSet, cmsCIEXYZ* BlackPoint)
+int EmitCIEBasedABC(cmsContext ContextID, cmsIOHANDLER* m, cmsFloat64Number* Matrix, cmsToneCurve** CurveSet, cmsCIEXYZ* BlackPoint)
 {
     int i;
 
-    _cmsIOPrintf(m, "[ /CIEBasedABC\n");
-    _cmsIOPrintf(m, "<<\n");
-    _cmsIOPrintf(m, "/DecodeABC [ ");
+    _cmsIOPrintf(ContextID, m, "[ /CIEBasedABC\n");
+    _cmsIOPrintf(ContextID, m, "<<\n");
+    _cmsIOPrintf(ContextID, m, "/DecodeABC [ ");
 
-    EmitNGamma(m, 3, CurveSet);
+    EmitNGamma(ContextID, m, 3, CurveSet);
 
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
-    _cmsIOPrintf(m, "/MatrixABC [ " );
+    _cmsIOPrintf(ContextID, m, "/MatrixABC [ " );
 
     for( i=0; i < 3; i++ ) {
 
-        _cmsIOPrintf(m, "%.6f %.6f %.6f ", Matrix[i + 3*0],
+        _cmsIOPrintf(ContextID, m, "%.6f %.6f %.6f ", Matrix[i + 3*0],
                                            Matrix[i + 3*1],
                                            Matrix[i + 3*2]);
     }
 
 
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
-    _cmsIOPrintf(m, "/RangeLMN [ 0.0 0.9642 0.0 1.0000 0.0 0.8249 ]\n");
+    _cmsIOPrintf(ContextID, m, "/RangeLMN [ 0.0 0.9642 0.0 1.0000 0.0 0.8249 ]\n");
 
-    EmitWhiteBlackD50(m, BlackPoint);
-    EmitIntent(m, INTENT_PERCEPTUAL);
+    EmitWhiteBlackD50(ContextID, m, BlackPoint);
+    EmitIntent(ContextID, m, INTENT_PERCEPTUAL);
 
-    _cmsIOPrintf(m, ">>\n");
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, ">>\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
 
     return 1;
@@ -768,7 +770,7 @@ int EmitCIEBasedABC(cmsIOHANDLER* m, cmsFloat64Number* Matrix, cmsToneCurve** Cu
 
 
 static
-int EmitCIEBasedDEF(cmsIOHANDLER* m, cmsPipeline* Pipeline, int Intent, cmsCIEXYZ* BlackPoint)
+int EmitCIEBasedDEF(cmsContext ContextID, cmsIOHANDLER* m, cmsPipeline* Pipeline, int Intent, cmsCIEXYZ* BlackPoint)
 {
     const char* PreMaj;
     const char* PostMaj;
@@ -777,16 +779,16 @@ int EmitCIEBasedDEF(cmsIOHANDLER* m, cmsPipeline* Pipeline, int Intent, cmsCIEXY
 
     mpe = Pipeline ->Elements;
 
-    switch (cmsStageInputChannels(mpe)) {
+    switch (cmsStageInputChannels(ContextID, mpe)) {
     case 3:
 
-            _cmsIOPrintf(m, "[ /CIEBasedDEF\n");
+            _cmsIOPrintf(ContextID, m, "[ /CIEBasedDEF\n");
             PreMaj ="<";
             PostMaj= ">\n";
             PreMin = PostMin = "";
             break;
     case 4:
-            _cmsIOPrintf(m, "[ /CIEBasedDEFG\n");
+            _cmsIOPrintf(ContextID, m, "[ /CIEBasedDEFG\n");
             PreMaj = "[";
             PostMaj = "]\n";
             PreMin = "<";
@@ -797,30 +799,30 @@ int EmitCIEBasedDEF(cmsIOHANDLER* m, cmsPipeline* Pipeline, int Intent, cmsCIEXY
 
     }
 
-    _cmsIOPrintf(m, "<<\n");
+    _cmsIOPrintf(ContextID, m, "<<\n");
 
-    if (cmsStageType(mpe) == cmsSigCurveSetElemType) {
+    if (cmsStageType(ContextID, mpe) == cmsSigCurveSetElemType) {
 
-        _cmsIOPrintf(m, "/DecodeDEF [ ");
-        EmitNGamma(m, cmsStageOutputChannels(mpe), _cmsStageGetPtrToCurveSet(mpe));
-        _cmsIOPrintf(m, "]\n");
+        _cmsIOPrintf(ContextID, m, "/DecodeDEF [ ");
+        EmitNGamma(ContextID, m, cmsStageOutputChannels(ContextID, mpe), _cmsStageGetPtrToCurveSet(mpe));
+        _cmsIOPrintf(ContextID, m, "]\n");
 
         mpe = mpe ->Next;
     }
 
-    if (cmsStageType(mpe) == cmsSigCLutElemType) {
+    if (cmsStageType(ContextID, mpe) == cmsSigCLutElemType) {
 
-            _cmsIOPrintf(m, "/Table ");
-            WriteCLUT(m, mpe, PreMaj, PostMaj, PreMin, PostMin, FALSE, (cmsColorSpaceSignature) 0);
-            _cmsIOPrintf(m, "]\n");
+            _cmsIOPrintf(ContextID, m, "/Table ");
+            WriteCLUT(ContextID, m, mpe, PreMaj, PostMaj, PreMin, PostMin, FALSE, (cmsColorSpaceSignature) 0);
+            _cmsIOPrintf(ContextID, m, "]\n");
     }
 
-    EmitLab2XYZ(m);
-    EmitWhiteBlackD50(m, BlackPoint);
-    EmitIntent(m, Intent);
+    EmitLab2XYZ(ContextID, m);
+    EmitWhiteBlackD50(ContextID, m, BlackPoint);
+    EmitIntent(ContextID, m, Intent);
 
-    _cmsIOPrintf(m, "   >>\n");
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, "   >>\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
     return 1;
 }
@@ -841,14 +843,14 @@ static
             cmsUInt8Number Gray = (cmsUInt8Number) i;
             cmsCIEXYZ XYZ;
 
-            cmsDoTransform(xform, &Gray, &XYZ, 1);
+            cmsDoTransform(ContextID, xform, &Gray, &XYZ, 1);
 
             Out ->Table16[i] =_cmsQuickSaturateWord(XYZ.Y * 65535.0);
         }
     }
 
-    if (xform) cmsDeleteTransform(xform);
-    if (hXYZ) cmsCloseProfile(hXYZ);
+    if (xform) cmsDeleteTransform(ContextID, xform);
+    if (hXYZ) cmsCloseProfile(ContextID, hXYZ);
     return Out;
 }
 
@@ -858,7 +860,7 @@ static
 // a more perceptually uniform space... I do choose Lab.
 
 static
-int WriteInputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Number dwFlags)
+int WriteInputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Number dwFlags)
 {
     cmsHPROFILE hLab;
     cmsHTRANSFORM xform;
@@ -871,24 +873,24 @@ int WriteInputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Nu
     // Does create a device-link based transform.
     // The DeviceLink is next dumped as working CSA.
 
-    InputFormat = cmsFormatterForColorspaceOfProfile(hProfile, 2, FALSE);
+    InputFormat = cmsFormatterForColorspaceOfProfile(ContextID, hProfile, 2, FALSE);
     nChannels   = T_CHANNELS(InputFormat);
 
 
-    cmsDetectBlackPoint(&BlackPointAdaptedToD50, hProfile, Intent, 0);
+    cmsDetectBlackPoint(ContextID, &BlackPointAdaptedToD50, hProfile, Intent, 0);
 
     // Adjust output to Lab4
-    hLab = cmsCreateLab4ProfileTHR(m ->ContextID, NULL);
+    hLab = cmsCreateLab4ProfileTHR(ContextID, NULL);
 
     Profiles[0] = hProfile;
     Profiles[1] = hLab;
 
     xform = cmsCreateMultiprofileTransform(Profiles, 2,  InputFormat, TYPE_Lab_DBL, Intent, 0);
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(ContextID, hLab);
 
     if (xform == NULL) {
 
-        cmsSignalError(m ->ContextID, cmsERROR_COLORSPACE_CHECK, "Cannot create transform Profile -> Lab");
+        cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Cannot create transform Profile -> Lab");
         return 0;
     }
 
@@ -897,9 +899,9 @@ int WriteInputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Nu
     switch (nChannels) {
 
     case 1: {
-            cmsToneCurve* Gray2Y = ExtractGray2Y(m ->ContextID, hProfile, Intent);
-            EmitCIEBasedA(m, Gray2Y, &BlackPointAdaptedToD50);
-            cmsFreeToneCurve(Gray2Y);
+            cmsToneCurve* Gray2Y = ExtractGray2Y(ContextID, hProfile, Intent);
+            EmitCIEBasedA(ContextID, m, Gray2Y, &BlackPointAdaptedToD50);
+            cmsFreeToneCurve(ContextID, Gray2Y);
             }
             break;
 
@@ -909,34 +911,35 @@ int WriteInputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Nu
             cmsPipeline* DeviceLink;
             _cmsTRANSFORM* v = (_cmsTRANSFORM*) xform;
 
-            DeviceLink = cmsPipelineDup(v ->Lut);
+            DeviceLink = cmsPipelineDup(ContextID, v ->Lut);
             if (DeviceLink == NULL) return 0;
 
             dwFlags |= cmsFLAGS_FORCE_CLUT;
-            _cmsOptimizePipeline(m->ContextID, &DeviceLink, Intent, &InputFormat, &OutFrm, &dwFlags);
+            _cmsOptimizePipeline(ContextID, &DeviceLink, Intent, &InputFormat, &OutFrm, &dwFlags);
 
-            rc = EmitCIEBasedDEF(m, DeviceLink, Intent, &BlackPointAdaptedToD50);
-            cmsPipelineFree(DeviceLink);
+            rc = EmitCIEBasedDEF(ContextID, m, DeviceLink, Intent, &BlackPointAdaptedToD50);
+            cmsPipelineFree(ContextID, DeviceLink);
             if (rc == 0) return 0;
             }
             break;
 
     default:
 
-        cmsSignalError(m ->ContextID, cmsERROR_COLORSPACE_CHECK, "Only 3, 4 channels supported for CSA. This profile has %d channels.", nChannels);
+        cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Only 3, 4 channels supported for CSA. This profile has %d channels.", nChannels);
         return 0;
     }
 
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ContextID, xform);
 
     return 1;
 }
 
 static
-cmsFloat64Number* GetPtrToMatrix(const cmsStage* mpe)
+cmsFloat64Number* GetPtrToMatrix(cmsContext ContextID, const cmsStage* mpe)
 {
     _cmsStageMatrixData* Data = (_cmsStageMatrixData*) mpe ->Data;
+    cmsUNUSED_PARAMETER(ContextID);
 
     return Data -> Double;
 }
@@ -944,20 +947,20 @@ cmsFloat64Number* GetPtrToMatrix(const cmsStage* mpe)
 
 // Does create CSA based on matrix-shaper. Allowed types are gray and RGB based
 static
-int WriteInputMatrixShaper(cmsIOHANDLER* m, cmsHPROFILE hProfile, cmsStage* Matrix, cmsStage* Shaper)
+int WriteInputMatrixShaper(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, cmsStage* Matrix, cmsStage* Shaper)
 {
     cmsColorSpaceSignature ColorSpace;
     int rc;
     cmsCIEXYZ BlackPointAdaptedToD50;
 
-    ColorSpace = cmsGetColorSpace(hProfile);
+    ColorSpace = cmsGetColorSpace(ContextID, hProfile);
 
-    cmsDetectBlackPoint(&BlackPointAdaptedToD50, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsDetectBlackPoint(ContextID, &BlackPointAdaptedToD50, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
 
     if (ColorSpace == cmsSigGrayData) {
 
         cmsToneCurve** ShaperCurve = _cmsStageGetPtrToCurveSet(Shaper);
-        rc = EmitCIEBasedA(m, ShaperCurve[0], &BlackPointAdaptedToD50);
+        rc = EmitCIEBasedA(ContextID, m, ShaperCurve[0], &BlackPointAdaptedToD50);
 
     }
     else
@@ -966,19 +969,19 @@ int WriteInputMatrixShaper(cmsIOHANDLER* m, cmsHPROFILE hProfile, cmsStage* Matr
             cmsMAT3 Mat;
             int i, j;
 
-            memmove(&Mat, GetPtrToMatrix(Matrix), sizeof(Mat));
+            memmove(&Mat, GetPtrToMatrix(ContextID, Matrix), sizeof(Mat));
 
             for (i = 0; i < 3; i++)
                 for (j = 0; j < 3; j++)
                     Mat.v[i].n[j] *= MAX_ENCODEABLE_XYZ;
 
-            rc = EmitCIEBasedABC(m, (cmsFloat64Number *)&Mat,
+            rc = EmitCIEBasedABC(ContextID, m, (cmsFloat64Number *) &Mat,
                 _cmsStageGetPtrToCurveSet(Shaper),
                 &BlackPointAdaptedToD50);
         }
         else {
 
-            cmsSignalError(m->ContextID, cmsERROR_COLORSPACE_CHECK, "Profile is not suitable for CSA. Unsupported colorspace.");
+            cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Profile is not suitable for CSA. Unsupported colorspace.");
             return 0;
         }
 
@@ -991,7 +994,7 @@ int WriteInputMatrixShaper(cmsIOHANDLER* m, cmsHPROFILE hProfile, cmsStage* Matr
 // This is a HP extension, and it works in Lab instead of XYZ
 
 static
-int WriteNamedColorCSA(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent)
+int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent)
 {
     cmsHTRANSFORM xform;
     cmsHPROFILE   hLab;
@@ -999,19 +1002,19 @@ int WriteNamedColorCSA(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent)
     char ColorName[32];
     cmsNAMEDCOLORLIST* NamedColorList;
 
-    hLab  = cmsCreateLab4ProfileTHR(m ->ContextID, NULL);
+    hLab  = cmsCreateLab4ProfileTHR(ContextID, NULL);
     xform = cmsCreateTransform(hNamedColor, TYPE_NAMED_COLOR_INDEX, hLab, TYPE_Lab_DBL, Intent, 0);
     if (xform == NULL) return 0;
 
     NamedColorList = cmsGetNamedColorList(xform);
     if (NamedColorList == NULL) return 0;
 
-    _cmsIOPrintf(m, "<<\n");
-    _cmsIOPrintf(m, "(colorlistcomment) (%s)\n", "Named color CSA");
-    _cmsIOPrintf(m, "(Prefix) [ (Pantone ) (PANTONE ) ]\n");
-    _cmsIOPrintf(m, "(Suffix) [ ( CV) ( CVC) ( C) ]\n");
+    _cmsIOPrintf(ContextID, m, "<<\n");
+    _cmsIOPrintf(ContextID, m, "(colorlistcomment) (%s)\n", "Named color CSA");
+    _cmsIOPrintf(ContextID, m, "(Prefix) [ (Pantone ) (PANTONE ) ]\n");
+    _cmsIOPrintf(ContextID, m, "(Suffix) [ ( CV) ( CVC) ( C) ]\n");
 
-    nColors   = cmsNamedColorCount(NamedColorList);
+    nColors   = cmsNamedColorCount(ContextID, NamedColorList);
 
 
     for (i=0; i < nColors; i++) {
@@ -1021,19 +1024,19 @@ int WriteNamedColorCSA(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent)
 
         In[0] = (cmsUInt16Number) i;
 
-        if (!cmsNamedColorInfo(NamedColorList, i, ColorName, NULL, NULL, NULL, NULL))
+        if (!cmsNamedColorInfo(ContextID, NamedColorList, i, ColorName, NULL, NULL, NULL, NULL))
                 continue;
 
-        cmsDoTransform(xform, In, &Lab, 1);
-        _cmsIOPrintf(m, "  (%s) [ %.3f %.3f %.3f ]\n", ColorName, Lab.L, Lab.a, Lab.b);
+        cmsDoTransform(ContextID, xform, In, &Lab, 1);
+        _cmsIOPrintf(ContextID, m, "  (%s) [ %.3f %.3f %.3f ]\n", ColorName, Lab.L, Lab.a, Lab.b);
     }
 
 
 
-    _cmsIOPrintf(m, ">>\n");
+    _cmsIOPrintf(ContextID, m, ">>\n");
 
-    cmsDeleteTransform(xform);
-    cmsCloseProfile(hLab);
+    cmsDeleteTransform(ContextID, xform);
+    cmsCloseProfile(ContextID, hLab);
     return 1;
 }
 
@@ -1052,16 +1055,16 @@ cmsUInt32Number GenerateCSA(cmsContext ContextID,
 
 
     // Is a named color profile?
-    if (cmsGetDeviceClass(hProfile) == cmsSigNamedColorClass) {
+    if (cmsGetDeviceClass(ContextID, hProfile) == cmsSigNamedColorClass) {
 
-        if (!WriteNamedColorCSA(mem, hProfile, Intent)) goto Error;
+        if (!WriteNamedColorCSA(ContextID, mem, hProfile, Intent)) goto Error;
     }
     else {
 
 
         // Any profile class are allowed (including devicelink), but
         // output (PCS) colorspace must be XYZ or Lab
-        cmsColorSpaceSignature ColorSpace = cmsGetPCS(hProfile);
+        cmsColorSpaceSignature ColorSpace = cmsGetPCS(ContextID, hProfile);
 
         if (ColorSpace != cmsSigXYZData &&
             ColorSpace != cmsSigLabData) {
@@ -1072,19 +1075,19 @@ cmsUInt32Number GenerateCSA(cmsContext ContextID,
 
 
         // Read the lut with all necessary conversion stages
-        lut = _cmsReadInputLUT(hProfile, Intent);
+        lut = _cmsReadInputLUT(ContextID, hProfile, Intent);
         if (lut == NULL) goto Error;
 
 
         // Tone curves + matrix can be implemented without any LUT
-        if (cmsPipelineCheckAndRetreiveStages(lut, 2, cmsSigCurveSetElemType, cmsSigMatrixElemType, &Shaper, &Matrix)) {
+        if (cmsPipelineCheckAndRetreiveStages(ContextID, lut, 2, cmsSigCurveSetElemType, cmsSigMatrixElemType, &Shaper, &Matrix)) {
 
-            if (!WriteInputMatrixShaper(mem, hProfile, Matrix, Shaper)) goto Error;
+            if (!WriteInputMatrixShaper(ContextID, mem, hProfile, Matrix, Shaper)) goto Error;
 
         }
         else {
            // We need a LUT for the rest
-           if (!WriteInputLUT(mem, hProfile, Intent, dwFlags)) goto Error;
+           if (!WriteInputLUT(ContextID, mem, hProfile, Intent, dwFlags)) goto Error;
         }
     }
 
@@ -1093,13 +1096,13 @@ cmsUInt32Number GenerateCSA(cmsContext ContextID,
     dwBytesUsed = mem ->UsedSpace;
 
     // Get rid of LUT
-    if (lut != NULL) cmsPipelineFree(lut);
+    if (lut != NULL) cmsPipelineFree(ContextID, lut);
 
     // Finally, return used byte count
     return dwBytesUsed;
 
 Error:
-    if (lut != NULL) cmsPipelineFree(lut);
+    if (lut != NULL) cmsPipelineFree(ContextID, lut);
     return 0;
 }
 
@@ -1170,7 +1173,7 @@ Error:
 
 
 static
-void EmitPQRStage(cmsIOHANDLER* m, cmsHPROFILE hProfile, int DoBPC, int lIsAbsolute)
+void EmitPQRStage(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, int DoBPC, int lIsAbsolute)
 {
 
 
@@ -1183,12 +1186,12 @@ void EmitPQRStage(cmsIOHANDLER* m, cmsHPROFILE hProfile, int DoBPC, int lIsAbsol
 
             cmsCIEXYZ White;
 
-            _cmsReadMediaWhitePoint(&White, hProfile);
+            _cmsReadMediaWhitePoint(ContextID, &White, hProfile);
 
-            _cmsIOPrintf(m,"/MatrixPQR [1 0 0 0 1 0 0 0 1 ]\n");
-            _cmsIOPrintf(m,"/RangePQR [ -0.5 2 -0.5 2 -0.5 2 ]\n");
+            _cmsIOPrintf(ContextID, m,"/MatrixPQR [1 0 0 0 1 0 0 0 1 ]\n");
+            _cmsIOPrintf(ContextID, m,"/RangePQR [ -0.5 2 -0.5 2 -0.5 2 ]\n");
 
-            _cmsIOPrintf(m, "%% Absolute colorimetric -- encode to relative to maximize LUT usage\n"
+            _cmsIOPrintf(ContextID, m, "%% Absolute colorimetric -- encode to relative to maximize LUT usage\n"
                       "/TransformPQR [\n"
                       "{0.9642 mul %g div exch pop exch pop exch pop exch pop} bind\n"
                       "{1.0000 mul %g div exch pop exch pop exch pop exch pop} bind\n"
@@ -1198,17 +1201,17 @@ void EmitPQRStage(cmsIOHANDLER* m, cmsHPROFILE hProfile, int DoBPC, int lIsAbsol
         }
 
 
-        _cmsIOPrintf(m,"%% Bradford Cone Space\n"
+        _cmsIOPrintf(ContextID, m,"%% Bradford Cone Space\n"
                  "/MatrixPQR [0.8951 -0.7502 0.0389 0.2664 1.7135 -0.0685 -0.1614 0.0367 1.0296 ] \n");
 
-        _cmsIOPrintf(m, "/RangePQR [ -0.5 2 -0.5 2 -0.5 2 ]\n");
+        _cmsIOPrintf(ContextID, m, "/RangePQR [ -0.5 2 -0.5 2 -0.5 2 ]\n");
 
 
         // No BPC
 
         if (!DoBPC) {
 
-            _cmsIOPrintf(m, "%% VonKries-like transform in Bradford Cone Space\n"
+            _cmsIOPrintf(ContextID, m, "%% VonKries-like transform in Bradford Cone Space\n"
                       "/TransformPQR [\n"
                       "{exch pop exch 3 get mul exch pop exch 3 get div} bind\n"
                       "{exch pop exch 4 get mul exch pop exch 4 get div} bind\n"
@@ -1217,22 +1220,22 @@ void EmitPQRStage(cmsIOHANDLER* m, cmsHPROFILE hProfile, int DoBPC, int lIsAbsol
 
             // BPC
 
-            _cmsIOPrintf(m, "%% VonKries-like transform in Bradford Cone Space plus BPC\n"
+            _cmsIOPrintf(ContextID, m, "%% VonKries-like transform in Bradford Cone Space plus BPC\n"
                       "/TransformPQR [\n");
 
-            _cmsIOPrintf(m, "{4 index 3 get div 2 index 3 get mul "
+            _cmsIOPrintf(ContextID, m, "{4 index 3 get div 2 index 3 get mul "
                     "2 index 3 get 2 index 3 get sub mul "
                     "2 index 3 get 4 index 3 get 3 index 3 get sub mul sub "
                     "3 index 3 get 3 index 3 get exch sub div "
                     "exch pop exch pop exch pop exch pop } bind\n");
 
-            _cmsIOPrintf(m, "{4 index 4 get div 2 index 4 get mul "
+            _cmsIOPrintf(ContextID, m, "{4 index 4 get div 2 index 4 get mul "
                     "2 index 4 get 2 index 4 get sub mul "
                     "2 index 4 get 4 index 4 get 3 index 4 get sub mul sub "
                     "3 index 4 get 3 index 4 get exch sub div "
                     "exch pop exch pop exch pop exch pop } bind\n");
 
-            _cmsIOPrintf(m, "{4 index 5 get div 2 index 5 get mul "
+            _cmsIOPrintf(ContextID, m, "{4 index 5 get div 2 index 5 get mul "
                     "2 index 5 get 2 index 5 get sub mul "
                     "2 index 5 get 4 index 5 get 3 index 5 get sub mul sub "
                     "3 index 5 get 3 index 5 get exch sub div "
@@ -1245,24 +1248,24 @@ void EmitPQRStage(cmsIOHANDLER* m, cmsHPROFILE hProfile, int DoBPC, int lIsAbsol
 
 
 static
-void EmitXYZ2Lab(cmsIOHANDLER* m)
+void EmitXYZ2Lab(cmsContext ContextID, cmsIOHANDLER* m)
 {
-    _cmsIOPrintf(m, "/RangeLMN [ -0.635 2.0 0 2 -0.635 2.0 ]\n");
-    _cmsIOPrintf(m, "/EncodeLMN [\n");
-    _cmsIOPrintf(m, "{ 0.964200  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n");
-    _cmsIOPrintf(m, "{ 1.000000  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n");
-    _cmsIOPrintf(m, "{ 0.824900  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n");
-    _cmsIOPrintf(m, "]\n");
-    _cmsIOPrintf(m, "/MatrixABC [ 0 1 0 1 -1 1 0 0 -1 ]\n");
-    _cmsIOPrintf(m, "/EncodeABC [\n");
+    _cmsIOPrintf(ContextID, m, "/RangeLMN [ -0.635 2.0 0 2 -0.635 2.0 ]\n");
+    _cmsIOPrintf(ContextID, m, "/EncodeLMN [\n");
+    _cmsIOPrintf(ContextID, m, "{ 0.964200  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n");
+    _cmsIOPrintf(ContextID, m, "{ 1.000000  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n");
+    _cmsIOPrintf(ContextID, m, "{ 0.824900  div dup 0.008856 le {7.787 mul 16 116 div add}{1 3 div exp} ifelse } bind\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
+    _cmsIOPrintf(ContextID, m, "/MatrixABC [ 0 1 0 1 -1 1 0 0 -1 ]\n");
+    _cmsIOPrintf(ContextID, m, "/EncodeABC [\n");
 
 
-    _cmsIOPrintf(m, "{ 116 mul  16 sub 100 div  } bind\n");
-    _cmsIOPrintf(m, "{ 500 mul 128 add 256 div  } bind\n");
-    _cmsIOPrintf(m, "{ 200 mul 128 add 256 div  } bind\n");
+    _cmsIOPrintf(ContextID, m, "{ 116 mul  16 sub 100 div  } bind\n");
+    _cmsIOPrintf(ContextID, m, "{ 500 mul 128 add 256 div  } bind\n");
+    _cmsIOPrintf(ContextID, m, "{ 200 mul 128 add 256 div  } bind\n");
 
 
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
 
 }
@@ -1274,7 +1277,7 @@ void EmitXYZ2Lab(cmsIOHANDLER* m)
 // 8 bits.
 
 static
-int WriteOutputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Number dwFlags)
+int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32Number dwFlags)
 {
     cmsHPROFILE hLab;
     cmsHTRANSFORM xform;
@@ -1291,13 +1294,13 @@ int WriteOutputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32N
     cmsColorSpaceSignature ColorSpace;
 
 
-    hLab = cmsCreateLab4ProfileTHR(m ->ContextID, NULL);
+    hLab = cmsCreateLab4ProfileTHR(ContextID, NULL);
     if (hLab == NULL) return 0;
 
-    OutputFormat = cmsFormatterForColorspaceOfProfile(hProfile, 2, FALSE);
+    OutputFormat = cmsFormatterForColorspaceOfProfile(ContextID, hProfile, 2, FALSE);
     nChannels    = T_CHANNELS(OutputFormat);
 
-    ColorSpace = cmsGetColorSpace(hProfile);
+    ColorSpace = cmsGetColorSpace(ContextID, hProfile);
 
     // For absolute colorimetric, the LUT is encoded as relative in order to preserve precision.
 
@@ -1310,37 +1313,37 @@ int WriteOutputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32N
     Profiles[0] = hLab;
     Profiles[1] = hProfile;
 
-    xform = cmsCreateMultiprofileTransformTHR(m ->ContextID,
+    xform = cmsCreateMultiprofileTransformTHR(ContextID,
                                               Profiles, 2, TYPE_Lab_DBL,
                                               OutputFormat, RelativeEncodingIntent, 0);
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(ContextID, hLab);
 
     if (xform == NULL) {
 
-        cmsSignalError(m ->ContextID, cmsERROR_COLORSPACE_CHECK, "Cannot create transform Lab -> Profile in CRD creation");
+        cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "Cannot create transform Lab -> Profile in CRD creation");
         return 0;
     }
 
     // Get a copy of the internal devicelink
     v = (_cmsTRANSFORM*) xform;
-    DeviceLink = cmsPipelineDup(v ->Lut);
+    DeviceLink = cmsPipelineDup(ContextID, v ->Lut);
     if (DeviceLink == NULL) return 0;
 
 
     // We need a CLUT
     dwFlags |= cmsFLAGS_FORCE_CLUT;
-    _cmsOptimizePipeline(m->ContextID, &DeviceLink, RelativeEncodingIntent, &InFrm, &OutputFormat, &dwFlags);
+    _cmsOptimizePipeline(ContextID, &DeviceLink, RelativeEncodingIntent, &InFrm, &OutputFormat, &dwFlags);
 
-    _cmsIOPrintf(m, "<<\n");
-    _cmsIOPrintf(m, "/ColorRenderingType 1\n");
+    _cmsIOPrintf(ContextID, m, "<<\n");
+    _cmsIOPrintf(ContextID, m, "/ColorRenderingType 1\n");
 
 
-    cmsDetectBlackPoint(&BlackPointAdaptedToD50, hProfile, Intent, 0);
+    cmsDetectBlackPoint(ContextID, &BlackPointAdaptedToD50, hProfile, Intent, 0);
 
     // Emit headers, etc.
-    EmitWhiteBlackD50(m, &BlackPointAdaptedToD50);
-    EmitPQRStage(m, hProfile, lDoBPC, Intent == INTENT_ABSOLUTE_COLORIMETRIC);
-    EmitXYZ2Lab(m);
+    EmitWhiteBlackD50(ContextID, m, &BlackPointAdaptedToD50);
+    EmitPQRStage(ContextID, m, hProfile, lDoBPC, Intent == INTENT_ABSOLUTE_COLORIMETRIC);
+    EmitXYZ2Lab(ContextID, m);
 
 
     // FIXUP: map Lab (100, 0, 0) to perfect white, because the particular encoding for Lab
@@ -1352,30 +1355,30 @@ int WriteOutputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32N
     if (Intent == INTENT_ABSOLUTE_COLORIMETRIC)
             lFixWhite = FALSE;
 
-    _cmsIOPrintf(m, "/RenderTable ");
+    _cmsIOPrintf(ContextID, m, "/RenderTable ");
 
 
-    WriteCLUT(m, cmsPipelineGetPtrToFirstStage(DeviceLink), "<", ">\n", "", "", lFixWhite, ColorSpace);
+    WriteCLUT(ContextID, m, cmsPipelineGetPtrToFirstStage(ContextID, DeviceLink), "<", ">\n", "", "", lFixWhite, ColorSpace);
 
-    _cmsIOPrintf(m, " %d {} bind ", nChannels);
+    _cmsIOPrintf(ContextID, m, " %d {} bind ", nChannels);
 
     for (i=1; i < nChannels; i++)
-            _cmsIOPrintf(m, "dup ");
+            _cmsIOPrintf(ContextID, m, "dup ");
 
-    _cmsIOPrintf(m, "]\n");
+    _cmsIOPrintf(ContextID, m, "]\n");
 
 
-    EmitIntent(m, Intent);
+    EmitIntent(ContextID, m, Intent);
 
-    _cmsIOPrintf(m, ">>\n");
+    _cmsIOPrintf(ContextID, m, ">>\n");
 
     if (!(dwFlags & cmsFLAGS_NODEFAULTRESOURCEDEF)) {
 
-        _cmsIOPrintf(m, "/Current exch /ColorRendering defineresource pop\n");
+        _cmsIOPrintf(ContextID, m, "/Current exch /ColorRendering defineresource pop\n");
     }
 
-    cmsPipelineFree(DeviceLink);
-    cmsDeleteTransform(xform);
+    cmsPipelineFree(ContextID, DeviceLink);
+    cmsDeleteTransform(ContextID, xform);
 
     return 1;
 }
@@ -1383,10 +1386,11 @@ int WriteOutputLUT(cmsIOHANDLER* m, cmsHPROFILE hProfile, int Intent, cmsUInt32N
 
 // Builds a ASCII string containing colorant list in 0..1.0 range
 static
-void BuildColorantList(char *Colorant, int nColorant, cmsUInt16Number Out[])
+void BuildColorantList(cmsContext ContextID, char *Colorant, int nColorant, cmsUInt16Number Out[])
 {
     char Buff[32];
     int j;
+    cmsUNUSED_PARAMETER(ContextID);
 
     Colorant[0] = 0;
     if (nColorant > cmsMAXCHANNELS)
@@ -1408,7 +1412,7 @@ void BuildColorantList(char *Colorant, int nColorant, cmsUInt16Number Out[])
 // This is a HP extension.
 
 static
-int WriteNamedColorCRD(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent, cmsUInt32Number dwFlags)
+int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent, cmsUInt32Number dwFlags)
 {
     cmsHTRANSFORM xform;
     int i, nColors, nColorant;
@@ -1418,7 +1422,7 @@ int WriteNamedColorCRD(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent, cms
     cmsNAMEDCOLORLIST* NamedColorList;
 
 
-    OutputFormat = cmsFormatterForColorspaceOfProfile(hNamedColor, 2, FALSE);
+    OutputFormat = cmsFormatterForColorspaceOfProfile(ContextID, hNamedColor, 2, FALSE);
     nColorant    = T_CHANNELS(OutputFormat);
 
 
@@ -1429,12 +1433,12 @@ int WriteNamedColorCRD(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent, cms
     NamedColorList = cmsGetNamedColorList(xform);
     if (NamedColorList == NULL) return 0;
 
-    _cmsIOPrintf(m, "<<\n");
-    _cmsIOPrintf(m, "(colorlistcomment) (%s) \n", "Named profile");
-    _cmsIOPrintf(m, "(Prefix) [ (Pantone ) (PANTONE ) ]\n");
-    _cmsIOPrintf(m, "(Suffix) [ ( CV) ( CVC) ( C) ]\n");
+    _cmsIOPrintf(ContextID, m, "<<\n");
+    _cmsIOPrintf(ContextID, m, "(colorlistcomment) (%s) \n", "Named profile");
+    _cmsIOPrintf(ContextID, m, "(Prefix) [ (Pantone ) (PANTONE ) ]\n");
+    _cmsIOPrintf(ContextID, m, "(Suffix) [ ( CV) ( CVC) ( C) ]\n");
 
-    nColors   = cmsNamedColorCount(NamedColorList);
+    nColors   = cmsNamedColorCount(ContextID, NamedColorList);
 
     for (i=0; i < nColors; i++) {
 
@@ -1443,22 +1447,22 @@ int WriteNamedColorCRD(cmsIOHANDLER* m, cmsHPROFILE hNamedColor, int Intent, cms
 
         In[0] = (cmsUInt16Number) i;
 
-        if (!cmsNamedColorInfo(NamedColorList, i, ColorName, NULL, NULL, NULL, NULL))
+        if (!cmsNamedColorInfo(ContextID, NamedColorList, i, ColorName, NULL, NULL, NULL, NULL))
                 continue;
 
-        cmsDoTransform(xform, In, Out, 1);
-        BuildColorantList(Colorant, nColorant, Out);
-        _cmsIOPrintf(m, "  (%s) [ %s ]\n", ColorName, Colorant);
+        cmsDoTransform(ContextID, xform, In, Out, 1);
+        BuildColorantList(ContextID, Colorant, nColorant, Out);
+        _cmsIOPrintf(ContextID, m, "  (%s) [ %s ]\n", ColorName, Colorant);
     }
 
-    _cmsIOPrintf(m, "   >>");
+    _cmsIOPrintf(ContextID, m, "   >>");
 
     if (!(dwFlags & cmsFLAGS_NODEFAULTRESOURCEDEF)) {
 
-    _cmsIOPrintf(m, " /Current exch /HPSpotTable defineresource pop\n");
+    _cmsIOPrintf(ContextID, m, " /Current exch /HPSpotTable defineresource pop\n");
     }
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ContextID, xform);
     return 1;
 }
 
@@ -1478,14 +1482,14 @@ cmsUInt32Number  GenerateCRD(cmsContext ContextID,
 
     if (!(dwFlags & cmsFLAGS_NODEFAULTRESOURCEDEF)) {
 
-        EmitHeader(mem, "Color Rendering Dictionary (CRD)", hProfile);
+        EmitHeader(ContextID, mem, "Color Rendering Dictionary (CRD)", hProfile);
     }
 
 
     // Is a named color profile?
-    if (cmsGetDeviceClass(hProfile) == cmsSigNamedColorClass) {
+    if (cmsGetDeviceClass(ContextID, hProfile) == cmsSigNamedColorClass) {
 
-        if (!WriteNamedColorCRD(mem, hProfile, Intent, dwFlags)) {
+        if (!WriteNamedColorCRD(ContextID, mem, hProfile, Intent, dwFlags)) {
             return 0;
         }
     }
@@ -1493,15 +1497,15 @@ cmsUInt32Number  GenerateCRD(cmsContext ContextID,
 
         // CRD are always implemented as LUT
 
-        if (!WriteOutputLUT(mem, hProfile, Intent, dwFlags)) {
+        if (!WriteOutputLUT(ContextID, mem, hProfile, Intent, dwFlags)) {
             return 0;
         }
     }
 
     if (!(dwFlags & cmsFLAGS_NODEFAULTRESOURCEDEF)) {
 
-        _cmsIOPrintf(mem, "%%%%EndResource\n");
-        _cmsIOPrintf(mem, "\n%% CRD End\n");
+        _cmsIOPrintf(ContextID, mem, "%%%%EndResource\n");
+        _cmsIOPrintf(ContextID, mem, "\n%% CRD End\n");
     }
 
     // Done, keep memory usage
@@ -1562,7 +1566,7 @@ cmsUInt32Number CMSEXPORT cmsGetPostScriptCRD(cmsContext ContextID,
     dwBytesUsed =  cmsGetPostScriptColorResource(ContextID, cmsPS_RESOURCE_CRD, hProfile, Intent, dwFlags, mem);
 
     // Get rid of memory stream
-    cmsCloseIOhandler(mem);
+    cmsCloseIOhandler(ContextID, mem);
 
     return dwBytesUsed;
 }
@@ -1590,7 +1594,7 @@ cmsUInt32Number CMSEXPORT cmsGetPostScriptCSA(cmsContext ContextID,
     dwBytesUsed =  cmsGetPostScriptColorResource(ContextID, cmsPS_RESOURCE_CSA, hProfile, Intent, dwFlags, mem);
 
     // Get rid of memory stream
-    cmsCloseIOhandler(mem);
+    cmsCloseIOhandler(ContextID, mem);
 
     return dwBytesUsed;
 

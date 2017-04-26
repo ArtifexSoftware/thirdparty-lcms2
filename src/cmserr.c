@@ -525,12 +525,12 @@ void CMSEXPORT cmsSignalError(cmsContext ContextID, cmsUInt32Number ErrorCode, c
 }
 
 // Utility function to print signatures
-void _cmsTagSignature2String(char String[5], cmsTagSignature sig)
+void _cmsTagSignature2String(cmsContext ContextID, char String[5], cmsTagSignature sig)
 {
     cmsUInt32Number be;
 
     // Convert to big endian
-    be = _cmsAdjustEndianess32((cmsUInt32Number) sig);
+    be = _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) sig);
 
     // Move chars
     memmove(String, &be, 4);

@@ -80,7 +80,7 @@ cmsHTRANSFORM _cmsChain2Lab(cmsContext            ContextID,
                                        OutputFormat,
                                        dwFlags);
 
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(ContextID, hLab);
 
     return xform;
 }
@@ -118,7 +118,7 @@ cmsToneCurve* ComputeKToLstar(cmsContext            ContextID,
         cmyk[2] = 0;
         cmyk[3] = (cmsFloat32Number) ((i * 100.0) / (nPoints-1));
 
-        cmsDoTransform(xform, cmyk, &Lab, 1);
+        cmsDoTransform(ContextID, xform, cmyk, &Lab, 1);
         SampledPoints[i]= (cmsFloat32Number) (1.0 - Lab.L / 100.0); // Negate K for easier operation
     }
 
@@ -126,7 +126,7 @@ cmsToneCurve* ComputeKToLstar(cmsContext            ContextID,
 
 Error:
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(ContextID, xform);
     if (SampledPoints) _cmsFree(ContextID, SampledPoints);
 
     return out;
@@ -148,12 +148,12 @@ cmsToneCurve* _cmsBuildKToneCurve(cmsContext        ContextID,
     cmsToneCurve *in, *out, *KTone;
 
     // Make sure CMYK -> CMYK
-    if (cmsGetColorSpace(hProfiles[0]) != cmsSigCmykData ||
-        cmsGetColorSpace(hProfiles[nProfiles-1])!= cmsSigCmykData) return NULL;
+    if (cmsGetColorSpace(ContextID, hProfiles[0]) != cmsSigCmykData ||
+        cmsGetColorSpace(ContextID, hProfiles[nProfiles-1])!= cmsSigCmykData) return NULL;
 
 
     // Make sure last is an output profile
-    if (cmsGetDeviceClass(hProfiles[nProfiles - 1]) != cmsSigOutputClass) return NULL;
+    if (cmsGetDeviceClass(ContextID, hProfiles[nProfiles - 1]) != cmsSigOutputClass) return NULL;
 
     // Create individual curves. BPC works also as each K to L* is
     // computed as a BPC to zero black point in case of L*
@@ -167,7 +167,7 @@ cmsToneCurve* _cmsBuildKToneCurve(cmsContext        ContextID,
                             AdaptationStates + (nProfiles - 1),
                             dwFlags);
     if (out == NULL) {
-        cmsFreeToneCurve(in);
+        cmsFreeToneCurve(ContextID, in);
         return NULL;
     }
 
@@ -176,14 +176,14 @@ cmsToneCurve* _cmsBuildKToneCurve(cmsContext        ContextID,
     KTone = cmsJoinToneCurve(ContextID, in, out, nPoints);
 
     // Get rid of components
-    cmsFreeToneCurve(in); cmsFreeToneCurve(out);
+    cmsFreeToneCurve(ContextID, in); cmsFreeToneCurve(ContextID, out);
 
     // Something went wrong...
     if (KTone == NULL) return NULL;
 
     // Make sure it is monotonic
-    if (!cmsIsToneCurveMonotonic(KTone)) {
-        cmsFreeToneCurve(KTone);
+    if (!cmsIsToneCurveMonotonic(ContextID, KTone)) {
+        cmsFreeToneCurve(ContextID, KTone);
         return NULL;
     }
 
@@ -211,7 +211,7 @@ typedef struct {
 
 
 static
-int GamutSampler(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+int GamutSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
 {
     GAMUTCHAIN*  t = (GAMUTCHAIN* ) Cargo;
     cmsCIELab LabIn1, LabOut1;
@@ -223,26 +223,26 @@ int GamutSampler(register const cmsUInt16Number In[], register cmsUInt16Number O
     ErrorRatio = 1.0;
 
     // Convert input to Lab
-    cmsDoTransform(t -> hInput, In, &LabIn1, 1);
+    cmsDoTransform(ContextID, t -> hInput, In, &LabIn1, 1);
 
     // converts from PCS to colorant. This always
     // does return in-gamut values,
-    cmsDoTransform(t -> hForward, &LabIn1, Proof, 1);
+    cmsDoTransform(ContextID, t -> hForward, &LabIn1, Proof, 1);
 
     // Now, do the inverse, from colorant to PCS.
-    cmsDoTransform(t -> hReverse, Proof, &LabOut1, 1);
+    cmsDoTransform(ContextID, t -> hReverse, Proof, &LabOut1, 1);
 
     memmove(&LabIn2, &LabOut1, sizeof(cmsCIELab));
 
     // Try again, but this time taking Check as input
-    cmsDoTransform(t -> hForward, &LabOut1, Proof2, 1);
-    cmsDoTransform(t -> hReverse, Proof2, &LabOut2, 1);
+    cmsDoTransform(ContextID, t -> hForward, &LabOut1, Proof2, 1);
+    cmsDoTransform(ContextID, t -> hReverse, Proof2, &LabOut2, 1);
 
     // Take difference of direct value
-    dE1 = cmsDeltaE(&LabIn1, &LabOut1);
+    dE1 = cmsDeltaE(ContextID, &LabIn1, &LabOut1);
 
     // Take difference of converted value
-    dE2 = cmsDeltaE(&LabIn2, &LabOut2);
+    dE2 = cmsDeltaE(ContextID, &LabIn2, &LabOut2);
 
 
     // if dE1 is small and dE2 is small, value is likely to be in gamut
@@ -321,7 +321,7 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     // the conversion is pretty exact. On LUT based profiles, different resolutions
     // of input and output CLUT may result in differences.
 
-    if (cmsIsMatrixShaper(hGamut)) {
+    if (cmsIsMatrixShaper(ContextID, hGamut)) {
 
         Chain.Thereshold = 1.0;
     }
@@ -345,10 +345,10 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     IntentList[nGamutPCSposition] = INTENT_RELATIVE_COLORIMETRIC;
 
 
-    ColorSpace  = cmsGetColorSpace(hGamut);
+    ColorSpace  = cmsGetColorSpace(ContextID, hGamut);
 
-    nChannels   = cmsChannelsOf(ColorSpace);
-    nGridpoints = _cmsReasonableGridpointsByColorspace(ColorSpace, cmsFLAGS_HIGHRESPRECALC);
+    nChannels   = cmsChannelsOf(ContextID, ColorSpace);
+    nGridpoints = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, cmsFLAGS_HIGHRESPRECALC);
     dwFormat    = (CHANNELS_SH(nChannels)|BYTES_SH(2));
 
     // 16 bits to Lab double
@@ -388,12 +388,12 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
         if (Gamut != NULL) {
 
             CLUT = cmsStageAllocCLut16bit(ContextID, nGridpoints, nChannels, 1, NULL);
-            if (!cmsPipelineInsertStage(Gamut, cmsAT_BEGIN, CLUT)) {
-                cmsPipelineFree(Gamut);
+            if (!cmsPipelineInsertStage(ContextID, Gamut, cmsAT_BEGIN, CLUT)) {
+                cmsPipelineFree(ContextID, Gamut);
                 Gamut = NULL;
-            } 
+            }
             else {
-                cmsStageSampleCLut16bit(CLUT, GamutSampler, (void*) &Chain, 0);
+                cmsStageSampleCLut16bit(ContextID, CLUT, GamutSampler, (void*) &Chain, 0);
             }
         }
     }
@@ -401,10 +401,10 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
         Gamut = NULL;   // Didn't work...
 
     // Free all needed stuff.
-    if (Chain.hInput)   cmsDeleteTransform(Chain.hInput);
-    if (Chain.hForward) cmsDeleteTransform(Chain.hForward);
-    if (Chain.hReverse) cmsDeleteTransform(Chain.hReverse);
-    if (hLab) cmsCloseProfile(hLab);
+    if (Chain.hInput)   cmsDeleteTransform(ContextID, Chain.hInput);
+    if (Chain.hForward) cmsDeleteTransform(ContextID, Chain.hForward);
+    if (Chain.hReverse) cmsDeleteTransform(ContextID, Chain.hReverse);
+    if (hLab) cmsCloseProfile(ContextID, hLab);
 
     // And return computed hull
     return Gamut;
@@ -424,7 +424,7 @@ typedef struct {
 // This callback just accounts the maximum ink dropped in the given node. It does not populate any
 // memory, as the destination table is NULL. Its only purpose it to know the global maximum.
 static
-int EstimateTAC(register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void * Cargo)
+int EstimateTAC(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void * Cargo)
 {
     cmsTACestimator* bp = (cmsTACestimator*) Cargo;
     cmsFloat32Number RoundTrip[cmsMAXCHANNELS];
@@ -433,7 +433,7 @@ int EstimateTAC(register const cmsUInt16Number In[], register cmsUInt16Number Ou
 
 
     // Evaluate the xform
-    cmsDoTransform(bp->hRoundTrip, In, RoundTrip, 1);
+    cmsDoTransform(ContextID, bp->hRoundTrip, In, RoundTrip, 1);
 
     // All all amounts of ink
     for (Sum=0, i=0; i < bp ->nOutputChans; i++)
@@ -456,21 +456,20 @@ int EstimateTAC(register const cmsUInt16Number In[], register cmsUInt16Number Ou
 
 
 // Detect Total area coverage of the profile
-cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsHPROFILE hProfile)
+cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsContext ContextID, cmsHPROFILE hProfile)
 {
     cmsTACestimator bp;
     cmsUInt32Number dwFormatter;
     cmsUInt32Number GridPoints[MAX_INPUT_DIMENSIONS];
     cmsHPROFILE hLab;
-    cmsContext ContextID = cmsGetProfileContextID(hProfile);
 
     // TAC only works on output profiles
-    if (cmsGetDeviceClass(hProfile) != cmsSigOutputClass) {
+    if (cmsGetDeviceClass(ContextID, hProfile) != cmsSigOutputClass) {
         return 0;
     }
 
     // Create a fake formatter for result
-    dwFormatter = cmsFormatterForColorspaceOfProfile(hProfile, 4, TRUE);
+    dwFormatter = cmsFormatterForColorspaceOfProfile(ContextID, hProfile, 4, TRUE);
 
     bp.nOutputChans = T_CHANNELS(dwFormatter);
     bp.MaxTAC = 0;    // Initial TAC is 0
@@ -484,7 +483,7 @@ cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsHPROFILE hProfile)
     bp.hRoundTrip = cmsCreateTransformTHR(ContextID, hLab, TYPE_Lab_16,
                                           hProfile, dwFormatter, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
 
-    cmsCloseProfile(hLab);
+    cmsCloseProfile(ContextID, hLab);
     if (bp.hRoundTrip == NULL) return 0;
 
     // For L* we only need black and white. For C* we need many points
@@ -493,11 +492,11 @@ cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsHPROFILE hProfile)
     GridPoints[2] = 74;
 
 
-    if (!cmsSliceSpace16(3, GridPoints, EstimateTAC, &bp)) {
+    if (!cmsSliceSpace16(ContextID, 3, GridPoints, EstimateTAC, &bp)) {
         bp.MaxTAC = 0;
     }
 
-    cmsDeleteTransform(bp.hRoundTrip);
+    cmsDeleteTransform(ContextID, bp.hRoundTrip);
 
     // Results in %
     return bp.MaxTAC;
@@ -506,7 +505,7 @@ cmsFloat64Number CMSEXPORT cmsDetectTAC(cmsHPROFILE hProfile)
 
 // Carefully,  clamp on CIELab space.
 
-cmsBool CMSEXPORT cmsDesaturateLab(cmsCIELab* Lab,
+cmsBool CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIELab* Lab,
                                    double amax, double amin,
                                    double bmax, double bmin)
 {
@@ -545,7 +544,7 @@ cmsBool CMSEXPORT cmsDesaturateLab(cmsCIELab* Lab,
                 return TRUE;
             }
 
-            cmsLab2LCh(&LCh, Lab);
+            cmsLab2LCh(ContextID, &LCh, Lab);
 
             slope = Lab -> b / Lab -> a;
             h = LCh.h;

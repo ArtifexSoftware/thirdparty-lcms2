@@ -45,11 +45,11 @@ void ReadAllTags(cmsHPROFILE h)
     cmsInt32Number i, n;
     cmsTagSignature sig;
 
-    n = cmsGetTagCount(h);
+    n = cmsGetTagCount(ContextID, h);
     for (i=0; i < n; i++) {
 
-        sig = cmsGetTagSignature(h, i);
-        if (cmsReadTag(h, sig) == NULL) return;
+        sig = cmsGetTagSignature(ContextID, h, i);
+        if (cmsReadTag(ContextID, h, sig) == NULL) return;
     }
 }
 
@@ -62,11 +62,11 @@ void ReadAllRAWTags(cmsHPROFILE h)
     cmsTagSignature sig;
     cmsInt32Number len;
 
-    n = cmsGetTagCount(h);
+    n = cmsGetTagCount(ContextID, h);
     for (i=0; i < n; i++) {
 
-        sig = cmsGetTagSignature(h, i);
-        len = cmsReadRawTag(h, sig, NULL, 0);
+        sig = cmsGetTagSignature(ContextID, h, i);
+        len = cmsReadRawTag(ContextID, h, sig, NULL, 0);
     }
 }
 
@@ -78,11 +78,11 @@ void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
     cmsInt32Number len;
     cmsContext id = 0;
 
-    len = cmsGetProfileInfo(h, Info, "en", "US", NULL, 0);
+    len = cmsGetProfileInfo(ContextID, h, Info, "en", "US", NULL, 0);
     if (len == 0) return;
 
     text = _cmsMalloc(id, len);
-    cmsGetProfileInfo(h, Info, "en", "US", text, len);
+    cmsGetProfileInfo(ContextID, h, Info, "en", "US", text, len);
 
     wprintf(L"%s\n", text);
     _cmsFree(id, text);
@@ -106,42 +106,42 @@ void ReadAllLUTS(cmsHPROFILE h)
     cmsCIEXYZ Black;
 
     a = _cmsReadInputLUT(h, INTENT_PERCEPTUAL);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadInputLUT(h, INTENT_RELATIVE_COLORIMETRIC);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadInputLUT(h, INTENT_SATURATION);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadInputLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
 
     a = _cmsReadOutputLUT(h, INTENT_PERCEPTUAL);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadOutputLUT(h, INTENT_RELATIVE_COLORIMETRIC);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadOutputLUT(h, INTENT_SATURATION);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadOutputLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
 
     a = _cmsReadDevicelinkLUT(h, INTENT_PERCEPTUAL);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadDevicelinkLUT(h, INTENT_RELATIVE_COLORIMETRIC);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadDevicelinkLUT(h, INTENT_SATURATION);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
     a = _cmsReadDevicelinkLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
-    if (a) cmsPipelineFree(a);
+    if (a) cmsPipelineFree(ContextID, a);
 
 
     cmsDetectDestinationBlackPoint(&Black, h, INTENT_PERCEPTUAL, 0);
@@ -168,13 +168,13 @@ cmsInt32Number CheckSingleSpecimen(const char* Profile)
 
     printf("%s\n", Profile);
 
-    PrintAllInfos(h);  
-    ReadAllTags(h);    
+    PrintAllInfos(h);
+    ReadAllTags(h);
     ReadAllLUTS(h);
  // ReadAllRAWTags(h);
 
 
-    cmsSaveProfileToFile(h, BuffDst);
+    cmsSaveProfileToFile(ContextID, h, BuffDst);
     cmsCloseProfile(h);
 
     h = cmsOpenProfileFromFile(BuffDst, "r");
@@ -202,7 +202,7 @@ cmsInt32Number CheckRAWSpecimen(const char* Profile)
 
     ReadAllTags(h);
     ReadAllRAWTags(h);
-    cmsSaveProfileToFile(h, BuffDst);
+    cmsSaveProfileToFile(ContextID, h, BuffDst);
     cmsCloseProfile(h);
 
     h = cmsOpenProfileFromFile(BuffDst, "r");
@@ -214,12 +214,12 @@ cmsInt32Number CheckRAWSpecimen(const char* Profile)
 }
 
 
-static int input = 0, 
+static int input = 0,
            disp = 0,
            output = 0,
            link = 0,
            abst = 0,
-           color = 0, 
+           color = 0,
            named = 0;
 
 static int rgb = 0,
@@ -237,12 +237,12 @@ int count_stats(const char* Profile)
     cmsCIEXYZ Black;
 
     sprintf(BuffSrc, "%s%s", ZOOfolder, Profile);
-   
+
     h = cmsOpenProfileFromFile(BuffSrc, "r");
     if (h == NULL) return 0;
 
-  
-    switch (cmsGetDeviceClass(h)) { 
+
+    switch (cmsGetDeviceClass(ContextID, h)) {
 
     case cmsSigInputClass        : input++; break;
     case cmsSigDisplayClass      : disp++; break;
@@ -254,7 +254,7 @@ int count_stats(const char* Profile)
     }
 
 
-    switch (cmsGetColorSpace(h)) {
+    switch (cmsGetColorSpace(ContextID, h)) {
 
     case cmsSigRgbData: rgb++; break;
     case cmsSigCmykData: cmyk++; break;
@@ -265,9 +265,9 @@ int count_stats(const char* Profile)
     cmsDetectDestinationBlackPoint(&Black, h, INTENT_PERCEPTUAL, 0);
     cmsDetectDestinationBlackPoint(&Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsDetectDestinationBlackPoint(&Black, h, INTENT_SATURATION, 0);
-   
+
     cmsCloseProfile(h);
-   
+
     return 1;
 }
 

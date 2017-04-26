@@ -30,7 +30,7 @@
 // up to 65535 channels on output. The user may change those by using the interpolation plug-in
 
 // Interpolation routines by default
-static cmsInterpFunction DefaultInterpolatorsFactory(cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags);
+static cmsInterpFunction DefaultInterpolatorsFactory(cmsContext ContextID, cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags);
 
 // This is the default factory
 _cmsInterpPluginChunkType _cmsInterpPluginChunk = { NULL };
@@ -43,9 +43,9 @@ void _cmsAllocInterpPluginChunk(struct _cmsContext_struct* ctx, const struct _cm
     _cmsAssert(ctx != NULL);
 
     if (src != NULL) {
-        from = src ->chunks[InterpPlugin];       
+        from = src ->chunks[InterpPlugin];
     }
-    else { 
+    else {
         static _cmsInterpPluginChunkType InterpPluginChunk = { NULL };
 
         from = &InterpPluginChunk;
@@ -76,19 +76,19 @@ cmsBool  _cmsRegisterInterpPlugin(cmsContext ContextID, cmsPluginBase* Data)
 
 // Set the interpolation method
 cmsBool _cmsSetInterpolationRoutine(cmsContext ContextID, cmsInterpParams* p)
-{      
+{
     _cmsInterpPluginChunkType* ptr = (_cmsInterpPluginChunkType*) _cmsContextGetClientChunk(ContextID, InterpPlugin);
 
     p ->Interpolation.Lerp16 = NULL;
 
    // Invoke factory, possibly in the Plug-in
     if (ptr ->Interpolators != NULL)
-        p ->Interpolation = ptr->Interpolators(p -> nInputs, p ->nOutputs, p ->dwFlags);
-    
+        p ->Interpolation = ptr->Interpolators(ContextID, p -> nInputs, p ->nOutputs, p ->dwFlags);
+
     // If unsupported by the plug-in, go for the LittleCMS default.
     // If happens only if an extern plug-in is being used
     if (p ->Interpolation.Lerp16 == NULL)
-        p ->Interpolation = DefaultInterpolatorsFactory(p ->nInputs, p ->nOutputs, p ->dwFlags);
+        p ->Interpolation = DefaultInterpolatorsFactory(ContextID, p ->nInputs, p ->nOutputs, p ->dwFlags);
 
     // Check for valid interpolator (we just check one member of the union)
     if (p ->Interpolation.Lerp16 == NULL) {
@@ -124,7 +124,6 @@ cmsInterpParams* _cmsComputeInterpParamsEx(cmsContext ContextID,
     p -> nInputs  = InputChan;
     p -> nOutputs = OutputChan;
     p ->Table     = Table;
-    p ->ContextID  = ContextID;
 
     // Fill samples per input direction and domain (which is number of nodes minus one)
     for (i=0; i < InputChan; i++) {
@@ -166,15 +165,16 @@ cmsInterpParams* _cmsComputeInterpParams(cmsContext ContextID, int nSamples, int
 
 
 // Free all associated memory
-void _cmsFreeInterpParams(cmsInterpParams* p)
+void _cmsFreeInterpParams(cmsContext ContextID, cmsInterpParams* p)
 {
-    if (p != NULL) _cmsFree(p ->ContextID, p);
+    if (p != NULL) _cmsFree(ContextID, p);
 }
 
 
 // Inline fixed point interpolation
-cmsINLINE cmsUInt16Number LinearInterp(cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
+cmsINLINE cmsUInt16Number LinearInterp(cmsContext ContextID, cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt32Number dif = (cmsUInt32Number) (h - l) * a + 0x8000;
     dif = (dif >> 16) + l;
     return (cmsUInt16Number) (dif);
@@ -183,7 +183,7 @@ cmsINLINE cmsUInt16Number LinearInterp(cmsS15Fixed16Number a, cmsS15Fixed16Numbe
 
 //  Linear interpolation (Fixed-point optimized)
 static
-void LinLerp1D(register const cmsUInt16Number Value[],
+void LinLerp1D(cmsContext ContextID, register const cmsUInt16Number Value[],
                register cmsUInt16Number Output[],
                register const cmsInterpParams* p)
 {
@@ -209,18 +209,18 @@ void LinLerp1D(register const cmsUInt16Number Value[],
     y1 = LutTable[cell0+1];
 
 
-    Output[0] = LinearInterp(rest, y0, y1);
+    Output[0] = LinearInterp(ContextID, rest, y0, y1);
 }
 
 // To prevent out of bounds indexing
-cmsINLINE cmsFloat32Number fclamp(cmsFloat32Number v) 
+cmsINLINE cmsFloat32Number fclamp(cmsFloat32Number v)
 {
     return ((v < 0.0f) || isnan(v)) ? 0.0f : (v > 1.0f ? 1.0f : v);
 }
 
 // Floating-point version of 1D interpolation
 static
-void LinLerp1Dfloat(const cmsFloat32Number Value[],
+void LinLerp1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
                     cmsFloat32Number Output[],
                     const cmsInterpParams* p)
 {
@@ -228,6 +228,7 @@ void LinLerp1Dfloat(const cmsFloat32Number Value[],
        cmsFloat32Number val2, rest;
        int cell0, cell1;
        const cmsFloat32Number* LutTable = (cmsFloat32Number*) p ->Table;
+       cmsUNUSED_PARAMETER(ContextID);
 
        val2 = fclamp(Value[0]);
 
@@ -255,7 +256,7 @@ void LinLerp1Dfloat(const cmsFloat32Number Value[],
 
 // Eval gray LUT having only one input channel
 static
-void Eval1Input(register const cmsUInt16Number Input[],
+void Eval1Input(cmsContext ContextID, register const cmsUInt16Number Input[],
                 register cmsUInt16Number Output[],
                 register const cmsInterpParams* p16)
 {
@@ -278,7 +279,7 @@ void Eval1Input(register const cmsUInt16Number Input[],
 
        for (OutChan=0; OutChan < p16->nOutputs; OutChan++) {
 
-           Output[OutChan] = LinearInterp(rk, LutTable[K0+OutChan], LutTable[K1+OutChan]);
+           Output[OutChan] = LinearInterp(ContextID, rk, LutTable[K0+OutChan], LutTable[K1+OutChan]);
        }
 }
 
@@ -286,7 +287,7 @@ void Eval1Input(register const cmsUInt16Number Input[],
 
 // Eval gray LUT having only one input channel
 static
-void Eval1InputFloat(const cmsFloat32Number Value[],
+void Eval1InputFloat(cmsContext ContextID, const cmsFloat32Number Value[],
                      cmsFloat32Number Output[],
                      const cmsInterpParams* p)
 {
@@ -295,6 +296,7 @@ void Eval1InputFloat(const cmsFloat32Number Value[],
     int cell0, cell1;
     cmsUInt32Number OutChan;
     const cmsFloat32Number* LutTable = (cmsFloat32Number*) p ->Table;
+    cmsUNUSED_PARAMETER(ContextID);
 
     val2 = fclamp(Value[0]);
 
@@ -326,7 +328,7 @@ void Eval1InputFloat(const cmsFloat32Number Value[],
 
 // Bilinear interpolation (16 bits) - cmsFloat32Number version
 static
-void BilinearInterpFloat(const cmsFloat32Number Input[],
+void BilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                          cmsFloat32Number Output[],
                          const cmsInterpParams* p)
 
@@ -343,6 +345,7 @@ void BilinearInterpFloat(const cmsFloat32Number Input[],
         d00, d01, d10, d11,
         dx0, dx1,
         dxy;
+    cmsUNUSED_PARAMETER(ContextID);
 
     TotalOut   = p -> nOutputs;
     px = fclamp(Input[0]) * p->Domain[0];
@@ -379,7 +382,7 @@ void BilinearInterpFloat(const cmsFloat32Number Input[],
 
 // Bilinear interpolation (16 bits) - optimized version
 static
-void BilinearInterp16(register const cmsUInt16Number Input[],
+void BilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
                       register cmsUInt16Number Output[],
                       register const cmsInterpParams* p)
 
@@ -396,6 +399,7 @@ void BilinearInterp16(register const cmsUInt16Number Input[],
            int        d00, d01, d10, d11,
                       dx0, dx1,
                       dxy;
+           cmsUNUSED_PARAMETER(ContextID);
 
     TotalOut   = p -> nOutputs;
 
@@ -438,7 +442,7 @@ void BilinearInterp16(register const cmsUInt16Number Input[],
 
 // Trilinear interpolation (16 bits) - cmsFloat32Number version
 static
-void TrilinearInterpFloat(const cmsFloat32Number Input[],
+void TrilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                           cmsFloat32Number Output[],
                           const cmsInterpParams* p)
 
@@ -456,6 +460,7 @@ void TrilinearInterpFloat(const cmsFloat32Number Input[],
         d100, d101, d110, d111,
         dx00, dx01, dx10, dx11,
         dxy0, dxy1, dxyz;
+    cmsUNUSED_PARAMETER(ContextID);
 
     TotalOut   = p -> nOutputs;
 
@@ -510,7 +515,7 @@ void TrilinearInterpFloat(const cmsFloat32Number Input[],
 
 // Trilinear interpolation (16 bits) - optimized version
 static
-void TrilinearInterp16(register const cmsUInt16Number Input[],
+void TrilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
                        register cmsUInt16Number Output[],
                        register const cmsInterpParams* p)
 
@@ -528,6 +533,7 @@ void TrilinearInterp16(register const cmsUInt16Number Input[],
                       d100, d101, d110, d111,
                       dx00, dx01, dx10, dx11,
                       dxy0, dxy1, dxyz;
+           cmsUNUSED_PARAMETER(ContextID);
 
     TotalOut   = p -> nOutputs;
 
@@ -589,7 +595,7 @@ void TrilinearInterp16(register const cmsUInt16Number Input[],
 // Tetrahedral interpolation, using Sakamoto algorithm.
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static
-void TetrahedralInterpFloat(const cmsFloat32Number Input[],
+void TetrahedralInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                             cmsFloat32Number Output[],
                             const cmsInterpParams* p)
 {
@@ -600,6 +606,7 @@ void TetrahedralInterpFloat(const cmsFloat32Number Input[],
     cmsFloat32Number     rx, ry, rz;
     cmsFloat32Number     c0, c1=0, c2=0, c3=0;
     int                  OutChan, TotalOut;
+    cmsUNUSED_PARAMETER(ContextID);
 
     TotalOut   = p -> nOutputs;
 
@@ -690,7 +697,7 @@ void TetrahedralInterpFloat(const cmsFloat32Number Input[],
 
 
 static
-void TetrahedralInterp16(register const cmsUInt16Number Input[],
+void TetrahedralInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
                          register cmsUInt16Number Output[],
                          register const cmsInterpParams* p)
 {
@@ -701,6 +708,7 @@ void TetrahedralInterp16(register const cmsUInt16Number Input[],
     cmsS15Fixed16Number c0, c1, c2, c3, Rest;
     cmsS15Fixed16Number X0, X1, Y0, Y1, Z0, Z1;
     cmsUInt32Number TotalOut = p -> nOutputs;
+    cmsUNUSED_PARAMETER(ContextID);
 
     fx = _cmsToFixedDomain((int) Input[0] * p -> Domain[0]);
     fy = _cmsToFixedDomain((int) Input[1] * p -> Domain[1]);
@@ -824,7 +832,7 @@ void TetrahedralInterp16(register const cmsUInt16Number Input[],
 
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
 static
-void Eval4Inputs(register const cmsUInt16Number Input[],
+void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                      register cmsUInt16Number Output[],
                      register const cmsInterpParams* p16)
 {
@@ -999,7 +1007,7 @@ void Eval4Inputs(register const cmsUInt16Number Input[],
 
 
     for (i=0; i < p16 -> nOutputs; i++) {
-        Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+        Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
     }
 }
 #undef DENS
@@ -1010,7 +1018,7 @@ void Eval4Inputs(register const cmsUInt16Number Input[],
 
 
 static
-void Eval4InputsFloat(const cmsFloat32Number Input[],
+void Eval4InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                       cmsFloat32Number Output[],
                       const cmsInterpParams* p)
 {
@@ -1036,11 +1044,11 @@ void Eval4InputsFloat(const cmsFloat32Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       TetrahedralInterpFloat(Input + 1,  Tmp1, &p1);
+       TetrahedralInterpFloat(ContextID, Input + 1,  Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
-       TetrahedralInterpFloat(Input + 1,  Tmp2, &p1);
+       TetrahedralInterpFloat(ContextID, Input + 1,  Tmp2, &p1);
 
        for (i=0; i < p -> nOutputs; i++)
        {
@@ -1053,7 +1061,7 @@ void Eval4InputsFloat(const cmsFloat32Number Input[],
 
 
 static
-void Eval5Inputs(register const cmsUInt16Number Input[],
+void Eval5Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
 
                  register const cmsInterpParams* p16)
@@ -1081,23 +1089,23 @@ void Eval5Inputs(register const cmsUInt16Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval4Inputs(Input + 1, Tmp1, &p1);
+       Eval4Inputs(ContextID, Input + 1, Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval4Inputs(Input + 1, Tmp2, &p1);
+       Eval4Inputs(ContextID, Input + 1, Tmp2, &p1);
 
        for (i=0; i < p16 -> nOutputs; i++) {
 
-              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
        }
 
 }
 
 
 static
-void Eval5InputsFloat(const cmsFloat32Number Input[],
+void Eval5InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                       cmsFloat32Number Output[],
                       const cmsInterpParams* p)
 {
@@ -1123,12 +1131,12 @@ void Eval5InputsFloat(const cmsFloat32Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval4InputsFloat(Input + 1,  Tmp1, &p1);
+       Eval4InputsFloat(ContextID, Input + 1,  Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval4InputsFloat(Input + 1,  Tmp2, &p1);
+       Eval4InputsFloat(ContextID, Input + 1,  Tmp2, &p1);
 
        for (i=0; i < p -> nOutputs; i++) {
 
@@ -1142,7 +1150,7 @@ void Eval5InputsFloat(const cmsFloat32Number Input[],
 
 
 static
-void Eval6Inputs(register const cmsUInt16Number Input[],
+void Eval6Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const cmsInterpParams* p16)
 {
@@ -1168,23 +1176,23 @@ void Eval6Inputs(register const cmsUInt16Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval5Inputs(Input + 1, Tmp1, &p1);
+       Eval5Inputs(ContextID, Input + 1, Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval5Inputs(Input + 1, Tmp2, &p1);
+       Eval5Inputs(ContextID, Input + 1, Tmp2, &p1);
 
        for (i=0; i < p16 -> nOutputs; i++) {
 
-              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
        }
 
 }
 
 
 static
-void Eval6InputsFloat(const cmsFloat32Number Input[],
+void Eval6InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                       cmsFloat32Number Output[],
                       const cmsInterpParams* p)
 {
@@ -1210,12 +1218,12 @@ void Eval6InputsFloat(const cmsFloat32Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval5InputsFloat(Input + 1,  Tmp1, &p1);
+       Eval5InputsFloat(ContextID, Input + 1,  Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval5InputsFloat(Input + 1,  Tmp2, &p1);
+       Eval5InputsFloat(ContextID, Input + 1,  Tmp2, &p1);
 
        for (i=0; i < p -> nOutputs; i++) {
 
@@ -1228,7 +1236,7 @@ void Eval6InputsFloat(const cmsFloat32Number Input[],
 
 
 static
-void Eval7Inputs(register const cmsUInt16Number Input[],
+void Eval7Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const cmsInterpParams* p16)
 {
@@ -1255,21 +1263,21 @@ void Eval7Inputs(register const cmsUInt16Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval6Inputs(Input + 1, Tmp1, &p1);
+       Eval6Inputs(ContextID, Input + 1, Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval6Inputs(Input + 1, Tmp2, &p1);
+       Eval6Inputs(ContextID, Input + 1, Tmp2, &p1);
 
        for (i=0; i < p16 -> nOutputs; i++) {
-              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
        }
 }
 
 
 static
-void Eval7InputsFloat(const cmsFloat32Number Input[],
+void Eval7InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                       cmsFloat32Number Output[],
                       const cmsInterpParams* p)
 {
@@ -1295,12 +1303,12 @@ void Eval7InputsFloat(const cmsFloat32Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval6InputsFloat(Input + 1,  Tmp1, &p1);
+       Eval6InputsFloat(ContextID, Input + 1,  Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval6InputsFloat(Input + 1,  Tmp2, &p1);
+       Eval6InputsFloat(ContextID, Input + 1,  Tmp2, &p1);
 
 
        for (i=0; i < p -> nOutputs; i++) {
@@ -1314,7 +1322,7 @@ void Eval7InputsFloat(const cmsFloat32Number Input[],
 }
 
 static
-void Eval8Inputs(register const cmsUInt16Number Input[],
+void Eval8Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const cmsInterpParams* p16)
 {
@@ -1340,21 +1348,21 @@ void Eval8Inputs(register const cmsUInt16Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval7Inputs(Input + 1, Tmp1, &p1);
+       Eval7Inputs(ContextID, Input + 1, Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
-       Eval7Inputs(Input + 1, Tmp2, &p1);
+       Eval7Inputs(ContextID, Input + 1, Tmp2, &p1);
 
        for (i=0; i < p16 -> nOutputs; i++) {
-              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
        }
 }
 
 
 
 static
-void Eval8InputsFloat(const cmsFloat32Number Input[],
+void Eval8InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
                       cmsFloat32Number Output[],
                       const cmsInterpParams* p)
 {
@@ -1380,12 +1388,12 @@ void Eval8InputsFloat(const cmsFloat32Number Input[],
        T = LutTable + K0;
        p1.Table = T;
 
-       Eval7InputsFloat(Input + 1,  Tmp1, &p1);
+       Eval7InputsFloat(ContextID, Input + 1,  Tmp1, &p1);
 
        T = LutTable + K1;
        p1.Table = T;
 
-       Eval7InputsFloat(Input + 1,  Tmp2, &p1);
+       Eval7InputsFloat(ContextID, Input + 1,  Tmp2, &p1);
 
 
        for (i=0; i < p -> nOutputs; i++) {
@@ -1399,12 +1407,13 @@ void Eval8InputsFloat(const cmsFloat32Number Input[],
 
 // The default factory
 static
-cmsInterpFunction DefaultInterpolatorsFactory(cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags)
+cmsInterpFunction DefaultInterpolatorsFactory(cmsContext ContextID, cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags)
 {
 
     cmsInterpFunction Interpolation;
     cmsBool  IsFloat     = (dwFlags & CMS_LERP_FLAGS_FLOAT);
     cmsBool  IsTrilinear = (dwFlags & CMS_LERP_FLAGS_TRILINEAR);
+    cmsUNUSED_PARAMETER(ContextID);
 
     memset(&Interpolation, 0, sizeof(Interpolation));
 
