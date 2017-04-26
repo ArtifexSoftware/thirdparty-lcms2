@@ -54,7 +54,7 @@ typedef struct _cmsParametricCurvesCollection_st {
 } _cmsParametricCurvesCollection;
 
 // This is the default (built-in) evaluator
-static cmsFloat64Number DefaultEvalParametricFn(cmsInt32Number Type, const cmsFloat64Number Params[], cmsFloat64Number R);
+static cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Number Type, const cmsFloat64Number Params[], cmsFloat64Number R);
 
 // The built-in list
 static _cmsParametricCurvesCollection DefaultCurves = {
@@ -67,7 +67,7 @@ static _cmsParametricCurvesCollection DefaultCurves = {
 
 // Duplicates the zone of memory used by the plug-in in the new context
 static
-void DupPluginCurvesList(struct _cmsContext_struct* ctx, 
+void DupPluginCurvesList(struct _cmsContext_struct* ctx,
                                                const struct _cmsContext_struct* src)
 {
    _cmsCurvesPluginChunkType newHead = { NULL };
@@ -83,15 +83,15 @@ void DupPluginCurvesList(struct _cmsContext_struct* ctx,
         entry = entry ->Next) {
 
             _cmsParametricCurvesCollection *newEntry = ( _cmsParametricCurvesCollection *) _cmsSubAllocDup(ctx ->MemPool, entry, sizeof(_cmsParametricCurvesCollection));
-   
-            if (newEntry == NULL) 
+
+            if (newEntry == NULL)
                 return;
 
             // We want to keep the linked list order, so this is a little bit tricky
             newEntry -> Next = NULL;
             if (Anterior)
                 Anterior -> Next = newEntry;
-     
+
             Anterior = newEntry;
 
             if (newHead.ParametricCurves == NULL)
@@ -102,7 +102,7 @@ void DupPluginCurvesList(struct _cmsContext_struct* ctx,
 }
 
 // The allocator have to follow the chain
-void _cmsAllocCurvesPluginChunk(struct _cmsContext_struct* ctx, 
+void _cmsAllocCurvesPluginChunk(struct _cmsContext_struct* ctx,
                                 const struct _cmsContext_struct* src)
 {
     _cmsAssert(ctx != NULL);
@@ -309,9 +309,10 @@ Error:
 
 // Parametric Fn using floating point
 static
-cmsFloat64Number DefaultEvalParametricFn(cmsInt32Number Type, const cmsFloat64Number Params[], cmsFloat64Number R)
+cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Number Type, const cmsFloat64Number Params[], cmsFloat64Number R)
 {
     cmsFloat64Number e, Val, disc;
+    cmsUNUSED_PARAMETER(ContextID);
 
     switch (Type) {
 
@@ -666,7 +667,7 @@ cmsFloat64Number DefaultEvalParametricFn(cmsInt32Number Type, const cmsFloat64Nu
 // Evaluate a segmented function for a single value. Return -Inf if no valid segment found .
 // If fn type is 0, perform an interpolation on the table
 static
-cmsFloat64Number EvalSegmentedFn(const cmsToneCurve *g, cmsFloat64Number R)
+cmsFloat64Number EvalSegmentedFn(cmsContext ContextID, const cmsToneCurve *g, cmsFloat64Number R)
 {
     int i;
     cmsFloat32Number Out32;
@@ -685,12 +686,12 @@ cmsFloat64Number EvalSegmentedFn(const cmsToneCurve *g, cmsFloat64Number R)
                 // Setup the table (TODO: clean that)
                 g->SegInterp[i]->Table = g->Segments[i].SampledPoints;
 
-                g->SegInterp[i]->Interpolation.LerpFloat(&R1, &Out32, g->SegInterp[i]);
+                g->SegInterp[i]->Interpolation.LerpFloat(ContextID, &R1, &Out32, g->SegInterp[i]);
                 Out = (cmsFloat64Number) Out32;
 
             }
             else {
-                Out = g->Evals[i](g->Segments[i].Type, g->Segments[i].Params, R);
+                Out = g->Evals[i](ContextID, g->Segments[i].Type, g->Segments[i].Params, R);
             }
 
             if (isinf(Out))
@@ -709,14 +710,16 @@ cmsFloat64Number EvalSegmentedFn(const cmsToneCurve *g, cmsFloat64Number R)
 }
 
 // Access to estimated low-res table
-cmsUInt32Number CMSEXPORT cmsGetToneCurveEstimatedTableEntries(const cmsToneCurve* t)
+cmsUInt32Number CMSEXPORT cmsGetToneCurveEstimatedTableEntries(cmsContext ContextID, const cmsToneCurve* t)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     _cmsAssert(t != NULL);
     return t ->nEntries;
 }
 
-const cmsUInt16Number* CMSEXPORT cmsGetToneCurveEstimatedTable(const cmsToneCurve* t)
+const cmsUInt16Number* CMSEXPORT cmsGetToneCurveEstimatedTable(cmsContext ContextID, const cmsToneCurve* t)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     _cmsAssert(t != NULL);
     return t ->Table16;
 }
@@ -763,7 +766,7 @@ cmsToneCurve* CMSEXPORT cmsBuildSegmentedToneCurve(cmsContext ContextID,
 
         R   = (cmsFloat64Number) i / (nGridPoints-1);
 
-        Val = EvalSegmentedFn(g, R);
+        Val = EvalSegmentedFn(ContextID, g, R);
 
         // Round and saturate
         g ->Table16[i] = _cmsQuickSaturateWord(Val * 65535.0);
@@ -801,13 +804,13 @@ cmsToneCurve* CMSEXPORT cmsBuildTabulatedToneCurveFloat(cmsContext ContextID, cm
     Seg[2].x0 = 1.0;
     Seg[2].x1 = PLUS_INF;
     Seg[2].Type = 6;
-    
+
     Seg[2].Params[0] = 1;
     Seg[2].Params[1] = 0;
     Seg[2].Params[2] = 0;
     Seg[2].Params[3] = values[nEntries-1];
     Seg[2].Params[4] = 0;
-    
+
 
     return cmsBuildSegmentedToneCurve(ContextID, 3, Seg);
 }
@@ -853,15 +856,11 @@ cmsToneCurve* CMSEXPORT cmsBuildGamma(cmsContext ContextID, cmsFloat64Number Gam
 
 
 // Free all memory taken by the gamma curve
-void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
+void CMSEXPORT cmsFreeToneCurve(cmsContext ContextID, cmsToneCurve* Curve)
 {
-    cmsContext ContextID;
-
     if (Curve == NULL) return;
 
-    ContextID = Curve ->InterpParams->ContextID;
-
-    _cmsFreeInterpParams(Curve ->InterpParams);
+    _cmsFreeInterpParams(ContextID, Curve ->InterpParams);
 
     if (Curve -> Table16)
         _cmsFree(ContextID, Curve ->Table16);
@@ -877,7 +876,7 @@ void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
             }
 
             if (Curve ->SegInterp[i] != 0)
-                _cmsFreeInterpParams(Curve->SegInterp[i]);
+                _cmsFreeInterpParams(ContextID, Curve->SegInterp[i]);
         }
 
         _cmsFree(ContextID, Curve ->Segments);
@@ -891,25 +890,25 @@ void CMSEXPORT cmsFreeToneCurve(cmsToneCurve* Curve)
 }
 
 // Utility function, free 3 gamma tables
-void CMSEXPORT cmsFreeToneCurveTriple(cmsToneCurve* Curve[3])
+void CMSEXPORT cmsFreeToneCurveTriple(cmsContext ContextID, cmsToneCurve* Curve[3])
 {
 
     _cmsAssert(Curve != NULL);
 
-    if (Curve[0] != NULL) cmsFreeToneCurve(Curve[0]);
-    if (Curve[1] != NULL) cmsFreeToneCurve(Curve[1]);
-    if (Curve[2] != NULL) cmsFreeToneCurve(Curve[2]);
+    if (Curve[0] != NULL) cmsFreeToneCurve(ContextID, Curve[0]);
+    if (Curve[1] != NULL) cmsFreeToneCurve(ContextID, Curve[1]);
+    if (Curve[2] != NULL) cmsFreeToneCurve(ContextID, Curve[2]);
 
     Curve[0] = Curve[1] = Curve[2] = NULL;
 }
 
 
 // Duplicate a gamma table
-cmsToneCurve* CMSEXPORT cmsDupToneCurve(const cmsToneCurve* In)
+cmsToneCurve* CMSEXPORT cmsDupToneCurve(cmsContext ContextID, const cmsToneCurve* In)
 {
     if (In == NULL) return NULL;
 
-    return  AllocateToneCurveStruct(In ->InterpParams ->ContextID, In ->nEntries, In ->nSegments, In ->Segments, In ->Table16);
+    return  AllocateToneCurveStruct(ContextID, In ->nEntries, In ->nSegments, In ->Segments, In ->Table16);
 }
 
 // Joins two curves for X and Y. Curves should be monotonic.
@@ -931,7 +930,7 @@ cmsToneCurve* CMSEXPORT cmsJoinToneCurve(cmsContext ContextID,
     _cmsAssert(X != NULL);
     _cmsAssert(Y != NULL);
 
-    Yreversed = cmsReverseToneCurveEx(nResultingPoints, Y);
+    Yreversed = cmsReverseToneCurveEx(ContextID, nResultingPoints, Y);
     if (Yreversed == NULL) goto Error;
 
     Res = (cmsFloat32Number*) _cmsCalloc(ContextID, nResultingPoints, sizeof(cmsFloat32Number));
@@ -941,8 +940,8 @@ cmsToneCurve* CMSEXPORT cmsJoinToneCurve(cmsContext ContextID,
     for (i=0; i <  nResultingPoints; i++) {
 
         t = (cmsFloat32Number) i / (nResultingPoints-1);
-        x = cmsEvalToneCurveFloat(X,  t);
-        Res[i] = cmsEvalToneCurveFloat(Yreversed, x);
+        x = cmsEvalToneCurveFloat(ContextID, X,  t);
+        Res[i] = cmsEvalToneCurveFloat(ContextID, Yreversed, x);
     }
 
     // Allocate space for output
@@ -951,7 +950,7 @@ cmsToneCurve* CMSEXPORT cmsJoinToneCurve(cmsContext ContextID,
 Error:
 
     if (Res != NULL) _cmsFree(ContextID, Res);
-    if (Yreversed != NULL) cmsFreeToneCurve(Yreversed);
+    if (Yreversed != NULL) cmsFreeToneCurve(ContextID, Yreversed);
 
     return out;
 }
@@ -1007,7 +1006,7 @@ int GetInterval(cmsFloat64Number In, const cmsUInt16Number LutTable[], const str
 }
 
 // Reverse a gamma table
-cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsInt32Number nResultSamples, const cmsToneCurve* InCurve)
+cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, cmsInt32Number nResultSamples, const cmsToneCurve* InCurve)
 {
     cmsToneCurve *out;
     cmsFloat64Number a = 0, b = 0, y, x1, y1, x2, y2;
@@ -1017,23 +1016,23 @@ cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsInt32Number nResultSamples, con
     _cmsAssert(InCurve != NULL);
 
     // Try to reverse it analytically whatever possible
- 
-    if (InCurve ->nSegments == 1 && InCurve ->Segments[0].Type > 0 && 
-        /* InCurve -> Segments[0].Type <= 5 */ 
-        GetParametricCurveByType(InCurve ->InterpParams->ContextID, InCurve ->Segments[0].Type, NULL) != NULL) {
 
-        return cmsBuildParametricToneCurve(InCurve ->InterpParams->ContextID,
+    if (InCurve ->nSegments == 1 && InCurve ->Segments[0].Type > 0 &&
+        /* InCurve -> Segments[0].Type <= 5 */
+        GetParametricCurveByType(ContextID, InCurve ->Segments[0].Type, NULL) != NULL) {
+
+        return cmsBuildParametricToneCurve(ContextID,
                                        -(InCurve -> Segments[0].Type),
                                        InCurve -> Segments[0].Params);
     }
 
     // Nope, reverse the table.
-    out = cmsBuildTabulatedToneCurve16(InCurve ->InterpParams->ContextID, nResultSamples, NULL);
+    out = cmsBuildTabulatedToneCurve16(ContextID, nResultSamples, NULL);
     if (out == NULL)
         return NULL;
 
     // We want to know if this is an ascending or descending table
-    Ascending = !cmsIsToneCurveDescending(InCurve);
+    Ascending = !cmsIsToneCurveDescending(ContextID, InCurve);
 
     // Iterate across Y axis
     for (i=0; i <  nResultSamples; i++) {
@@ -1074,11 +1073,11 @@ cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsInt32Number nResultSamples, con
 }
 
 // Reverse a gamma table
-cmsToneCurve* CMSEXPORT cmsReverseToneCurve(const cmsToneCurve* InGamma)
+cmsToneCurve* CMSEXPORT cmsReverseToneCurve(cmsContext ContextID, const cmsToneCurve* InGamma)
 {
     _cmsAssert(InGamma != NULL);
 
-    return cmsReverseToneCurveEx(4096, InGamma);
+    return cmsReverseToneCurveEx(ContextID, 4096, InGamma);
 }
 
 // From: Eilers, P.H.C. (1994) Smoothing and interpolation with finite
@@ -1148,19 +1147,19 @@ cmsBool smooth2(cmsContext ContextID, cmsFloat32Number w[], cmsFloat32Number y[]
 }
 
 // Smooths a curve sampled at regular intervals.
-cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsToneCurve* Tab, cmsFloat64Number lambda)
+cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, cmsFloat64Number lambda)
 {
     cmsFloat32Number w[MAX_NODES_IN_CURVE], y[MAX_NODES_IN_CURVE], z[MAX_NODES_IN_CURVE];
     int i, nItems, Zeros, Poles;
 
     if (Tab == NULL) return FALSE;
 
-    if (cmsIsToneCurveLinear(Tab)) return TRUE; // Nothing to do
+    if (cmsIsToneCurveLinear(ContextID, Tab)) return TRUE; // Nothing to do
 
     nItems = Tab -> nEntries;
 
     if (nItems >= MAX_NODES_IN_CURVE) {
-        cmsSignalError(Tab ->InterpParams->ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: too many points.");
+        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: too many points.");
         return FALSE;
     }
 
@@ -1174,7 +1173,7 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsToneCurve* Tab, cmsFloat64Number lambda
         w[i+1] = 1.0;
     }
 
-    if (!smooth2(Tab ->InterpParams->ContextID, w, y, z, (cmsFloat32Number) lambda, nItems)) return FALSE;
+    if (!smooth2(ContextID, w, y, z, (cmsFloat32Number) lambda, nItems)) return FALSE;
 
     // Do some reality - checking...
     Zeros = Poles = 0;
@@ -1183,17 +1182,17 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsToneCurve* Tab, cmsFloat64Number lambda
         if (z[i] == 0.) Zeros++;
         if (z[i] >= 65535.) Poles++;
         if (z[i] < z[i-1]) {
-            cmsSignalError(Tab ->InterpParams->ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Non-Monotonic.");
+            cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Non-Monotonic.");
             return FALSE;
         }
     }
 
     if (Zeros > (nItems / 3)) {
-        cmsSignalError(Tab ->InterpParams->ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly zeros.");
+        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly zeros.");
         return FALSE;
     }
     if (Poles > (nItems / 3)) {
-        cmsSignalError(Tab ->InterpParams->ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly poles.");
+        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly poles.");
         return FALSE;
     }
 
@@ -1209,10 +1208,11 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsToneCurve* Tab, cmsFloat64Number lambda
 
 // Is a table linear? Do not use parametric since we cannot guarantee some weird parameters resulting
 // in a linear table. This way assures it is linear in 12 bits, which should be enought in most cases.
-cmsBool CMSEXPORT cmsIsToneCurveLinear(const cmsToneCurve* Curve)
+cmsBool CMSEXPORT cmsIsToneCurveLinear(cmsContext ContextID, const cmsToneCurve* Curve)
 {
     cmsUInt32Number i;
     int diff;
+    cmsUNUSED_PARAMETER(ContextID);
 
     _cmsAssert(Curve != NULL);
 
@@ -1227,7 +1227,7 @@ cmsBool CMSEXPORT cmsIsToneCurveLinear(const cmsToneCurve* Curve)
 }
 
 // Same, but for monotonicity
-cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(const cmsToneCurve* t)
+cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID, const cmsToneCurve* t)
 {
     int n;
     int i, last;
@@ -1240,7 +1240,7 @@ cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(const cmsToneCurve* t)
     if (n < 2) return TRUE;
 
     // Curve direction
-    lDescending = cmsIsToneCurveDescending(t);
+    lDescending = cmsIsToneCurveDescending(ContextID, t);
 
     if (lDescending) {
 
@@ -1273,32 +1273,35 @@ cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(const cmsToneCurve* t)
 }
 
 // Same, but for descending tables
-cmsBool  CMSEXPORT cmsIsToneCurveDescending(const cmsToneCurve* t)
+cmsBool  CMSEXPORT cmsIsToneCurveDescending(cmsContext ContextID, const cmsToneCurve* t)
 {
     _cmsAssert(t != NULL);
+    cmsUNUSED_PARAMETER(ContextID);
 
     return t ->Table16[0] > t ->Table16[t ->nEntries-1];
 }
 
 
 // Another info fn: is out gamma table multisegment?
-cmsBool  CMSEXPORT cmsIsToneCurveMultisegment(const cmsToneCurve* t)
+cmsBool  CMSEXPORT cmsIsToneCurveMultisegment(cmsContext ContextID, const cmsToneCurve* t)
 {
     _cmsAssert(t != NULL);
+    cmsUNUSED_PARAMETER(ContextID);
 
     return t -> nSegments > 1;
 }
 
-cmsInt32Number  CMSEXPORT cmsGetToneCurveParametricType(const cmsToneCurve* t)
+cmsInt32Number  CMSEXPORT cmsGetToneCurveParametricType(cmsContext ContextID, const cmsToneCurve* t)
 {
     _cmsAssert(t != NULL);
+    cmsUNUSED_PARAMETER(ContextID);
 
     if (t -> nSegments != 1) return 0;
     return t ->Segments[0].Type;
 }
 
 // We need accuracy this time
-cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(const cmsToneCurve* Curve, cmsFloat32Number v)
+cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v)
 {
     _cmsAssert(Curve != NULL);
 
@@ -1308,22 +1311,22 @@ cmsFloat32Number CMSEXPORT cmsEvalToneCurveFloat(const cmsToneCurve* Curve, cmsF
         cmsUInt16Number In, Out;
 
         In = (cmsUInt16Number) _cmsQuickSaturateWord(v * 65535.0);
-        Out = cmsEvalToneCurve16(Curve, In);
+        Out = cmsEvalToneCurve16(ContextID, Curve, In);
 
         return (cmsFloat32Number) (Out / 65535.0);
     }
 
-    return (cmsFloat32Number) EvalSegmentedFn(Curve, v);
+    return (cmsFloat32Number) EvalSegmentedFn(ContextID, Curve, v);
 }
 
 // We need xput over here
-cmsUInt16Number CMSEXPORT cmsEvalToneCurve16(const cmsToneCurve* Curve, cmsUInt16Number v)
+cmsUInt16Number CMSEXPORT cmsEvalToneCurve16(cmsContext ContextID, const cmsToneCurve* Curve, cmsUInt16Number v)
 {
     cmsUInt16Number out;
 
     _cmsAssert(Curve != NULL);
 
-    Curve ->InterpParams ->Interpolation.Lerp16(&v, &out, Curve ->InterpParams);
+    Curve ->InterpParams ->Interpolation.Lerp16(ContextID, &v, &out, Curve ->InterpParams);
     return out;
 }
 
@@ -1345,7 +1348,7 @@ cmsUInt16Number CMSEXPORT cmsEvalToneCurve16(const cmsToneCurve* Curve, cmsUInt1
 //
 // g = 1/n * SUM(log(y) / log(x))
 
-cmsFloat64Number CMSEXPORT cmsEstimateGamma(const cmsToneCurve* t, cmsFloat64Number Precision)
+cmsFloat64Number CMSEXPORT cmsEstimateGamma(cmsContext ContextID, const cmsToneCurve* t, cmsFloat64Number Precision)
 {
     cmsFloat64Number gamma, sum, sum2;
     cmsFloat64Number n, x, y, Std;
@@ -1359,7 +1362,7 @@ cmsFloat64Number CMSEXPORT cmsEstimateGamma(const cmsToneCurve* t, cmsFloat64Num
     for (i=1; i < (MAX_NODES_IN_CURVE-1); i++) {
 
         x = (cmsFloat64Number) i / (MAX_NODES_IN_CURVE-1);
-        y = (cmsFloat64Number) cmsEvalToneCurveFloat(t, (cmsFloat32Number) x);
+        y = (cmsFloat64Number) cmsEvalToneCurveFloat(ContextID, t, (cmsFloat32Number) x);
 
         // Avoid 7% on lower part to prevent
         // artifacts due to linear ramps

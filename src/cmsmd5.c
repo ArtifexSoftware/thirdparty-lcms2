@@ -33,7 +33,7 @@ void byteReverse(cmsUInt8Number * buf, cmsUInt32Number longs)
 {
     do {
 
-        cmsUInt32Number t = _cmsAdjustEndianess32(*(cmsUInt32Number *) buf);
+        cmsUInt32Number t = _cmsAdjustEndianess32(ContextID, *(cmsUInt32Number *) buf);
         *(cmsUInt32Number *) buf = t;
         buf += sizeof(cmsUInt32Number);
 
@@ -258,9 +258,8 @@ void MD5finish(cmsProfileID* ProfileID,  cmsHANDLE Handle)
 // In the header, rendering intentent, attributes and ID should be set to zero
 // before computing MD5 checksum (per 6.1.13 in ICC spec)
 
-cmsBool CMSEXPORT cmsMD5computeID(cmsHPROFILE hProfile)
+cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsContext   ContextID;
     cmsUInt32Number BytesNeeded;
     cmsUInt8Number* Mem = NULL;
     cmsHANDLE  MD5 = NULL;
@@ -268,8 +267,6 @@ cmsBool CMSEXPORT cmsMD5computeID(cmsHPROFILE hProfile)
     _cmsICCPROFILE Keep;
 
     _cmsAssert(hProfile != NULL);
-
-    ContextID = cmsGetProfileContextID(hProfile);
 
     // Save a copy of the profile header
     memmove(&Keep, Icc, sizeof(_cmsICCPROFILE));
@@ -280,14 +277,14 @@ cmsBool CMSEXPORT cmsMD5computeID(cmsHPROFILE hProfile)
     memset(&Icc ->ProfileID, 0, sizeof(Icc ->ProfileID));
 
     // Compute needed storage
-    if (!cmsSaveProfileToMem(hProfile, NULL, &BytesNeeded)) goto Error;
+    if (!cmsSaveProfileToMem(ContextID, hProfile, NULL, &BytesNeeded)) goto Error;
 
     // Allocate memory
     Mem = (cmsUInt8Number*) _cmsMalloc(ContextID, BytesNeeded);
     if (Mem == NULL) goto Error;
 
     // Save to temporary storage
-    if (!cmsSaveProfileToMem(hProfile, Mem, &BytesNeeded)) goto Error;
+    if (!cmsSaveProfileToMem(ContextID, hProfile, Mem, &BytesNeeded)) goto Error;
 
     // Create MD5 object
     MD5 = MD5alloc(ContextID);

@@ -41,7 +41,7 @@ cmsMLU* CMSEXPORT cmsMLUalloc(cmsContext ContextID, cmsUInt32Number nItems)
     mlu = (cmsMLU*) _cmsMallocZero(ContextID, sizeof(cmsMLU));
     if (mlu == NULL) return NULL;
 
-    mlu ->ContextID = ContextID;
+    ContextID = ContextID;
 
     // Create entry array
     mlu ->Entries = (_cmsMLUentry*) _cmsCalloc(ContextID, nItems, sizeof(_cmsMLUentry));
@@ -60,7 +60,7 @@ cmsMLU* CMSEXPORT cmsMLUalloc(cmsContext ContextID, cmsUInt32Number nItems)
 
 // Grows a mempool table for a MLU. Each time this function is called, mempool size is multiplied times two.
 static
-cmsBool GrowMLUpool(cmsMLU* mlu)
+cmsBool GrowMLUpool(cmsContext ContextID, cmsMLU* mlu)
 {
     cmsUInt32Number size;
     void *NewPtr;
@@ -77,7 +77,7 @@ cmsBool GrowMLUpool(cmsMLU* mlu)
     if (size < mlu ->PoolSize) return FALSE;
 
     // Reallocate the pool
-    NewPtr = _cmsRealloc(mlu ->ContextID, mlu ->MemPool, size);
+    NewPtr = _cmsRealloc(ContextID, mlu ->MemPool, size);
     if (NewPtr == NULL) return FALSE;
 
 
@@ -90,7 +90,7 @@ cmsBool GrowMLUpool(cmsMLU* mlu)
 
 // Grows a entry table for a MLU. Each time this function is called, table size is multiplied times two.
 static
-cmsBool GrowMLUtable(cmsMLU* mlu)
+cmsBool GrowMLUtable(cmsContext ContextID, cmsMLU* mlu)
 {
     cmsUInt32Number AllocatedEntries;
     _cmsMLUentry *NewPtr;
@@ -104,7 +104,7 @@ cmsBool GrowMLUtable(cmsMLU* mlu)
     if (AllocatedEntries / 2 != mlu ->AllocatedEntries) return FALSE;
 
     // Reallocate the memory
-    NewPtr = (_cmsMLUentry*)_cmsRealloc(mlu ->ContextID, mlu ->Entries, AllocatedEntries*sizeof(_cmsMLUentry));
+    NewPtr = (_cmsMLUentry*)_cmsRealloc(ContextID, mlu ->Entries, AllocatedEntries*sizeof(_cmsMLUentry));
     if (NewPtr == NULL) return FALSE;
 
     mlu ->Entries          = NewPtr;
@@ -137,7 +137,7 @@ int SearchMLUEntry(cmsMLU* mlu, cmsUInt16Number LanguageCode, cmsUInt16Number Co
 // Add a block of characters to the intended MLU. Language and country are specified.
 // Only one entry for Language/country pair is allowed.
 static
-cmsBool AddMLUBlock(cmsMLU* mlu, cmsUInt32Number size, const wchar_t *Block,
+cmsBool AddMLUBlock(cmsContext ContextID, cmsMLU* mlu, cmsUInt32Number size, const wchar_t *Block,
                      cmsUInt16Number LanguageCode, cmsUInt16Number CountryCode)
 {
     cmsUInt32Number Offset;
@@ -148,7 +148,7 @@ cmsBool AddMLUBlock(cmsMLU* mlu, cmsUInt32Number size, const wchar_t *Block,
 
     // Is there any room available?
     if (mlu ->UsedEntries >= mlu ->AllocatedEntries) {
-        if (!GrowMLUtable(mlu)) return FALSE;
+        if (!GrowMLUtable(ContextID, mlu)) return FALSE;
     }
 
     // Only one ASCII string
@@ -157,7 +157,7 @@ cmsBool AddMLUBlock(cmsMLU* mlu, cmsUInt32Number size, const wchar_t *Block,
     // Check for size
     while ((mlu ->PoolSize - mlu ->PoolUsed) < size) {
 
-            if (!GrowMLUpool(mlu)) return FALSE;
+            if (!GrowMLUpool(ContextID, mlu)) return FALSE;
     }
 
     Offset = mlu ->PoolUsed;
@@ -182,51 +182,51 @@ cmsBool AddMLUBlock(cmsMLU* mlu, cmsUInt32Number size, const wchar_t *Block,
 // compilers don't properly align beginning of strings
 
 static
-cmsUInt16Number strTo16(const char str[3])
+cmsUInt16Number strTo16(cmsContext ContextID, const char str[3])
 {
     const cmsUInt8Number* ptr8 = (const cmsUInt8Number*)str;
     cmsUInt16Number n = ((cmsUInt16Number) ptr8[1] << 8) |  ptr8[0];
 
-    return _cmsAdjustEndianess16(n);
+    return _cmsAdjustEndianess16(ContextID, n);
 }
 
 static
-void strFrom16(char str[3], cmsUInt16Number n)
+void strFrom16(cmsContext ContextID, char str[3], cmsUInt16Number n)
 {
     // Assuming this would be aligned
     union {
 
        cmsUInt16Number n;
        cmsUInt8Number str[2];
-       
+
     } c;
 
-    c.n = _cmsAdjustEndianess16(n);  
+    c.n = _cmsAdjustEndianess16(ContextID, n);
 
     str[0] = (char) c.str[0]; str[1] = (char) c.str[1]; str[2] = (char) 0;
 
 }
 
 // Add an ASCII entry. Do not add any \0 termination (ICC1v43_2010-12.pdf page 61)
-cmsBool CMSEXPORT cmsMLUsetASCII(cmsMLU* mlu, const char LanguageCode[3], const char CountryCode[3], const char* ASCIIString)
+cmsBool CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* mlu, const char LanguageCode[3], const char CountryCode[3], const char* ASCIIString)
 {
     cmsUInt32Number i, len = (cmsUInt32Number) strlen(ASCIIString);
     wchar_t* WStr;
     cmsBool  rc;
-    cmsUInt16Number Lang  = strTo16(LanguageCode);
-    cmsUInt16Number Cntry = strTo16(CountryCode);
+    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
+    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
 
     if (mlu == NULL) return FALSE;
 
-    WStr = (wchar_t*) _cmsCalloc(mlu ->ContextID, len,  sizeof(wchar_t));
+    WStr = (wchar_t*) _cmsCalloc(ContextID, len,  sizeof(wchar_t));
     if (WStr == NULL) return FALSE;
 
     for (i=0; i < len; i++)
         WStr[i] = (wchar_t) ASCIIString[i];
 
-    rc = AddMLUBlock(mlu, len  * sizeof(wchar_t), WStr, Lang, Cntry);
+    rc = AddMLUBlock(ContextID, mlu, len  * sizeof(wchar_t), WStr, Lang, Cntry);
 
-    _cmsFree(mlu ->ContextID, WStr);
+    _cmsFree(ContextID, WStr);
     return rc;
 
 }
@@ -245,28 +245,28 @@ cmsUInt32Number mywcslen(const wchar_t *s)
 }
 
 // Add a wide entry. Do not add any \0 terminator (ICC1v43_2010-12.pdf page 61)
-cmsBool  CMSEXPORT cmsMLUsetWide(cmsMLU* mlu, const char Language[3], const char Country[3], const wchar_t* WideString)
+cmsBool  CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu, const char Language[3], const char Country[3], const wchar_t* WideString)
 {
-    cmsUInt16Number Lang  = strTo16(Language);
-    cmsUInt16Number Cntry = strTo16(Country);
+    cmsUInt16Number Lang  = strTo16(ContextID, Language);
+    cmsUInt16Number Cntry = strTo16(ContextID, Country);
     cmsUInt32Number len;
 
     if (mlu == NULL) return FALSE;
     if (WideString == NULL) return FALSE;
 
     len = (cmsUInt32Number) (mywcslen(WideString)) * sizeof(wchar_t);
-    return AddMLUBlock(mlu, len, WideString, Lang, Cntry);
+    return AddMLUBlock(ContextID, mlu, len, WideString, Lang, Cntry);
 }
 
 // Duplicating a MLU is as easy as copying all members
-cmsMLU* CMSEXPORT cmsMLUdup(const cmsMLU* mlu)
+cmsMLU* CMSEXPORT cmsMLUdup(cmsContext ContextID, const cmsMLU* mlu)
 {
     cmsMLU* NewMlu = NULL;
 
     // Duplicating a NULL obtains a NULL
     if (mlu == NULL) return NULL;
 
-    NewMlu = cmsMLUalloc(mlu ->ContextID, mlu ->UsedEntries);
+    NewMlu = cmsMLUalloc(ContextID, mlu ->UsedEntries);
     if (NewMlu == NULL) return NULL;
 
     // Should never happen
@@ -285,7 +285,7 @@ cmsMLU* CMSEXPORT cmsMLUdup(const cmsMLU* mlu)
     }
     else {
         // It is not empty
-        NewMlu ->MemPool = _cmsMalloc(mlu ->ContextID, mlu ->PoolUsed);
+        NewMlu ->MemPool = _cmsMalloc(ContextID, mlu ->PoolUsed);
         if (NewMlu ->MemPool == NULL) goto Error;
     }
 
@@ -300,19 +300,19 @@ cmsMLU* CMSEXPORT cmsMLUdup(const cmsMLU* mlu)
 
 Error:
 
-    if (NewMlu != NULL) cmsMLUfree(NewMlu);
+    if (NewMlu != NULL) cmsMLUfree(ContextID, NewMlu);
     return NULL;
 }
 
 // Free any used memory
-void CMSEXPORT cmsMLUfree(cmsMLU* mlu)
+void CMSEXPORT cmsMLUfree(cmsContext ContextID, cmsMLU* mlu)
 {
     if (mlu) {
 
-        if (mlu -> Entries) _cmsFree(mlu ->ContextID, mlu->Entries);
-        if (mlu -> MemPool) _cmsFree(mlu ->ContextID, mlu->MemPool);
+        if (mlu -> Entries) _cmsFree(ContextID, mlu->Entries);
+        if (mlu -> MemPool) _cmsFree(ContextID, mlu->MemPool);
 
-        _cmsFree(mlu ->ContextID, mlu);
+        _cmsFree(ContextID, mlu);
     }
 }
 
@@ -369,7 +369,7 @@ const wchar_t* _cmsMLUgetWide(const cmsMLU* mlu,
 
 
 // Obtain an ASCII representation of the wide string. Setting buffer to NULL returns the len
-cmsUInt32Number CMSEXPORT cmsMLUgetASCII(const cmsMLU* mlu,
+cmsUInt32Number CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu,
                                        const char LanguageCode[3], const char CountryCode[3],
                                        char* Buffer, cmsUInt32Number BufferSize)
 {
@@ -377,8 +377,8 @@ cmsUInt32Number CMSEXPORT cmsMLUgetASCII(const cmsMLU* mlu,
     cmsUInt32Number  StrLen = 0;
     cmsUInt32Number ASCIIlen, i;
 
-    cmsUInt16Number Lang  = strTo16(LanguageCode);
-    cmsUInt16Number Cntry = strTo16(CountryCode);
+    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
+    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
 
     // Sanitize
     if (mlu == NULL) return 0;
@@ -414,15 +414,15 @@ cmsUInt32Number CMSEXPORT cmsMLUgetASCII(const cmsMLU* mlu,
 }
 
 // Obtain a wide representation of the MLU, on depending on current locale settings
-cmsUInt32Number CMSEXPORT cmsMLUgetWide(const cmsMLU* mlu,
+cmsUInt32Number CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
                                       const char LanguageCode[3], const char CountryCode[3],
                                       wchar_t* Buffer, cmsUInt32Number BufferSize)
 {
     const wchar_t *Wide;
     cmsUInt32Number  StrLen = 0;
 
-    cmsUInt16Number Lang  = strTo16(LanguageCode);
-    cmsUInt16Number Cntry = strTo16(CountryCode);
+    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
+    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
 
     // Sanitize
     if (mlu == NULL) return 0;
@@ -448,14 +448,14 @@ cmsUInt32Number CMSEXPORT cmsMLUgetWide(const cmsMLU* mlu,
 
 
 // Get also the language and country
-CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(const cmsMLU* mlu,
+CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU* mlu,
                                               const char LanguageCode[3], const char CountryCode[3],
                                               char ObtainedLanguage[3], char ObtainedCountry[3])
 {
     const wchar_t *Wide;
 
-    cmsUInt16Number Lang  = strTo16(LanguageCode);
-    cmsUInt16Number Cntry = strTo16(CountryCode);
+    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
+    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
     cmsUInt16Number ObtLang, ObtCode;
 
     // Sanitize
@@ -465,8 +465,8 @@ CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(const cmsMLU* mlu,
     if (Wide == NULL) return FALSE;
 
     // Get used language and code
-    strFrom16(ObtainedLanguage, ObtLang);
-    strFrom16(ObtainedCountry, ObtCode);
+    strFrom16(ContextID, ObtainedLanguage, ObtLang);
+    strFrom16(ContextID, ObtainedCountry, ObtCode);
 
     return TRUE;
 }
@@ -474,14 +474,16 @@ CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(const cmsMLU* mlu,
 
 
 // Get the number of translations in the MLU object
-cmsUInt32Number CMSEXPORT cmsMLUtranslationsCount(const cmsMLU* mlu)
+cmsUInt32Number CMSEXPORT cmsMLUtranslationsCount(cmsContext ContextID, const cmsMLU* mlu)
 {
+    cmsUNUSED_PARAMETER(ContextID);
     if (mlu == NULL) return 0;
     return mlu->UsedEntries;
 }
 
 // Get the language and country codes for a specific MLU index
-cmsBool CMSEXPORT cmsMLUtranslationsCodes(const cmsMLU* mlu,
+cmsBool CMSEXPORT cmsMLUtranslationsCodes(cmsContext ContextID,
+                                          const cmsMLU* mlu,
                                           cmsUInt32Number idx,
                                           char LanguageCode[3],
                                           char CountryCode[3])
@@ -493,9 +495,9 @@ cmsBool CMSEXPORT cmsMLUtranslationsCodes(const cmsMLU* mlu,
     if (idx >= mlu->UsedEntries) return FALSE;
 
     entry = &mlu->Entries[idx];
-    
-    strFrom16(LanguageCode, entry->Language);
-    strFrom16(CountryCode, entry->Country);
+
+    strFrom16(ContextID, LanguageCode, entry->Language);
+    strFrom16(ContextID, CountryCode, entry->Country);
 
     return TRUE;
 }
@@ -505,7 +507,7 @@ cmsBool CMSEXPORT cmsMLUtranslationsCodes(const cmsMLU* mlu,
 
 // Grow the list to keep at least NumElements
 static
-cmsBool  GrowNamedColorList(cmsNAMEDCOLORLIST* v)
+cmsBool  GrowNamedColorList(cmsContext ContextID, cmsNAMEDCOLORLIST* v)
 {
     cmsUInt32Number size;
     _cmsNAMEDCOLOR * NewPtr;
@@ -519,12 +521,12 @@ cmsBool  GrowNamedColorList(cmsNAMEDCOLORLIST* v)
 
     // Keep a maximum color lists can grow, 100K entries seems reasonable
     if (size > 1024 * 100) {
-        _cmsFree(v->ContextID, (void*) v->List);
+        _cmsFree(ContextID, (void*) v->List);
         v->List = NULL;
         return FALSE;
     }
 
-    NewPtr = (_cmsNAMEDCOLOR*) _cmsRealloc(v ->ContextID, v ->List, size * sizeof(_cmsNAMEDCOLOR));
+    NewPtr = (_cmsNAMEDCOLOR*) _cmsRealloc(ContextID, v ->List, size * sizeof(_cmsNAMEDCOLOR));
     if (NewPtr == NULL)
         return FALSE;
 
@@ -542,10 +544,9 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsAllocNamedColorList(cmsContext ContextID, cmsUIn
 
     v ->List      = NULL;
     v ->nColors   = 0;
-    v ->ContextID  = ContextID;
 
     while (v -> Allocated < n) {
-        if (!GrowNamedColorList(v)) {
+        if (!GrowNamedColorList(ContextID, v)) {
             _cmsFree(ContextID, (void*) v);
             return NULL;
         }
@@ -561,25 +562,25 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsAllocNamedColorList(cmsContext ContextID, cmsUIn
 }
 
 // Free a list
-void CMSEXPORT cmsFreeNamedColorList(cmsNAMEDCOLORLIST* v)
+void CMSEXPORT cmsFreeNamedColorList(cmsContext ContextID, cmsNAMEDCOLORLIST* v)
 {
     if (v == NULL) return;
-    if (v ->List) _cmsFree(v ->ContextID, v ->List);
-    _cmsFree(v ->ContextID, v);
+    if (v ->List) _cmsFree(ContextID, v ->List);
+    _cmsFree(ContextID, v);
 }
 
-cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(const cmsNAMEDCOLORLIST* v)
+cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(cmsContext ContextID, const cmsNAMEDCOLORLIST* v)
 {
     cmsNAMEDCOLORLIST* NewNC;
 
     if (v == NULL) return NULL;
 
-    NewNC= cmsAllocNamedColorList(v ->ContextID, v -> nColors, v ->ColorantCount, v ->Prefix, v ->Suffix);
+    NewNC= cmsAllocNamedColorList(ContextID, v -> nColors, v ->ColorantCount, v ->Prefix, v ->Suffix);
     if (NewNC == NULL) return NULL;
 
     // For really large tables we need this
     while (NewNC ->Allocated < v ->Allocated){
-        if (!GrowNamedColorList(NewNC)) return NULL;
+        if (!GrowNamedColorList(ContextID, NewNC)) return NULL;
     }
 
     memmove(NewNC ->Prefix, v ->Prefix, sizeof(v ->Prefix));
@@ -592,7 +593,7 @@ cmsNAMEDCOLORLIST* CMSEXPORT cmsDupNamedColorList(const cmsNAMEDCOLORLIST* v)
 
 
 // Append a color to a list. List pointer may change if reallocated
-cmsBool  CMSEXPORT cmsAppendNamedColor(cmsNAMEDCOLORLIST* NamedColorList,
+cmsBool  CMSEXPORT cmsAppendNamedColor(cmsContext ContextID, cmsNAMEDCOLORLIST* NamedColorList,
                                        const char* Name,
                                        cmsUInt16Number PCS[3], cmsUInt16Number Colorant[cmsMAXCHANNELS])
 {
@@ -601,7 +602,7 @@ cmsBool  CMSEXPORT cmsAppendNamedColor(cmsNAMEDCOLORLIST* NamedColorList,
     if (NamedColorList == NULL) return FALSE;
 
     if (NamedColorList ->nColors + 1 > NamedColorList ->Allocated) {
-        if (!GrowNamedColorList(NamedColorList)) return FALSE;
+        if (!GrowNamedColorList(ContextID, NamedColorList)) return FALSE;
     }
 
     for (i=0; i < NamedColorList ->ColorantCount; i++)
@@ -625,14 +626,15 @@ cmsBool  CMSEXPORT cmsAppendNamedColor(cmsNAMEDCOLORLIST* NamedColorList,
 }
 
 // Returns number of elements
-cmsUInt32Number CMSEXPORT cmsNamedColorCount(const cmsNAMEDCOLORLIST* NamedColorList)
+cmsUInt32Number CMSEXPORT cmsNamedColorCount(cmsContext ContextID, const cmsNAMEDCOLORLIST* NamedColorList)
 {
+     cmsUNUSED_PARAMETER(ContextID);
      if (NamedColorList == NULL) return 0;
      return NamedColorList ->nColors;
 }
 
 // Info aboout a given color
-cmsBool  CMSEXPORT cmsNamedColorInfo(const cmsNAMEDCOLORLIST* NamedColorList, cmsUInt32Number nColor,
+cmsBool  CMSEXPORT cmsNamedColorInfo(cmsContext ContextID, const cmsNAMEDCOLORLIST* NamedColorList, cmsUInt32Number nColor,
                                      char* Name,
                                      char* Prefix,
                                      char* Suffix,
@@ -641,7 +643,7 @@ cmsBool  CMSEXPORT cmsNamedColorInfo(const cmsNAMEDCOLORLIST* NamedColorList, cm
 {
     if (NamedColorList == NULL) return FALSE;
 
-    if (nColor >= cmsNamedColorCount(NamedColorList)) return FALSE;
+    if (nColor >= cmsNamedColorCount(ContextID, NamedColorList)) return FALSE;
 
     if (Name) strcpy(Name, NamedColorList->List[nColor].Name);
     if (Prefix) strcpy(Prefix, NamedColorList->Prefix);
@@ -658,12 +660,12 @@ cmsBool  CMSEXPORT cmsNamedColorInfo(const cmsNAMEDCOLORLIST* NamedColorList, cm
 }
 
 // Search for a given color name (no prefix or suffix)
-cmsInt32Number CMSEXPORT cmsNamedColorIndex(const cmsNAMEDCOLORLIST* NamedColorList, const char* Name)
+cmsInt32Number CMSEXPORT cmsNamedColorIndex(cmsContext ContextID, const cmsNAMEDCOLORLIST* NamedColorList, const char* Name)
 {
     int i, n;
 
     if (NamedColorList == NULL) return -1;
-    n = cmsNamedColorCount(NamedColorList);
+    n = cmsNamedColorCount(ContextID, NamedColorList);
     for (i=0; i < n; i++) {
         if (cmsstrcasecmp(Name,  NamedColorList->List[i].Name) == 0)
             return i;
@@ -675,27 +677,27 @@ cmsInt32Number CMSEXPORT cmsNamedColorIndex(const cmsNAMEDCOLORLIST* NamedColorL
 // MPE support -----------------------------------------------------------------------------------------------------------------
 
 static
-void FreeNamedColorList(cmsStage* mpe)
+void FreeNamedColorList(cmsContext ContextID, cmsStage* mpe)
 {
     cmsNAMEDCOLORLIST* List = (cmsNAMEDCOLORLIST*) mpe ->Data;
-    cmsFreeNamedColorList(List);
+    cmsFreeNamedColorList(ContextID, List);
 }
 
 static
-void* DupNamedColorList(cmsStage* mpe)
+void* DupNamedColorList(cmsContext ContextID, cmsStage* mpe)
 {
     cmsNAMEDCOLORLIST* List = (cmsNAMEDCOLORLIST*) mpe ->Data;
-    return cmsDupNamedColorList(List);
+    return cmsDupNamedColorList(ContextID, List);
 }
 
 static
-void EvalNamedColorPCS(const cmsFloat32Number In[], cmsFloat32Number Out[], const cmsStage *mpe)
+void EvalNamedColorPCS(cmsContext ContextID, const cmsFloat32Number In[], cmsFloat32Number Out[], const cmsStage *mpe)
 {
     cmsNAMEDCOLORLIST* NamedColorList = (cmsNAMEDCOLORLIST*) mpe ->Data;
     cmsUInt16Number index = (cmsUInt16Number) _cmsQuickSaturateWord(In[0] * 65535.0);
 
     if (index >= NamedColorList-> nColors) {
-        cmsSignalError(NamedColorList ->ContextID, cmsERROR_RANGE, "Color %d out of range", index);
+        cmsSignalError(ContextID, cmsERROR_RANGE, "Color %d out of range; ignored", index);
         Out[0] = Out[1] = Out[2] = 0.0f;
     }
     else {
@@ -708,17 +710,16 @@ void EvalNamedColorPCS(const cmsFloat32Number In[], cmsFloat32Number Out[], cons
 }
 
 static
-void EvalNamedColor(const cmsFloat32Number In[], cmsFloat32Number Out[], const cmsStage *mpe)
+void EvalNamedColor(cmsContext ContextID, const cmsFloat32Number In[], cmsFloat32Number Out[], const cmsStage *mpe)
 {
     cmsNAMEDCOLORLIST* NamedColorList = (cmsNAMEDCOLORLIST*) mpe ->Data;
     cmsUInt16Number index = (cmsUInt16Number) _cmsQuickSaturateWord(In[0] * 65535.0);
     cmsUInt32Number j;
 
     if (index >= NamedColorList-> nColors) {
-        cmsSignalError(NamedColorList ->ContextID, cmsERROR_RANGE, "Color %d out of range", index);
+        cmsSignalError(ContextID, cmsERROR_RANGE, "Color %d out of range; ignored", index);
         for (j = 0; j < NamedColorList->ColorantCount; j++)
             Out[j] = 0.0f;
-
     }
     else {
         for (j=0; j < NamedColorList ->ColorantCount; j++)
@@ -728,15 +729,15 @@ void EvalNamedColor(const cmsFloat32Number In[], cmsFloat32Number Out[], const c
 
 
 // Named color lookup element
-cmsStage* _cmsStageAllocNamedColor(cmsNAMEDCOLORLIST* NamedColorList, cmsBool UsePCS)
+cmsStage* _cmsStageAllocNamedColor(cmsContext ContextID, cmsNAMEDCOLORLIST* NamedColorList, cmsBool UsePCS)
 {
-    return _cmsStageAllocPlaceholder(NamedColorList ->ContextID,
+    return _cmsStageAllocPlaceholder(ContextID,
                                    cmsSigNamedColorElemType,
                                    1, UsePCS ? 3 : NamedColorList ->ColorantCount,
                                    UsePCS ? EvalNamedColorPCS : EvalNamedColor,
                                    DupNamedColorList,
                                    FreeNamedColorList,
-                                   cmsDupNamedColorList(NamedColorList));
+                                   cmsDupNamedColorList(ContextID, NamedColorList));
 
 }
 
@@ -768,7 +769,6 @@ cmsSEQ* CMSEXPORT cmsAllocProfileSequenceDescription(cmsContext ContextID, cmsUI
     Seq = (cmsSEQ*) _cmsMallocZero(ContextID, sizeof(cmsSEQ));
     if (Seq == NULL) return NULL;
 
-    Seq -> ContextID = ContextID;
     Seq -> seq      = (cmsPSEQDESC*) _cmsCalloc(ContextID, n, sizeof(cmsPSEQDESC));
     Seq -> n        = n;
 
@@ -786,21 +786,21 @@ cmsSEQ* CMSEXPORT cmsAllocProfileSequenceDescription(cmsContext ContextID, cmsUI
     return Seq;
 }
 
-void CMSEXPORT cmsFreeProfileSequenceDescription(cmsSEQ* pseq)
+void CMSEXPORT cmsFreeProfileSequenceDescription(cmsContext ContextID, cmsSEQ* pseq)
 {
     cmsUInt32Number i;
 
     for (i=0; i < pseq ->n; i++) {
-        if (pseq ->seq[i].Manufacturer != NULL) cmsMLUfree(pseq ->seq[i].Manufacturer);
-        if (pseq ->seq[i].Model != NULL) cmsMLUfree(pseq ->seq[i].Model);
-        if (pseq ->seq[i].Description != NULL) cmsMLUfree(pseq ->seq[i].Description);
+        if (pseq ->seq[i].Manufacturer != NULL) cmsMLUfree(ContextID, pseq ->seq[i].Manufacturer);
+        if (pseq ->seq[i].Model != NULL) cmsMLUfree(ContextID, pseq ->seq[i].Model);
+        if (pseq ->seq[i].Description != NULL) cmsMLUfree(ContextID, pseq ->seq[i].Description);
     }
 
-    if (pseq ->seq != NULL) _cmsFree(pseq ->ContextID, pseq ->seq);
-    _cmsFree(pseq -> ContextID, pseq);
+    if (pseq ->seq != NULL) _cmsFree(ContextID, pseq ->seq);
+    _cmsFree(ContextID, pseq);
 }
 
-cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(const cmsSEQ* pseq)
+cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(cmsContext ContextID, const cmsSEQ* pseq)
 {
     cmsSEQ *NewSeq;
     cmsUInt32Number i;
@@ -808,14 +808,13 @@ cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(const cmsSEQ* pseq)
     if (pseq == NULL)
         return NULL;
 
-    NewSeq = (cmsSEQ*) _cmsMalloc(pseq -> ContextID, sizeof(cmsSEQ));
+    NewSeq = (cmsSEQ*) _cmsMalloc(ContextID, sizeof(cmsSEQ));
     if (NewSeq == NULL) return NULL;
 
 
-    NewSeq -> seq      = (cmsPSEQDESC*) _cmsCalloc(pseq ->ContextID, pseq ->n, sizeof(cmsPSEQDESC));
+    NewSeq -> seq      = (cmsPSEQDESC*) _cmsCalloc(ContextID, pseq ->n, sizeof(cmsPSEQDESC));
     if (NewSeq ->seq == NULL) goto Error;
 
-    NewSeq -> ContextID = pseq ->ContextID;
     NewSeq -> n        = pseq ->n;
 
     for (i=0; i < pseq->n; i++) {
@@ -827,9 +826,9 @@ cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(const cmsSEQ* pseq)
         memmove(&NewSeq ->seq[i].ProfileID, &pseq ->seq[i].ProfileID, sizeof(cmsProfileID));
         NewSeq ->seq[i].technology  = pseq ->seq[i].technology;
 
-        NewSeq ->seq[i].Manufacturer = cmsMLUdup(pseq ->seq[i].Manufacturer);
-        NewSeq ->seq[i].Model        = cmsMLUdup(pseq ->seq[i].Model);
-        NewSeq ->seq[i].Description  = cmsMLUdup(pseq ->seq[i].Description);
+        NewSeq ->seq[i].Manufacturer = cmsMLUdup(ContextID, pseq ->seq[i].Manufacturer);
+        NewSeq ->seq[i].Model        = cmsMLUdup(ContextID, pseq ->seq[i].Model);
+        NewSeq ->seq[i].Description  = cmsMLUdup(ContextID, pseq ->seq[i].Description);
 
     }
 
@@ -837,7 +836,7 @@ cmsSEQ* CMSEXPORT cmsDupProfileSequenceDescription(const cmsSEQ* pseq)
 
 Error:
 
-    cmsFreeProfileSequenceDescription(NewSeq);
+    cmsFreeProfileSequenceDescription(ContextID, NewSeq);
     return NULL;
 }
 
@@ -848,7 +847,6 @@ Error:
 
 typedef struct _cmsDICT_struct {
     cmsDICTentry* head;
-    cmsContext ContextID;
 } _cmsDICT;
 
 
@@ -858,13 +856,12 @@ cmsHANDLE CMSEXPORT cmsDictAlloc(cmsContext ContextID)
     _cmsDICT* dict = (_cmsDICT*) _cmsMallocZero(ContextID, sizeof(_cmsDICT));
     if (dict == NULL) return NULL;
 
-    dict ->ContextID = ContextID;
     return (cmsHANDLE) dict;
 
 }
 
 // Dispose resources
-void CMSEXPORT cmsDictFree(cmsHANDLE hDict)
+void CMSEXPORT cmsDictFree(cmsContext ContextID, cmsHANDLE hDict)
 {
     _cmsDICT* dict = (_cmsDICT*) hDict;
     cmsDICTentry *entry, *next;
@@ -875,19 +872,19 @@ void CMSEXPORT cmsDictFree(cmsHANDLE hDict)
     entry = dict ->head;
     while (entry != NULL) {
 
-            if (entry ->DisplayName  != NULL) cmsMLUfree(entry ->DisplayName);
-            if (entry ->DisplayValue != NULL) cmsMLUfree(entry ->DisplayValue);
-            if (entry ->Name != NULL) _cmsFree(dict ->ContextID, entry -> Name);
-            if (entry ->Value != NULL) _cmsFree(dict ->ContextID, entry -> Value);
+            if (entry ->DisplayName  != NULL) cmsMLUfree(ContextID, entry ->DisplayName);
+            if (entry ->DisplayValue != NULL) cmsMLUfree(ContextID, entry ->DisplayValue);
+            if (entry ->Name != NULL) _cmsFree(ContextID, entry -> Name);
+            if (entry ->Value != NULL) _cmsFree(ContextID, entry -> Value);
 
             // Don't fall in the habitual trap...
             next = entry ->Next;
-            _cmsFree(dict ->ContextID, entry);
+            _cmsFree(ContextID, entry);
 
             entry = next;
     }
 
-    _cmsFree(dict ->ContextID, dict);
+    _cmsFree(ContextID, dict);
 }
 
 
@@ -900,7 +897,7 @@ wchar_t* DupWcs(cmsContext ContextID, const wchar_t* ptr)
 }
 
 // Add a new entry to the linked list
-cmsBool CMSEXPORT cmsDictAddEntry(cmsHANDLE hDict, const wchar_t* Name, const wchar_t* Value, const cmsMLU *DisplayName, const cmsMLU *DisplayValue)
+cmsBool CMSEXPORT cmsDictAddEntry(cmsContext ContextID, cmsHANDLE hDict, const wchar_t* Name, const wchar_t* Value, const cmsMLU *DisplayName, const cmsMLU *DisplayValue)
 {
     _cmsDICT* dict = (_cmsDICT*) hDict;
     cmsDICTentry *entry;
@@ -908,13 +905,13 @@ cmsBool CMSEXPORT cmsDictAddEntry(cmsHANDLE hDict, const wchar_t* Name, const wc
     _cmsAssert(dict != NULL);
     _cmsAssert(Name != NULL);
 
-    entry = (cmsDICTentry*) _cmsMallocZero(dict ->ContextID, sizeof(cmsDICTentry));
+    entry = (cmsDICTentry*) _cmsMallocZero(ContextID, sizeof(cmsDICTentry));
     if (entry == NULL) return FALSE;
 
-    entry ->DisplayName  = cmsMLUdup(DisplayName);
-    entry ->DisplayValue = cmsMLUdup(DisplayValue);
-    entry ->Name         = DupWcs(dict ->ContextID, Name);
-    entry ->Value        = DupWcs(dict ->ContextID, Value);
+    entry ->DisplayName  = cmsMLUdup(ContextID, DisplayName);
+    entry ->DisplayValue = cmsMLUdup(ContextID, DisplayValue);
+    entry ->Name         = DupWcs(ContextID, Name);
+    entry ->Value        = DupWcs(ContextID, Value);
 
     entry ->Next = dict ->head;
     dict ->head = entry;
@@ -924,7 +921,7 @@ cmsBool CMSEXPORT cmsDictAddEntry(cmsHANDLE hDict, const wchar_t* Name, const wc
 
 
 // Duplicates an existing dictionary
-cmsHANDLE CMSEXPORT cmsDictDup(cmsHANDLE hDict)
+cmsHANDLE CMSEXPORT cmsDictDup(cmsContext ContextID, cmsHANDLE hDict)
 {
     _cmsDICT* old_dict = (_cmsDICT*) hDict;
     cmsHANDLE hNew;
@@ -932,16 +929,16 @@ cmsHANDLE CMSEXPORT cmsDictDup(cmsHANDLE hDict)
 
     _cmsAssert(old_dict != NULL);
 
-    hNew  = cmsDictAlloc(old_dict ->ContextID);
+    hNew  = cmsDictAlloc(ContextID);
     if (hNew == NULL) return NULL;
 
     // Walk the list freeing all nodes
     entry = old_dict ->head;
     while (entry != NULL) {
 
-        if (!cmsDictAddEntry(hNew, entry ->Name, entry ->Value, entry ->DisplayName, entry ->DisplayValue)) {
+        if (!cmsDictAddEntry(ContextID, hNew, entry ->Name, entry ->Value, entry ->DisplayName, entry ->DisplayValue)) {
 
-            cmsDictFree(hNew);
+            cmsDictFree(ContextID, hNew);
             return NULL;
         }
 
@@ -952,17 +949,19 @@ cmsHANDLE CMSEXPORT cmsDictDup(cmsHANDLE hDict)
 }
 
 // Get a pointer to the linked list
-const cmsDICTentry* CMSEXPORT cmsDictGetEntryList(cmsHANDLE hDict)
+const cmsDICTentry* CMSEXPORT cmsDictGetEntryList(cmsContext ContextID, cmsHANDLE hDict)
 {
     _cmsDICT* dict = (_cmsDICT*) hDict;
+    cmsUNUSED_PARAMETER(ContextID);
 
     if (dict == NULL) return NULL;
     return dict ->head;
 }
 
 // Helper For external languages
-const cmsDICTentry* CMSEXPORT cmsDictNextEntry(const cmsDICTentry* e)
+const cmsDICTentry* CMSEXPORT cmsDictNextEntry(cmsContext ContextID, const cmsDICTentry* e)
 {
-     if (e == NULL) return NULL;
+    cmsUNUSED_PARAMETER(ContextID);
+    if (e == NULL) return NULL;
      return e ->Next;
 }

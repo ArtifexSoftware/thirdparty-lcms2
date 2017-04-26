@@ -84,7 +84,7 @@ cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File)
 
            cmsCIExyY D65xyY;
 
-           cmsWhitePointFromTemp( &D65xyY, 6504);
+           cmsWhitePointFromTemp(ContextID,  &D65xyY, 6504);
            return cmsCreateLab4ProfileTHR(ContextID, &D65xyY);
        }
 
@@ -94,16 +94,16 @@ cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File)
        if (cmsstrcasecmp(File, "*Gray22") == 0) {
 
            cmsToneCurve* Curve = cmsBuildGamma(ContextID, 2.2);
-           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(ContextID, cmsD50_xyY(), Curve);
-           cmsFreeToneCurve(Curve);
+           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(ContextID, cmsD50_xyY(ContextID), Curve);
+           cmsFreeToneCurve(ContextID, Curve);
            return hProfile;
        }
 
         if (cmsstrcasecmp(File, "*Gray30") == 0) {
 
            cmsToneCurve* Curve = cmsBuildGamma(ContextID, 3.0);
-           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(ContextID, cmsD50_xyY(), Curve);
-           cmsFreeToneCurve(Curve);
+           cmsHPROFILE hProfile = cmsCreateGrayProfileTHR(ContextID, cmsD50_xyY(ContextID), Curve);
+           cmsFreeToneCurve(ContextID, Curve);
            return hProfile;
        }
 
@@ -122,7 +122,7 @@ cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File)
 
             Gamma4[0] = Gamma4[1] = Gamma4[2] = Gamma4[3] = Gamma;
             hProfile = cmsCreateLinearizationDeviceLink(cmsSigCmykData, Gamma4);
-            cmsFreeToneCurve(Gamma);
+            cmsFreeToneCurve(ContextID, Gamma);
             return hProfile;
        }
 
@@ -148,18 +148,18 @@ void PrintBuiltins(void)
 
 // Auxiliary for printing information on profile
 static
-void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
+void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
 {
     char* text;
     int len;
 
-    len = cmsGetProfileInfoASCII(h, Info, "en", "US", NULL, 0);
+    len = cmsGetProfileInfoASCII(ContextID, h, Info, "en", "US", NULL, 0);
     if (len == 0) return;
 
     text = (char*) malloc(len * sizeof(char));
     if (text == NULL) return;
 
-    cmsGetProfileInfoASCII(h, Info, "en", "US", text, len);
+    cmsGetProfileInfoASCII(ContextID, h, Info, "en", "US", text, len);
 
     if (strlen(text) > 0)
         printf("%s\n", text);
@@ -171,27 +171,27 @@ void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
 
 // Displays the colorant table
 static
-void PrintColorantTable(cmsHPROFILE hInput, cmsTagSignature Sig, const char* Title)
+void PrintColorantTable(cmsContext ContextID, cmsHPROFILE hInput, cmsTagSignature Sig, const char* Title)
 {
     cmsNAMEDCOLORLIST* list;
     int i, n;
 
-    if (cmsIsTag(hInput, Sig)) {
+    if (cmsIsTag(ContextID, hInput, Sig)) {
 
         printf("%s:\n", Title);
 
-        list = (cmsNAMEDCOLORLIST*) cmsReadTag(hInput, Sig);
+        list = (cmsNAMEDCOLORLIST*) cmsReadTag(ContextID, hInput, Sig);
         if (list == NULL) {
             printf("(Unavailable)\n");
             return;
         }
 
-        n = cmsNamedColorCount(list);
+        n = cmsNamedColorCount(ContextID, list);
         for (i=0; i < n; i++) {
 
             char Name[cmsMAX_PATH];
 
-            cmsNamedColorInfo(list, i, Name, NULL, NULL, NULL, NULL);
+            cmsNamedColorInfo(ContextID, list, i, Name, NULL, NULL, NULL, NULL);
             printf("\t%s\n", Name);
         }
 
@@ -201,22 +201,22 @@ void PrintColorantTable(cmsHPROFILE hInput, cmsTagSignature Sig, const char* Tit
 }
 
 
-void PrintProfileInformation(cmsHPROFILE hInput)
+void PrintProfileInformation(cmsContext ContextID, cmsHPROFILE hInput)
 {
     if (hInput == NULL) {
 			fprintf(stderr, "*Wrong or corrupted profile*\n");
             return;
     }
 
-    PrintInfo(hInput, cmsInfoDescription);
-    PrintInfo(hInput, cmsInfoManufacturer);
-    PrintInfo(hInput, cmsInfoModel);
-    PrintInfo(hInput, cmsInfoCopyright);
+    PrintInfo(ContextID, hInput, cmsInfoDescription);
+    PrintInfo(ContextID, hInput, cmsInfoManufacturer);
+    PrintInfo(ContextID, hInput, cmsInfoModel);
+    PrintInfo(ContextID, hInput, cmsInfoCopyright);
 
     if (Verbose > 2) {
 
-        PrintColorantTable(hInput, cmsSigColorantTableTag,    "Input colorant table");
-        PrintColorantTable(hInput, cmsSigColorantTableOutTag, "Input colorant out table");
+        PrintColorantTable(ContextID, hInput, cmsSigColorantTableTag,    "Input colorant table");
+        PrintColorantTable(ContextID, hInput, cmsSigColorantTableOutTag, "Input colorant out table");
     }
 
     printf("\n");

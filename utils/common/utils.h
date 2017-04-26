@@ -78,7 +78,7 @@ cmsHPROFILE OpenStockProfile(cmsContext ContextID, const char* File);
 
 // The print info utility ----------------------------------------------------------
 
-void PrintProfileInformation(cmsHPROFILE h);
+void PrintProfileInformation(cmsContext ContextID, cmsHPROFILE h);
 
 // ---------------------------------------------------------------------------------
 
