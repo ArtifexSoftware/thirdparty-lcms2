@@ -51,9 +51,6 @@ typedef struct  {
     cmsFloat64Number F, c, Nc;
     cmsUInt32Number surround;
     cmsFloat64Number n, Nbb, Ncb, z, FL, D;
-
-    cmsContext ContextID;
-
 } cmsCIECAM02;
 
 
@@ -366,8 +363,6 @@ cmsHANDLE  CMSEXPORT cmsCIECAM02Init(cmsContext ContextID, const cmsViewingCondi
         return NULL;
     }
 
-    lpMod ->ContextID = ContextID;
-
     lpMod ->adoptedWhite.XYZ[0] = pVC ->whitePoint.X;
     lpMod ->adoptedWhite.XYZ[1] = pVC ->whitePoint.Y;
     lpMod ->adoptedWhite.XYZ[2] = pVC ->whitePoint.Z;
@@ -425,19 +420,20 @@ cmsHANDLE  CMSEXPORT cmsCIECAM02Init(cmsContext ContextID, const cmsViewingCondi
 
 }
 
-void CMSEXPORT cmsCIECAM02Done(cmsHANDLE hModel)
+void CMSEXPORT cmsCIECAM02Done(cmsContext ContextID, cmsHANDLE hModel)
 {
     cmsCIECAM02* lpMod = (cmsCIECAM02*) hModel;
 
-    if (lpMod) _cmsFree(lpMod ->ContextID, lpMod);
+    if (lpMod) _cmsFree(ContextID, lpMod);
 }
 
 
-void CMSEXPORT cmsCIECAM02Forward(cmsHANDLE hModel, const cmsCIEXYZ* pIn, cmsJCh* pOut)
+void CMSEXPORT cmsCIECAM02Forward(cmsContext ContextID, cmsHANDLE hModel, const cmsCIEXYZ* pIn, cmsJCh* pOut)
 {
     CAM02COLOR clr;
     cmsCIECAM02* lpMod = (cmsCIECAM02*) hModel;
-  
+    cmsUNUSED_PARAMETER(ContextID);
+
     _cmsAssert(lpMod != NULL);
     _cmsAssert(pIn != NULL);
     _cmsAssert(pOut != NULL);
@@ -459,11 +455,12 @@ void CMSEXPORT cmsCIECAM02Forward(cmsHANDLE hModel, const cmsCIEXYZ* pIn, cmsJCh
     pOut ->h = clr.h;
 }
 
-void CMSEXPORT cmsCIECAM02Reverse(cmsHANDLE hModel, const cmsJCh* pIn, cmsCIEXYZ* pOut)
+void CMSEXPORT cmsCIECAM02Reverse(cmsContext ContextID, cmsHANDLE hModel, const cmsJCh* pIn, cmsCIEXYZ* pOut)
 {
     CAM02COLOR clr;
     cmsCIECAM02* lpMod = (cmsCIECAM02*) hModel;
-    
+    cmsUNUSED_PARAMETER(ContextID);
+
     _cmsAssert(lpMod != NULL);
     _cmsAssert(pIn != NULL);
     _cmsAssert(pOut != NULL);

@@ -306,7 +306,7 @@ cmsUInt32Number OpenEmbedded(TIFF* tiff, cmsHPROFILE* PtrProfile, cmsHTRANSFORM*
               if (Verbose) {
                   
 				  fprintf(stdout, "Embedded profile found:\n");                          
-				  PrintProfileInformation(*PtrProfile);
+				  PrintProfileInformation(ContextID, *PtrProfile);
                   
               }
 
@@ -444,7 +444,7 @@ int CmpImages(TIFF* tiff1, TIFF* tiff2, TIFF* diff)
                 cmsDoTransform(xform1, &buf1[index1], &Lab1,  1);
                 cmsDoTransform(xform2, &buf2[index2], &Lab2,  1);
 
-                dE = cmsDeltaE(&Lab1, &Lab2);               
+                dE = cmsDeltaE(ContextID, &Lab1, &Lab2);               
                 AddOnePixel(&ColorimetricStat, dE);
             }
 
