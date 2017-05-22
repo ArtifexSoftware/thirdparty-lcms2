@@ -47,10 +47,10 @@ typedef struct {
 static
 cmsUInt32Number NULLRead(cmsContext ContextID, cmsIOHANDLER* iohandler, void *Buffer, cmsUInt32Number size, cmsUInt32Number count)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     FILENULL* ResData = (FILENULL*) iohandler ->stream;
-
     cmsUInt32Number len = size * count;
+    cmsUNUSED_PARAMETER(ContextID);
+
     ResData -> Pointer += len;
     return count;
 
@@ -60,8 +60,8 @@ cmsUInt32Number NULLRead(cmsContext ContextID, cmsIOHANDLER* iohandler, void *Bu
 static
 cmsBool  NULLSeek(cmsContext ContextID, cmsIOHANDLER* iohandler, cmsUInt32Number offset)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     FILENULL* ResData = (FILENULL*) iohandler ->stream;
+    cmsUNUSED_PARAMETER(ContextID);
 
     ResData ->Pointer = offset;
     return TRUE;
@@ -70,8 +70,8 @@ cmsBool  NULLSeek(cmsContext ContextID, cmsIOHANDLER* iohandler, cmsUInt32Number
 static
 cmsUInt32Number NULLTell(cmsContext ContextID, cmsIOHANDLER* iohandler)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     FILENULL* ResData = (FILENULL*) iohandler ->stream;
+    cmsUNUSED_PARAMETER(ContextID);
     return ResData -> Pointer;
 }
 
@@ -517,8 +517,8 @@ cmsHPROFILE CMSEXPORT cmsCreateProfilePlaceholder(cmsContext ContextID)
 // Return the number of tags
 cmsInt32Number CMSEXPORT cmsGetTagCount(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE* Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     if (Icc == NULL) return -1;
 
     return  Icc->TagCount;
@@ -854,156 +854,156 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
 
 cmsUInt32Number CMSEXPORT cmsGetHeaderRenderingIntent(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc -> RenderingIntent;
 }
 
 void CMSEXPORT cmsSetHeaderRenderingIntent(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number RenderingIntent)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> RenderingIntent = RenderingIntent;
 }
 
 cmsUInt32Number CMSEXPORT cmsGetHeaderFlags(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return (cmsUInt32Number) Icc -> flags;
 }
 
 void CMSEXPORT cmsSetHeaderFlags(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Flags)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> flags = (cmsUInt32Number) Flags;
 }
 
 cmsUInt32Number CMSEXPORT cmsGetHeaderManufacturer(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc ->manufacturer;
 }
 
 void CMSEXPORT cmsSetHeaderManufacturer(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number manufacturer)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> manufacturer = manufacturer;
 }
 
 cmsUInt32Number CMSEXPORT cmsGetHeaderCreator(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc ->creator;
 }
 
 cmsUInt32Number CMSEXPORT cmsGetHeaderModel(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc ->model;
 }
 
 void CMSEXPORT cmsSetHeaderModel(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number model)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> model = model;
 }
 
 void CMSEXPORT cmsGetHeaderAttributes(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt64Number* Flags)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     memmove(Flags, &Icc -> attributes, sizeof(cmsUInt64Number));
 }
 
 void CMSEXPORT cmsSetHeaderAttributes(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt64Number Flags)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     memmove(&Icc -> attributes, &Flags, sizeof(cmsUInt64Number));
 }
 
 void CMSEXPORT cmsGetHeaderProfileID(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt8Number* ProfileID)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     memmove(ProfileID, Icc ->ProfileID.ID8, 16);
 }
 
 void CMSEXPORT cmsSetHeaderProfileID(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt8Number* ProfileID)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     memmove(&Icc -> ProfileID, ProfileID, 16);
 }
 
 cmsBool  CMSEXPORT cmsGetHeaderCreationDateTime(cmsContext ContextID, cmsHPROFILE hProfile, struct tm *Dest)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     memmove(Dest, &Icc ->Created, sizeof(struct tm));
     return TRUE;
 }
 
 cmsColorSpaceSignature CMSEXPORT cmsGetPCS(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc -> PCS;
 }
 
 void CMSEXPORT cmsSetPCS(cmsContext ContextID, cmsHPROFILE hProfile, cmsColorSpaceSignature pcs)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> PCS = pcs;
 }
 
 cmsColorSpaceSignature CMSEXPORT cmsGetColorSpace(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc -> ColorSpace;
 }
 
 void CMSEXPORT cmsSetColorSpace(cmsContext ContextID, cmsHPROFILE hProfile, cmsColorSpaceSignature sig)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> ColorSpace = sig;
 }
 
 cmsProfileClassSignature CMSEXPORT cmsGetDeviceClass(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc -> DeviceClass;
 }
 
 void CMSEXPORT cmsSetDeviceClass(cmsContext ContextID, cmsHPROFILE hProfile, cmsProfileClassSignature sig)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> DeviceClass = sig;
 }
 
 cmsUInt32Number CMSEXPORT cmsGetEncodedICCversion(cmsContext ContextID, cmsHPROFILE hProfile)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     return Icc -> Version;
 }
 
 void CMSEXPORT cmsSetEncodedICCversion(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Version)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) hProfile;
+    cmsUNUSED_PARAMETER(ContextID);
     Icc -> Version = Version;
 }
 

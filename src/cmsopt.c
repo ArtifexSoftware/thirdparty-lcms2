@@ -911,7 +911,6 @@ void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
                   register cmsUInt16Number Output[],
                   register const void* D)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt8Number         r, g, b;
     cmsS15Fixed16Number    rx, ry, rz;
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
@@ -921,6 +920,7 @@ void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
     register const cmsInterpParams* p = p8 ->p;
     int                    TotalOut = p -> nOutputs;
     const cmsUInt16Number* LutTable = (const cmsUInt16Number*) p->Table;
+    cmsUNUSED_PARAMETER(ContextID);
 
     r = Input[0] >> 8;
     g = Input[1] >> 8;

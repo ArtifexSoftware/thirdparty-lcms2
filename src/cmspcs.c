@@ -446,8 +446,8 @@ void CMSEXPORT cmsXYZEncoded2Float(cmsContext ContextID, cmsCIEXYZ* fXYZ, const 
 // Returns dE on two Lab values
 cmsFloat64Number CMSEXPORT cmsDeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     cmsFloat64Number dL, da, db;
+    cmsUNUSED_PARAMETER(ContextID);
 
     dL = fabs(Lab1 -> L - Lab2 -> L);
     da = fabs(Lab1 -> a - Lab2 -> a);
@@ -599,7 +599,6 @@ cmsFloat64Number CMSEXPORT cmsCMCdeltaE(cmsContext ContextID, const cmsCIELab* L
 cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELab* Lab1, const cmsCIELab* Lab2,
                                   cmsFloat64Number Kl, cmsFloat64Number Kc, cmsFloat64Number Kh)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     cmsFloat64Number L1  = Lab1->L;
     cmsFloat64Number a1  = Lab1->a;
     cmsFloat64Number b1  = Lab1->b;
@@ -661,6 +660,8 @@ cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELa
                             Sqr(delta_C/(Sc * Kc))  +
                             Sqr(delta_H/(Sh * Kh))  +
                             Rt*(delta_C/(Sc * Kc)) * (delta_H / (Sh * Kh)));
+
+    cmsUNUSED_PARAMETER(ContextID);
 
     return deltaE00;
 }
@@ -774,7 +775,6 @@ cmsBool  _cmsEndPointsBySpace(cmsColorSpaceSignature Space,
 
 cmsColorSpaceSignature CMSEXPORT _cmsICCcolorSpace(cmsContext ContextID, int OurNotation)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     switch (OurNotation) {
 
        case 1:
@@ -816,6 +816,7 @@ cmsColorSpaceSignature CMSEXPORT _cmsICCcolorSpace(cmsContext ContextID, int Our
 
        default:  return (cmsColorSpaceSignature) (-1);
        }
+    cmsUNUSED_PARAMETER(ContextID);
 }
 
 

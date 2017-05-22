@@ -76,11 +76,11 @@ cmsFloat64Number CMSEXPORT _cmsVEC3length(cmsContext ContextID, const cmsVEC3* a
 // Euclidean distance
 cmsFloat64Number CMSEXPORT _cmsVEC3distance(cmsContext ContextID, const cmsVEC3* a, const cmsVEC3* b)
 {
-    cmsUNUSED_PARAMETER(ContextID);
-
     cmsFloat64Number d1 = a ->n[VX] - b ->n[VX];
     cmsFloat64Number d2 = a ->n[VY] - b ->n[VY];
     cmsFloat64Number d3 = a ->n[VZ] - b ->n[VZ];
+
+    cmsUNUSED_PARAMETER(ContextID);
 
     return sqrt(d1*d1 + d2*d2 + d3*d3);
 }
