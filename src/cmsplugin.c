@@ -38,9 +38,9 @@ cmsUInt16Number CMSEXPORT  _cmsAdjustEndianess16(cmsContext ContextID, cmsUInt16
 {
 #ifndef CMS_USE_BIG_ENDIAN
 
-    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt8Number* pByte = (cmsUInt8Number*) &Word;
     cmsUInt8Number tmp;
+    cmsUNUSED_PARAMETER(ContextID);
 
     tmp = pByte[0];
     pByte[0] = pByte[1];
@@ -59,11 +59,10 @@ cmsUInt16Number CMSEXPORT  _cmsAdjustEndianess16(cmsContext ContextID, cmsUInt16
 cmsUInt32Number CMSEXPORT  _cmsAdjustEndianess32(cmsContext ContextID, cmsUInt32Number DWord)
 {
 #ifndef CMS_USE_BIG_ENDIAN
-
-    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt8Number* pByte = (cmsUInt8Number*) &DWord;
     cmsUInt8Number temp1;
     cmsUInt8Number temp2;
+    cmsUNUSED_PARAMETER(ContextID);
 
     temp1 = *pByte++;
     temp2 = *pByte++;

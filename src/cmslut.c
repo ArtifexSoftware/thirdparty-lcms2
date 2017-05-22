@@ -1132,8 +1132,8 @@ cmsStage* _cmsStageNormalizeToXyzFloat(cmsContext ContextID)
 static
 void Clipper(cmsContext ContextID, const cmsFloat32Number In[], cmsFloat32Number Out[], const cmsStage *mpe)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt32Number i;
+    cmsUNUSED_PARAMETER(ContextID);
        for (i = 0; i < mpe->InputChannels; i++) {
 
               cmsFloat32Number n = In[i];
