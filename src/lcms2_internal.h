@@ -96,6 +96,11 @@
 # ifndef vsnprintf
 #       define vsnprintf  _vsnprintf
 # endif
+#if _MSC_VER <= 1700 /* MSVC 2012 */
+#include <float.h>
+#define isnan(x) _isnan(x)
+#define isinf(x) (!_finite(x))
+#endif
 #endif
 
 
