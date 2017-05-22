@@ -174,8 +174,8 @@ void _cmsFreeInterpParams(cmsContext ContextID, cmsInterpParams* p)
 // Inline fixed point interpolation
 cmsINLINE cmsUInt16Number LinearInterp(cmsContext ContextID, cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     cmsUInt32Number dif = (cmsUInt32Number) (h - l) * a + 0x8000;
+    cmsUNUSED_PARAMETER(ContextID);
     dif = (dif >> 16) + l;
     return (cmsUInt16Number) (dif);
 }
