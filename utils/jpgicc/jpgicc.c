@@ -180,25 +180,27 @@ int PCS2ITU(cmsContext ContextID, register const cmsUInt16Number In[], register 
 {
     cmsCIELab Lab;
 
-    cmsLabEncoded2Float(ContextID, &Lab, In);
-    cmsDesaturateLab(ContextID, &Lab, 85, -85, 125, -75);    // This function does the necessary gamut remapping
+    cmsLabEncoded2Float(NULL, &Lab, In);
+    cmsDesaturateLab(NULL, &Lab, 85, -85, 125, -75);    // This function does the necessary gamut remapping
     Lab2ITU(&Lab, Out);
     return TRUE;
 
     UTILS_UNUSED_PARAMETER(Cargo);
+    UTILS_UNUSED_PARAMETER(ContextID);
 }
 
 
 static
-int ITU2PCS( register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void*  Cargo)
+int ITU2PCS(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void*  Cargo)
 {
     cmsCIELab Lab;
 
     ITU2Lab(In, &Lab);
-    cmsFloat2LabEncoded(ContextID, Out, &Lab);
+    cmsFloat2LabEncoded(NULL, Out, &Lab);
     return TRUE;
 
     UTILS_UNUSED_PARAMETER(Cargo);
+    UTILS_UNUSED_PARAMETER(ContextID);
 }
 
 // This function does create the virtual input profile, which decodes ITU to the profile connection space
@@ -215,20 +217,20 @@ cmsHPROFILE CreateITU2PCS_ICC(void)
     ColorMap = cmsStageAllocCLut16bit(0, GRID_POINTS, 3, 3, NULL);
     if (ColorMap == NULL) return NULL;
 
-    cmsPipelineInsertStage(ContextID, AToB0, cmsAT_BEGIN, ColorMap);
-    cmsStageSampleCLut16bit(ContextID, ColorMap, ITU2PCS, NULL, 0);
+    cmsPipelineInsertStage(NULL, AToB0, cmsAT_BEGIN, ColorMap);
+    cmsStageSampleCLut16bit(NULL, ColorMap, ITU2PCS, NULL, 0);
 
     hProfile = cmsCreateProfilePlaceholder(0);
     if (hProfile == NULL) {
-        cmsPipelineFree(ContextID, AToB0);
+        cmsPipelineFree(NULL, AToB0);
         return NULL;
     }
 
-    cmsWriteTag(ContextID, hProfile, cmsSigAToB0Tag, AToB0);
-    cmsSetColorSpace(hProfile, cmsSigLabData);
-    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigColorSpaceClass);
-    cmsPipelineFree(ContextID, AToB0);
+    cmsWriteTag(NULL, hProfile, cmsSigAToB0Tag, AToB0);
+    cmsSetColorSpace(NULL, hProfile, cmsSigLabData);
+    cmsSetPCS(NULL, hProfile, cmsSigLabData);
+    cmsSetDeviceClass(NULL, hProfile, cmsSigColorSpaceClass);
+    cmsPipelineFree(NULL, AToB0);
 
     return hProfile;
 }
@@ -248,21 +250,21 @@ cmsHPROFILE CreatePCS2ITU_ICC(void)
     ColorMap = cmsStageAllocCLut16bit(0, GRID_POINTS, 3, 3, NULL);
     if (ColorMap == NULL) return NULL;
 
-    cmsPipelineInsertStage(ContextID, BToA0, cmsAT_BEGIN, ColorMap);
-    cmsStageSampleCLut16bit(ContextID, ColorMap, PCS2ITU, NULL, 0);
+    cmsPipelineInsertStage(NULL, BToA0, cmsAT_BEGIN, ColorMap);
+    cmsStageSampleCLut16bit(NULL, ColorMap, PCS2ITU, NULL, 0);
 
     hProfile = cmsCreateProfilePlaceholder(0);
     if (hProfile == NULL) {
-        cmsPipelineFree(ContextID, BToA0);
+        cmsPipelineFree(NULL, BToA0);
         return NULL;
     }
 
-    cmsWriteTag(ContextID, hProfile, cmsSigBToA0Tag, BToA0);
-    cmsSetColorSpace(hProfile, cmsSigLabData);
-    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
-    cmsSetDeviceClass(ContextID, hProfile, cmsSigColorSpaceClass);
+    cmsWriteTag(NULL, hProfile, cmsSigBToA0Tag, BToA0);
+    cmsSetColorSpace(NULL, hProfile, cmsSigLabData);
+    cmsSetPCS(NULL, hProfile, cmsSigLabData);
+    cmsSetDeviceClass(NULL, hProfile, cmsSigColorSpaceClass);
 
-    cmsPipelineFree(ContextID, BToA0);
+    cmsPipelineFree(NULL, BToA0);
 
     return hProfile;
 }
@@ -696,17 +698,17 @@ cmsUInt32Number ComputeOutputFormatDescriptor(cmsUInt32Number dwInput, int OutCo
 static
 int GetProfileColorSpace(cmsHPROFILE hProfile)
 {
-    cmsColorSpaceSignature ProfileSpace = cmsGetColorSpace(ContextID, hProfile);
+    cmsColorSpaceSignature ProfileSpace = cmsGetColorSpace(NULL, hProfile);
 
-    return _cmsLCMScolorSpace(ContextID, ProfileSpace);
+    return _cmsLCMScolorSpace(NULL, ProfileSpace);
 }
 
 static
 int GetDevicelinkColorSpace(cmsHPROFILE hProfile)
 {
-    cmsColorSpaceSignature ProfileSpace = cmsGetPCS(ContextID, hProfile);
+    cmsColorSpaceSignature ProfileSpace = cmsGetPCS(NULL, hProfile);
 
-    return _cmsLCMScolorSpace(ContextID, ProfileSpace);
+    return _cmsLCMScolorSpace(NULL, ProfileSpace);
 }
 
 
@@ -872,7 +874,7 @@ int DoTransform(cmsHTRANSFORM hXForm, int OutputColorSpace)
 
        jpeg_read_scanlines(&Decompressor, &ScanLineIn, 1);
 
-       cmsDoTransform(hXForm, ScanLineIn, ScanLineOut, Decompressor.output_width);
+       cmsDoTransform(NULL, hXForm, ScanLineIn, ScanLineOut, Decompressor.output_width);
 
        jpeg_write_scanlines(&Compressor, &ScanLineOut, 1);
        }
@@ -942,7 +944,7 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
                if (Verbose) {
 
                   fprintf(stdout, " (Embedded profile found)\n");
-                  PrintProfileInformation(ContextID, hIn);
+                  PrintProfileInformation(NULL, hIn);
                   fflush(stdout);
               }
 
@@ -985,7 +987,7 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
             FatalError("Output profile couldn't be read.");
 
        // Assure both, input profile and input JPEG are on same colorspace
-       if (cmsGetColorSpace(ContextID, hIn) != _cmsICCcolorSpace(ContextID, T_COLORSPACE(wInput)))
+       if (cmsGetColorSpace(NULL, hIn) != _cmsICCcolorSpace(NULL, T_COLORSPACE(wInput)))
               FatalError("Input profile is not operating in proper color space");
 
 
@@ -1017,10 +1019,10 @@ int TransformImage(char *cDefInpProf, char *cOutputProf)
 
        jcopy_markers_execute(&Decompressor, &Compressor);
 
-       cmsDeleteTransform(xform);
-       cmsCloseProfile(hIn);
-       cmsCloseProfile(hOut);
-       if (hProof) cmsCloseProfile(hProof);
+       cmsDeleteTransform(NULL, xform);
+       cmsCloseProfile(NULL, hIn);
+       cmsCloseProfile(NULL, hOut);
+       if (hProof) cmsCloseProfile(NULL, hProof);
 
        return 1;
 }
