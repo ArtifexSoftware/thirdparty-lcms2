@@ -50,7 +50,6 @@ cmsInt32Number CheckAllocContext(void)
 {
      cmsContext c1, c2, c3, c4;
 
-
      c1 = cmsCreateContext(NULL, NULL);                 // This creates a context by using the normal malloc
      DebugMemDontCheckThis(c1);
      cmsDeleteContext(c1);
@@ -69,8 +68,6 @@ cmsInt32Number CheckAllocContext(void)
 
      c3 = DupContext(c1, NULL);
      c4 = DupContext(c2, NULL);
-
-
 
      cmsDeleteContext(c1);  // Should be deleted by using nomal malloc
      cmsDeleteContext(c2);  // Should be deleted by using debug malloc
@@ -218,7 +215,7 @@ cmsInt32Number CheckAdaptationStateContext(void)
 
 // This fake interpolation takes always the closest lower node in the interpolation table for 1D
 static
-void Fake1Dfloat(const cmsFloat32Number Value[],
+void Fake1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
                     cmsFloat32Number Output[],
                     const cmsInterpParams* p)
 {
@@ -239,7 +236,7 @@ void Fake1Dfloat(const cmsFloat32Number Value[],
 
 // This fake interpolation just uses scrambled negated indexes for output
 static
-void Fake3D16(register const cmsUInt16Number Input[],
+void Fake3D16(cmsContext ContextID, register const cmsUInt16Number Input[],
               register cmsUInt16Number Output[],
               register const struct _cms_interp_struc* p)
 {
@@ -249,7 +246,7 @@ void Fake3D16(register const cmsUInt16Number Input[],
 }
 
 // The factory chooses interpolation routines on depending on certain conditions.
-cmsInterpFunction my_Interpolators_Factory(cmsUInt32Number nInputChannels,
+cmsInterpFunction my_Interpolators_Factory(cmsContext ContextID, cmsUInt32Number nInputChannels,
                                            cmsUInt32Number nOutputChannels,
                                            cmsUInt32Number dwFlags)
 {
@@ -314,12 +311,12 @@ cmsInt32Number CheckInterp1DPlugin(void)
     }
 
     // Do some interpolations with the plugin
-    if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.10f), 0.10, 0.01)) goto Error;
-    if (!IsGoodVal("0.13", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.13f), 0.10, 0.01)) goto Error;
-    if (!IsGoodVal("0.55", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.55f), 0.50, 0.01)) goto Error;
-    if (!IsGoodVal("0.9999", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.9999f), 0.90, 0.01)) goto Error;
+    if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(cpy, Sampled1D, 0.10f), 0.10, 0.01)) goto Error;
+    if (!IsGoodVal("0.13", cmsEvalToneCurveFloat(cpy, Sampled1D, 0.13f), 0.10, 0.01)) goto Error;
+    if (!IsGoodVal("0.55", cmsEvalToneCurveFloat(cpy, Sampled1D, 0.55f), 0.50, 0.01)) goto Error;
+    if (!IsGoodVal("0.9999", cmsEvalToneCurveFloat(cpy, Sampled1D, 0.9999f), 0.90, 0.01)) goto Error;
 
-    cmsFreeToneCurve(ContextID, Sampled1D);
+    cmsFreeToneCurve(cpy, Sampled1D);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
 
@@ -331,18 +328,18 @@ cmsInt32Number CheckInterp1DPlugin(void)
     }
 
     // Now without the plug-in
-    if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.10f), 0.10, 0.001)) goto Error;
-    if (!IsGoodVal("0.13", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.13f), 0.13, 0.001)) goto Error;
-    if (!IsGoodVal("0.55", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.55f), 0.55, 0.001)) goto Error;
-    if (!IsGoodVal("0.9999", cmsEvalToneCurveFloat(ContextID, Sampled1D, 0.9999f), 0.9999, 0.001)) goto Error;
+    if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(NULL, Sampled1D, 0.10f), 0.10, 0.001)) goto Error;
+    if (!IsGoodVal("0.13", cmsEvalToneCurveFloat(NULL, Sampled1D, 0.13f), 0.13, 0.001)) goto Error;
+    if (!IsGoodVal("0.55", cmsEvalToneCurveFloat(NULL, Sampled1D, 0.55f), 0.55, 0.001)) goto Error;
+    if (!IsGoodVal("0.9999", cmsEvalToneCurveFloat(NULL, Sampled1D, 0.9999f), 0.9999, 0.001)) goto Error;
 
-    cmsFreeToneCurve(ContextID, Sampled1D);
+    cmsFreeToneCurve(NULL, Sampled1D);
     return 1;
 
 Error:
     if (ctx != NULL) cmsDeleteContext(ctx);
      if (cpy != NULL) cmsDeleteContext(ctx);
-    if (Sampled1D != NULL) cmsFreeToneCurve(ContextID, Sampled1D);
+    if (Sampled1D != NULL) cmsFreeToneCurve(NULL, Sampled1D);
     return 0;
 
 }
@@ -374,60 +371,57 @@ cmsInt32Number CheckInterp3DPlugin(void)
        return 0;
     }
 
-
     cmsPluginTHR(ctx, &InterpPluginSample);
-
 
     p =  cmsPipelineAlloc(ctx, 3, 3);
     clut = cmsStageAllocCLut16bit(ctx, 2, 3, 3, identity);
-    cmsPipelineInsertStage(ContextID, p, cmsAT_BEGIN, clut);
+    cmsPipelineInsertStage(ctx, p, cmsAT_BEGIN, clut);
 
     // Do some interpolations with the plugin
 
     In[0] = 0; In[1] = 0; In[2] = 0;
-    cmsPipelineEval16(ContextID, In, Out, p);
+    cmsPipelineEval16(ctx, In, Out, p);
 
     if (!IsGoodWord("0", Out[0], 0xFFFF - 0)) goto Error;
     if (!IsGoodWord("1", Out[1], 0xFFFF - 0)) goto Error;
     if (!IsGoodWord("2", Out[2], 0xFFFF - 0)) goto Error;
 
     In[0] = 0x1234; In[1] = 0x5678; In[2] = 0x9ABC;
-    cmsPipelineEval16(ContextID, In, Out, p);
+    cmsPipelineEval16(ctx, In, Out, p);
 
     if (!IsGoodWord("0", 0xFFFF - 0x9ABC, Out[0])) goto Error;
     if (!IsGoodWord("1", 0xFFFF - 0x5678, Out[1])) goto Error;
     if (!IsGoodWord("2", 0xFFFF - 0x1234, Out[2])) goto Error;
 
-    cmsPipelineFree(ContextID, p);
+    cmsPipelineFree(ctx, p);
     cmsDeleteContext(ctx);
 
     // Now without the plug-in
 
     p =  cmsPipelineAlloc(NULL, 3, 3);
     clut = cmsStageAllocCLut16bit(NULL, 2, 3, 3, identity);
-    cmsPipelineInsertStage(ContextID, p, cmsAT_BEGIN, clut);
+    cmsPipelineInsertStage(NULL, p, cmsAT_BEGIN, clut);
 
     In[0] = 0; In[1] = 0; In[2] = 0;
-    cmsPipelineEval16(ContextID, In, Out, p);
+    cmsPipelineEval16(NULL, In, Out, p);
 
     if (!IsGoodWord("0", 0, Out[0])) goto Error;
     if (!IsGoodWord("1", 0, Out[1])) goto Error;
     if (!IsGoodWord("2", 0, Out[2])) goto Error;
 
     In[0] = 0x1234; In[1] = 0x5678; In[2] = 0x9ABC;
-    cmsPipelineEval16(ContextID, In, Out, p);
+    cmsPipelineEval16(NULL, In, Out, p);
 
     if (!IsGoodWord("0", 0x1234, Out[0])) goto Error;
     if (!IsGoodWord("1", 0x5678, Out[1])) goto Error;
     if (!IsGoodWord("2", 0x9ABC, Out[2])) goto Error;
 
-    cmsPipelineFree(ContextID, p);
+    cmsPipelineFree(NULL, p);
     return 1;
 
 Error:
-    cmsPipelineFree(ContextID, p);
+    cmsPipelineFree(NULL, p);
     return 0;
-
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -439,7 +433,7 @@ Error:
 #define TYPE_TAN  1020
 #define TYPE_709  709
 
-static cmsFloat64Number my_fns(cmsInt32Number Type,
+static cmsFloat64Number my_fns(cmsContext ContextID, cmsInt32Number Type,
                         const cmsFloat64Number Params[],
                         cmsFloat64Number R)
 {
@@ -470,7 +464,7 @@ static cmsFloat64Number my_fns(cmsInt32Number Type,
 }
 
 static
-cmsFloat64Number my_fns2(cmsInt32Number Type,
+cmsFloat64Number my_fns2(cmsContext ContextID, cmsInt32Number Type,
                         const cmsFloat64Number Params[],
                         cmsFloat64Number R)
 {
@@ -492,7 +486,7 @@ cmsFloat64Number my_fns2(cmsInt32Number Type,
 }
 
 
-static double Rec709Math(int Type, const double Params[], double R)
+static double Rec709Math(cmsContext ContextID, int Type, const double Params[], double R)
 {
     double Fun = 0;
 
@@ -552,14 +546,12 @@ cmsInt32Number CheckParametricCurvePlugin(void)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
-    cmsContext cpy2 = NULL;
     cmsToneCurve* sinus;
     cmsToneCurve* cosinus;
     cmsToneCurve* tangent;
     cmsToneCurve* reverse_sinus;
     cmsToneCurve* reverse_cosinus;
     cmsFloat64Number scale = 1.0;
-
 
     ctx = WatchDogContext(NULL);
 
@@ -569,61 +561,54 @@ cmsInt32Number CheckParametricCurvePlugin(void)
 
     cmsPluginTHR(cpy, &CurvePluginSample2);
 
-    cpy2 =  DupContext(cpy, NULL);
-
-    cmsPluginTHR(cpy2, &Rec709Plugin);
-
-
     sinus = cmsBuildParametricToneCurve(cpy, TYPE_SIN, &scale);
     cosinus = cmsBuildParametricToneCurve(cpy, TYPE_COS, &scale);
     tangent = cmsBuildParametricToneCurve(cpy, TYPE_TAN, &scale);
-    reverse_sinus = cmsReverseToneCurve(sinus);
-    reverse_cosinus = cmsReverseToneCurve(cosinus);
+    reverse_sinus = cmsReverseToneCurve(cpy, sinus);
+    reverse_cosinus = cmsReverseToneCurve(cpy, cosinus);
 
 
-     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, sinus, 0.10f), sin(0.10 * M_PI) , 0.001)) goto Error;
-     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(ContextID, sinus, 0.60f), sin(0.60* M_PI), 0.001)) goto Error;
-     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(ContextID, sinus, 0.90f), sin(0.90* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(cpy, sinus, 0.10f), sin(0.10 * M_PI) , 0.001)) goto Error;
+     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(cpy, sinus, 0.60f), sin(0.60* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(cpy, sinus, 0.90f), sin(0.90* M_PI), 0.001)) goto Error;
 
-     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, cosinus, 0.10f), cos(0.10* M_PI), 0.001)) goto Error;
-     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(ContextID, cosinus, 0.60f), cos(0.60* M_PI), 0.001)) goto Error;
-     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(ContextID, cosinus, 0.90f), cos(0.90* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(cpy, cosinus, 0.10f), cos(0.10* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(cpy, cosinus, 0.60f), cos(0.60* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(cpy, cosinus, 0.90f), cos(0.90* M_PI), 0.001)) goto Error;
 
-     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, tangent, 0.10f), tan(0.10* M_PI), 0.001)) goto Error;
-     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(ContextID, tangent, 0.60f), tan(0.60* M_PI), 0.001)) goto Error;
-     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(ContextID, tangent, 0.90f), tan(0.90* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(cpy, tangent, 0.10f), tan(0.10* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(cpy, tangent, 0.60f), tan(0.60* M_PI), 0.001)) goto Error;
+     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(cpy, tangent, 0.90f), tan(0.90* M_PI), 0.001)) goto Error;
 
 
-     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, reverse_sinus, 0.10f), asin(0.10)/M_PI, 0.001)) goto Error;
-     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(ContextID, reverse_sinus, 0.60f), asin(0.60)/M_PI, 0.001)) goto Error;
-     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(ContextID, reverse_sinus, 0.90f), asin(0.90)/M_PI, 0.001)) goto Error;
+     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(cpy, reverse_sinus, 0.10f), asin(0.10)/M_PI, 0.001)) goto Error;
+     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(cpy, reverse_sinus, 0.60f), asin(0.60)/M_PI, 0.001)) goto Error;
+     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(cpy, reverse_sinus, 0.90f), asin(0.90)/M_PI, 0.001)) goto Error;
 
-     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(ContextID, reverse_cosinus, 0.10f), acos(0.10)/M_PI, 0.001)) goto Error;
-     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(ContextID, reverse_cosinus, 0.60f), acos(0.60)/M_PI, 0.001)) goto Error;
-     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(ContextID, reverse_cosinus, 0.90f), acos(0.90)/M_PI, 0.001)) goto Error;
+     if (!IsGoodVal("0.10", cmsEvalToneCurveFloat(cpy, reverse_cosinus, 0.10f), acos(0.10)/M_PI, 0.001)) goto Error;
+     if (!IsGoodVal("0.60", cmsEvalToneCurveFloat(cpy, reverse_cosinus, 0.60f), acos(0.60)/M_PI, 0.001)) goto Error;
+     if (!IsGoodVal("0.90", cmsEvalToneCurveFloat(cpy, reverse_cosinus, 0.90f), acos(0.90)/M_PI, 0.001)) goto Error;
 
-     cmsFreeToneCurve(ContextID, sinus);
-     cmsFreeToneCurve(ContextID, cosinus);
-     cmsFreeToneCurve(ContextID, tangent);
-     cmsFreeToneCurve(ContextID, reverse_sinus);
-     cmsFreeToneCurve(ContextID, reverse_cosinus);
+     cmsFreeToneCurve(cpy, sinus);
+     cmsFreeToneCurve(cpy, cosinus);
+     cmsFreeToneCurve(cpy, tangent);
+     cmsFreeToneCurve(cpy, reverse_sinus);
+     cmsFreeToneCurve(cpy, reverse_cosinus);
 
      cmsDeleteContext(ctx);
      cmsDeleteContext(cpy);
-     cmsDeleteContext(cpy2);
 
      return 1;
 
 Error:
 
-     cmsFreeToneCurve(ContextID, sinus);
-     cmsFreeToneCurve(ContextID, reverse_sinus);
-     cmsFreeToneCurve(ContextID, cosinus);
-     cmsFreeToneCurve(ContextID, reverse_cosinus);
+     cmsFreeToneCurve(cpy, sinus);
+     cmsFreeToneCurve(cpy, reverse_sinus);
+     cmsFreeToneCurve(cpy, cosinus);
+     cmsFreeToneCurve(cpy, reverse_cosinus);
 
      if (ctx != NULL) cmsDeleteContext(ctx);
      if (cpy != NULL) cmsDeleteContext(cpy);
-     if (cpy2 != NULL) cmsDeleteContext(cpy2);
      return 0;
 }
 
@@ -635,7 +620,7 @@ Error:
 
 #define TYPE_RGB_565  (COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0) | (1 << 23))
 
-cmsUInt8Number* my_Unroll565(register struct _cmstransform_struct* nfo,
+cmsUInt8Number* my_Unroll565(cmsContext ContextID, register struct _cmstransform_struct* nfo,
                             register cmsUInt16Number wIn[],
                             register cmsUInt8Number* accum,
                             register cmsUInt32Number Stride)
@@ -653,7 +638,7 @@ cmsUInt8Number* my_Unroll565(register struct _cmstransform_struct* nfo,
     return accum + 2;
 }
 
-cmsUInt8Number* my_Pack565(register _cmsTRANSFORM* info,
+cmsUInt8Number* my_Pack565(cmsContext ContextID, register _cmsTRANSFORM* info,
                            register cmsUInt16Number wOut[],
                            register cmsUInt8Number* output,
                            register cmsUInt32Number Stride)
@@ -675,7 +660,7 @@ cmsUInt8Number* my_Pack565(register _cmsTRANSFORM* info,
 }
 
 
-cmsFormatter my_FormatterFactory(cmsUInt32Number Type,
+cmsFormatter my_FormatterFactory(cmsContext ContextID, cmsUInt32Number Type,
                                   cmsFormatterDirection Dir,
                                   cmsUInt32Number dwFlags)
 {
@@ -690,7 +675,7 @@ cmsFormatter my_FormatterFactory(cmsUInt32Number Type,
 }
 
 
-cmsFormatter my_FormatterFactory2(cmsUInt32Number Type,
+cmsFormatter my_FormatterFactory2(cmsContext ContextID, cmsUInt32Number Type,
                                   cmsFormatterDirection Dir,
                                   cmsUInt32Number dwFlags)
 {
@@ -725,12 +710,10 @@ cmsInt32Number CheckFormattersPlugin(void)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
-    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt16Number stream[]= { 0xffffU, 0x1234U, 0x0000U, 0x33ddU };
     cmsUInt16Number result[4];
     int i;
-
 
     cmsPluginTHR(ctx, &FormattersPluginSample);
 
@@ -738,16 +721,13 @@ cmsInt32Number CheckFormattersPlugin(void)
 
     cmsPluginTHR(cpy, &FormattersPluginSample2);
 
-    cpy2 = DupContext(cpy, NULL);
+    xform = cmsCreateTransformTHR(cpy, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
 
-    xform = cmsCreateTransformTHR(cpy2, NULL, TYPE_RGB_565, NULL, TYPE_RGB_565, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
+    cmsDoTransform(cpy, xform, stream, result, 4);
 
-    cmsDoTransform(xform, stream, result, 4);
-
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
-    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (stream[i] != result[i]) return 0;
@@ -763,37 +743,37 @@ cmsInt32Number CheckFormattersPlugin(void)
 #define SigInt          ((cmsTagSignature)  0x74747448)       //   'tttH'
 
 static
-void *Type_int_Read(struct _cms_typehandler_struct* self,
+void *Type_int_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
  			    cmsIOHANDLER* io,
                cmsUInt32Number* nItems,
                cmsUInt32Number SizeOfTag)
 {
-    cmsUInt32Number* Ptr = (cmsUInt32Number*) _cmsMalloc(self ->ContextID, sizeof(cmsUInt32Number));
+    cmsUInt32Number* Ptr = (cmsUInt32Number*) _cmsMalloc(ContextID, sizeof(cmsUInt32Number));
     if (Ptr == NULL) return NULL;
-    if (!_cmsReadUInt32Number(io, Ptr)) return NULL;
+    if (!_cmsReadUInt32Number(ContextID, io, Ptr)) return NULL;
     *nItems = 1;
     return Ptr;
 }
 
 static
-cmsBool Type_int_Write(struct _cms_typehandler_struct* self,
+cmsBool Type_int_Write(cmsContext ContextID, struct _cms_typehandler_struct* self,
                         cmsIOHANDLER* io,
                         void* Ptr, cmsUInt32Number nItems)
 {
-    return _cmsWriteUInt32Number(io, *(cmsUInt32Number*) Ptr);
+    return _cmsWriteUInt32Number(ContextID, io, *(cmsUInt32Number*) Ptr);
 }
 
 static
-void* Type_int_Dup(struct _cms_typehandler_struct* self,
+void* Type_int_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self,
                    const void *Ptr, cmsUInt32Number n)
 {
-    return _cmsDupMem(self ->ContextID, Ptr, n * sizeof(cmsUInt32Number));
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt32Number));
 }
 
-void Type_int_Free(struct _cms_typehandler_struct* self,
+void Type_int_Free(cmsContext ContextID, struct _cms_typehandler_struct* self,
                    void* Ptr)
 {
-    _cmsFree(self ->ContextID, Ptr);
+    _cmsFree(ContextID, Ptr);
 }
 
 
@@ -806,7 +786,7 @@ static cmsPluginTag HiddenTagPluginSample = {
 static cmsPluginTagType TagTypePluginSample = {
 
      { cmsPluginMagicNumber, 2060, cmsPluginTagTypeSig,  (cmsPluginBase*) &HiddenTagPluginSample},
-     { SigIntType, Type_int_Read, Type_int_Write, Type_int_Dup, Type_int_Free, NULL }
+     { SigIntType, Type_int_Read, Type_int_Write, Type_int_Dup, Type_int_Free, 0 }
 };
 
 
@@ -814,7 +794,6 @@ cmsInt32Number CheckTagTypePlugin(void)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
-    cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
     cmsUInt32Number myTag = 1234;
     cmsUInt32Number rc = 0;
@@ -822,29 +801,24 @@ cmsInt32Number CheckTagTypePlugin(void)
     cmsUInt32Number *ptr = NULL;
     cmsUInt32Number clen = 0;
 
-
     ctx = WatchDogContext(NULL);
     cmsPluginTHR(ctx, &TagTypePluginSample);
 
     cpy = DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
-    cmsDeleteContext(ctx);
-    cmsDeleteContext(cpy);
-
-    h = cmsCreateProfilePlaceholder(cpy2);
+    h = cmsCreateProfilePlaceholder(cpy);
     if (h == NULL) {
         Fail("Create placeholder failed");
         goto Error;
     }
 
 
-    if (!cmsWriteTag(ContextID, h, SigInt, &myTag)) {
+    if (!cmsWriteTag(cpy, h, SigInt, &myTag)) {
         Fail("Plug-in failed");
         goto Error;
     }
 
-    rc = cmsSaveProfileToMem(ContextID, h, NULL, &clen);
+    rc = cmsSaveProfileToMem(cpy, h, NULL, &clen);
     if (!rc) {
         Fail("Fetch mem size failed");
         goto Error;
@@ -858,13 +832,13 @@ cmsInt32Number CheckTagTypePlugin(void)
     }
 
 
-    rc = cmsSaveProfileToMem(ContextID, h, data, &clen);
+    rc = cmsSaveProfileToMem(cpy, h, data, &clen);
     if (!rc) {
         Fail("Save to mem failed");
         goto Error;
     }
 
-    cmsCloseProfile(h);
+    cmsCloseProfile(cpy, h);
 
     cmsSetLogErrorHandler(NULL);
     h = cmsOpenProfileFromMem(data, clen);
@@ -873,17 +847,17 @@ cmsInt32Number CheckTagTypePlugin(void)
         goto Error;
     }
 
-    ptr = (cmsUInt32Number*) cmsReadTag(ContextID, h, SigInt);
+    ptr = (cmsUInt32Number*) cmsReadTag(cpy, h, SigInt);
     if (ptr != NULL) {
 
         Fail("read tag/context switching failed");
         goto Error;
     }
 
-    cmsCloseProfile(h);
+    cmsCloseProfile(cpy, h);
     ResetFatalError();
 
-    h = cmsOpenProfileFromMemTHR(cpy2, data, clen);
+    h = cmsOpenProfileFromMemTHR(cpy, data, clen);
     if (h == NULL) {
         Fail("Open profile from mem failed");
         goto Error;
@@ -892,7 +866,7 @@ cmsInt32Number CheckTagTypePlugin(void)
     // Get rid of data
     free(data); data = NULL;
 
-    ptr = (cmsUInt32Number*) cmsReadTag(ContextID, h, SigInt);
+    ptr = (cmsUInt32Number*) cmsReadTag(cpy, h, SigInt);
     if (ptr == NULL) {
         Fail("Read tag/conext switching failed (2)");
         return 0;
@@ -900,18 +874,17 @@ cmsInt32Number CheckTagTypePlugin(void)
 
     rc = (*ptr == 1234);
 
-    cmsCloseProfile(h);
-
-    cmsDeleteContext(cpy2);
+    cmsCloseProfile(cpy, h);
+    cmsDeleteContext(ctx);
+    cmsDeleteContext(cpy);
 
     return rc;
 
 Error:
 
-    if (h != NULL) cmsCloseProfile(h);
+    if (h != NULL) cmsCloseProfile(cpy, h);
     if (ctx != NULL) cmsDeleteContext(ctx);
     if (cpy != NULL) cmsDeleteContext(cpy);
-    if (cpy2 != NULL) cmsDeleteContext(cpy2);
     if (data) free(data);
 
     return 0;
@@ -923,7 +896,7 @@ Error:
 #define SigNegateType ((cmsStageSignature)0x6E202020)
 
 static
-void EvaluateNegate(const cmsFloat32Number In[],
+void EvaluateNegate(cmsContext ContextID, const cmsFloat32Number In[],
                      cmsFloat32Number Out[],
                      const cmsStage *mpe)
 {
@@ -941,26 +914,26 @@ cmsStage* StageAllocNegate(cmsContext ContextID)
 }
 
 static
-void *Type_negate_Read(struct _cms_typehandler_struct* self,
+void *Type_negate_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
  			    cmsIOHANDLER* io,
                 cmsUInt32Number* nItems,
                 cmsUInt32Number SizeOfTag)
 {
     cmsUInt16Number   Chans;
-    if (!_cmsReadUInt16Number(io, &Chans)) return NULL;
+    if (!_cmsReadUInt16Number(ContextID, io, &Chans)) return NULL;
     if (Chans != 3) return NULL;
 
     *nItems = 1;
-    return StageAllocNegate(self -> ContextID);
+    return StageAllocNegate(ContextID);
 }
 
 static
-cmsBool Type_negate_Write(struct _cms_typehandler_struct* self,
+cmsBool Type_negate_Write(cmsContext ContextID, struct _cms_typehandler_struct* self,
                         cmsIOHANDLER* io,
                         void* Ptr, cmsUInt32Number nItems)
 {
 
-    if (!_cmsWriteUInt16Number(io, 3)) return FALSE;
+    if (!_cmsWriteUInt16Number(ContextID, io, 3)) return FALSE;
     return TRUE;
 }
 
@@ -969,7 +942,7 @@ cmsPluginMultiProcessElement MPEPluginSample = {
 
     {cmsPluginMagicNumber, 2060, cmsPluginMultiProcessElementSig, NULL},
 
-    { (cmsTagTypeSignature) SigNegateType, Type_negate_Read, Type_negate_Write, NULL, NULL, NULL }
+    { (cmsTagTypeSignature) SigNegateType, Type_negate_Read, Type_negate_Write, NULL, NULL, 0 }
 };
 
 
@@ -977,7 +950,6 @@ cmsInt32Number CheckMPEPlugin(void)
 {
     cmsContext ctx = NULL;
     cmsContext cpy = NULL;
-    cmsContext cpy2 = NULL;
     cmsHPROFILE h = NULL;
     cmsUInt32Number myTag = 1234;
     cmsUInt32Number rc = 0;
@@ -990,23 +962,19 @@ cmsInt32Number CheckMPEPlugin(void)
     cmsPluginTHR(ctx, &MPEPluginSample);
 
     cpy =  DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
-    cmsDeleteContext(ctx);
-    cmsDeleteContext(cpy);
-
-    h = cmsCreateProfilePlaceholder(cpy2);
+    h = cmsCreateProfilePlaceholder(cpy);
     if (h == NULL) {
         Fail("Create placeholder failed");
         goto Error;
     }
 
-    pipe = cmsPipelineAlloc(cpy2, 3, 3);
-    cmsPipelineInsertStage(ContextID, pipe, cmsAT_BEGIN, StageAllocNegate(cpy2));
+    pipe = cmsPipelineAlloc(cpy, 3, 3);
+    cmsPipelineInsertStage(cpy, pipe, cmsAT_BEGIN, StageAllocNegate(cpy));
 
 
     In[0] = 0.3f; In[1] = 0.2f; In[2] = 0.9f;
-    cmsPipelineEvalFloat(ContextID, In, Out, pipe);
+    cmsPipelineEvalFloat(cpy, In, Out, pipe);
 
     rc = (IsGoodVal("0", Out[0], 1.0-In[0], 0.001) &&
            IsGoodVal("1", Out[1], 1.0-In[1], 0.001) &&
@@ -1017,15 +985,15 @@ cmsInt32Number CheckMPEPlugin(void)
         goto Error;
     }
 
-    if (!cmsWriteTag(ContextID, h, cmsSigDToB3Tag, pipe)) {
+    if (!cmsWriteTag(cpy, h, cmsSigDToB3Tag, pipe)) {
         Fail("Plug-in failed");
         goto Error;
     }
 
     // This cleans the stage as well
-    cmsPipelineFree(ContextID, pipe);
+    cmsPipelineFree(cpy, pipe);
 
-    rc = cmsSaveProfileToMem(ContextID, h, NULL, &clen);
+    rc = cmsSaveProfileToMem(cpy, h, NULL, &clen);
     if (!rc) {
         Fail("Fetch mem size failed");
         goto Error;
@@ -1039,14 +1007,13 @@ cmsInt32Number CheckMPEPlugin(void)
     }
 
 
-    rc = cmsSaveProfileToMem(ContextID, h, data, &clen);
+    rc = cmsSaveProfileToMem(cpy, h, data, &clen);
     if (!rc) {
         Fail("Save to mem failed");
         goto Error;
     }
 
-    cmsCloseProfile(h);
-
+    cmsCloseProfile(cpy, h);
 
     cmsSetLogErrorHandler(NULL);
     h = cmsOpenProfileFromMem(data, clen);
@@ -1055,7 +1022,7 @@ cmsInt32Number CheckMPEPlugin(void)
         goto Error;
     }
 
-    pipe = (cmsPipeline*) cmsReadTag(ContextID, h, cmsSigDToB3Tag);
+    pipe = (cmsPipeline*) cmsReadTag(cpy, h, cmsSigDToB3Tag);
     if (pipe != NULL) {
 
         // Unsupported stage, should fail
@@ -1063,11 +1030,11 @@ cmsInt32Number CheckMPEPlugin(void)
         goto Error;
     }
 
-    cmsCloseProfile(h);
+    cmsCloseProfile(cpy, h);
 
     ResetFatalError();
 
-    h = cmsOpenProfileFromMemTHR(cpy2, data, clen);
+    h = cmsOpenProfileFromMemTHR(cpy, data, clen);
     if (h == NULL) {
         Fail("Open profile from mem failed");
         goto Error;
@@ -1076,7 +1043,7 @@ cmsInt32Number CheckMPEPlugin(void)
     // Get rid of data
     free(data); data = NULL;
 
-    pipe = (cmsPipeline*) cmsReadTag(ContextID, h, cmsSigDToB3Tag);
+    pipe = (cmsPipeline*) cmsReadTag(cpy, h, cmsSigDToB3Tag);
     if (pipe == NULL) {
         Fail("Read tag/conext switching failed (2)");
         return 0;
@@ -1084,24 +1051,22 @@ cmsInt32Number CheckMPEPlugin(void)
 
     // Evaluate for negation
     In[0] = 0.3f; In[1] = 0.2f; In[2] = 0.9f;
-    cmsPipelineEvalFloat(ContextID, In, Out, pipe);
+    cmsPipelineEvalFloat(cpy, In, Out, pipe);
 
      rc = (IsGoodVal("0", Out[0], 1.0-In[0], 0.001) &&
            IsGoodVal("1", Out[1], 1.0-In[1], 0.001) &&
            IsGoodVal("2", Out[2], 1.0-In[2], 0.001));
 
-    cmsCloseProfile(h);
-
-    cmsDeleteContext(cpy2);
-
+    cmsCloseProfile(cpy, h);
+    cmsDeleteContext(ctx);
+    cmsDeleteContext(cpy);
     return rc;
 
 Error:
 
-    if (h != NULL) cmsCloseProfile(h);
+    if (h != NULL) cmsCloseProfile(ctx, h);
     if (ctx != NULL) cmsDeleteContext(ctx);
     if (cpy != NULL) cmsDeleteContext(cpy);
-    if (cpy2 != NULL) cmsDeleteContext(cpy2);
     if (data) free(data);
 
     return 0;
@@ -1113,7 +1078,7 @@ Error:
 // --------------------------------------------------------------------------------------------------
 
 static
-void FastEvaluateCurves(register const cmsUInt16Number In[],
+void FastEvaluateCurves(cmsContext ContextID, register const cmsUInt16Number In[],
                                      register cmsUInt16Number Out[],
                                      register const void* Data)
 {
@@ -1121,7 +1086,7 @@ void FastEvaluateCurves(register const cmsUInt16Number In[],
 }
 
 static
-cmsBool MyOptimize(cmsPipeline** Lut,
+cmsBool MyOptimize(cmsContext ContextID, cmsPipeline** Lut,
                    cmsUInt32Number  Intent,
                    cmsUInt32Number* InputFormat,
                    cmsUInt32Number* OutputFormat,
@@ -1161,7 +1126,6 @@ cmsInt32Number CheckOptimizationPlugin(void)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
-    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt8Number In[]= { 10, 20, 30, 40 };
     cmsUInt8Number Out[4];
@@ -1172,21 +1136,19 @@ cmsInt32Number CheckOptimizationPlugin(void)
     cmsPluginTHR(ctx, &OptimizationPluginSample);
 
     cpy = DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
-    Linear[0] = cmsBuildGamma(cpy2, 1.0);
-    h = cmsCreateLinearizationDeviceLinkTHR(cpy2, cmsSigGrayData, Linear);
-    cmsFreeToneCurve(ContextID, Linear[0]);
+    Linear[0] = cmsBuildGamma(cpy, 1.0);
+    h = cmsCreateLinearizationDeviceLinkTHR(cpy, cmsSigGrayData, Linear);
+    cmsFreeToneCurve(cpy, Linear[0]);
 
-    xform = cmsCreateTransformTHR(cpy2, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
-    cmsCloseProfile(h);
+    xform = cmsCreateTransformTHR(cpy, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(cpy, h);
 
-    cmsDoTransform(xform, In, Out, 4);
+    cmsDoTransform(cpy, xform, In, Out, 4);
 
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
-    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (In[i] != Out[i]) return 0;
@@ -1252,7 +1214,6 @@ cmsInt32Number CheckIntentPlugin(void)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
-    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsHPROFILE h1, h2;
     cmsToneCurve* Linear1;
@@ -1264,25 +1225,23 @@ cmsInt32Number CheckIntentPlugin(void)
     cmsPluginTHR(ctx, &IntentPluginSample);
 
     cpy  = DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
-    Linear1 = cmsBuildGamma(cpy2, 3.0);
-    Linear2 = cmsBuildGamma(cpy2, 0.1);
-    h1 = cmsCreateLinearizationDeviceLinkTHR(cpy2, cmsSigGrayData, &Linear1);
-    h2 = cmsCreateLinearizationDeviceLinkTHR(cpy2, cmsSigGrayData, &Linear2);
+    Linear1 = cmsBuildGamma(cpy, 3.0);
+    Linear2 = cmsBuildGamma(cpy, 0.1);
+    h1 = cmsCreateLinearizationDeviceLinkTHR(cpy, cmsSigGrayData, &Linear1);
+    h2 = cmsCreateLinearizationDeviceLinkTHR(cpy, cmsSigGrayData, &Linear2);
 
-    cmsFreeToneCurve(ContextID, Linear1);
-    cmsFreeToneCurve(ContextID, Linear2);
+    cmsFreeToneCurve(cpy, Linear1);
+    cmsFreeToneCurve(cpy, Linear2);
 
-    xform = cmsCreateTransformTHR(cpy2, h1, TYPE_GRAY_8, h2, TYPE_GRAY_8, INTENT_DECEPTIVE, 0);
-    cmsCloseProfile(h1); cmsCloseProfile(h2);
+    xform = cmsCreateTransformTHR(cpy, h1, TYPE_GRAY_8, h2, TYPE_GRAY_8, INTENT_DECEPTIVE, 0);
+    cmsCloseProfile(cpy,h1); cmsCloseProfile(cpy, h2);
 
-    cmsDoTransform(xform, In, Out, 4);
+    cmsDoTransform(cpy, xform, In, Out, 4);
 
-    cmsDeleteTransform(xform);
-    cmsDeleteContext(ctx);
+    cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(cpy);
-    cmsDeleteContext(cpy2);
+    cmsDeleteContext(ctx);
 
     for (i=0; i < 4; i++)
         if (Out[i] != In[i]) return 0;
@@ -1297,7 +1256,7 @@ cmsInt32Number CheckIntentPlugin(void)
 
 // This is a sample intent that only works for gray8 as output, and always returns '42'
 static
-void TrancendentalTransform(struct _cmstransform_struct * CMM,
+void TrancendentalTransform(cmsContext ContextID, struct _cmstransform_struct * CMM,
                               const void* InputBuffer,
                               void* OutputBuffer,
                               cmsUInt32Number Size,
@@ -1313,7 +1272,7 @@ void TrancendentalTransform(struct _cmstransform_struct * CMM,
 }
 
 
-cmsBool  TransformFactory(_cmsTransformFn* xformPtr,
+cmsBool  TransformFactory(cmsContext ContextID, _cmsTransformFn* xformPtr,
                           void** UserData,
                            _cmsFreeUserDataFn* FreePrivateDataFn,
                            cmsPipeline** Lut,
@@ -1345,7 +1304,6 @@ cmsInt32Number CheckTransformPlugin(void)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
-    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt8Number In[]= { 10, 20, 30, 40 };
     cmsUInt8Number Out[4];
@@ -1353,26 +1311,22 @@ cmsInt32Number CheckTransformPlugin(void)
     cmsHPROFILE h;
     int i;
 
-
     cmsPluginTHR(ctx, &FullTransformPluginSample);
 
     cpy  = DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
-    Linear = cmsBuildGamma(cpy2, 1.0);
-    h = cmsCreateLinearizationDeviceLinkTHR(cpy2, cmsSigGrayData, &Linear);
-    cmsFreeToneCurve(ContextID, Linear);
+    Linear = cmsBuildGamma(cpy, 1.0);
+    h = cmsCreateLinearizationDeviceLinkTHR(cpy, cmsSigGrayData, &Linear);
+    cmsFreeToneCurve(cpy, Linear);
 
-    xform = cmsCreateTransformTHR(cpy2, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
-    cmsCloseProfile(h);
+    xform = cmsCreateTransformTHR(cpy, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(cpy, h);
 
-    cmsDoTransform(xform, In, Out, 4);
+    cmsDoTransform(cpy, xform, In, Out, 4);
 
-
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
-    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (Out[i] != 0x42) return 0;
@@ -1440,7 +1394,6 @@ cmsInt32Number CheckMutexPlugin(void)
 {
     cmsContext ctx = WatchDogContext(NULL);
     cmsContext cpy;
-    cmsContext cpy2;
     cmsHTRANSFORM xform;
     cmsUInt8Number In[]= { 10, 20, 30, 40 };
     cmsUInt8Number Out[4];
@@ -1452,22 +1405,19 @@ cmsInt32Number CheckMutexPlugin(void)
     cmsPluginTHR(ctx, &MutexPluginSample);
 
     cpy  = DupContext(ctx, NULL);
-    cpy2 = DupContext(cpy, NULL);
 
-    Linear = cmsBuildGamma(cpy2, 1.0);
-    h = cmsCreateLinearizationDeviceLinkTHR(cpy2, cmsSigGrayData, &Linear);
-    cmsFreeToneCurve(ContextID, Linear);
+    Linear = cmsBuildGamma(cpy, 1.0);
+    h = cmsCreateLinearizationDeviceLinkTHR(cpy, cmsSigGrayData, &Linear);
+    cmsFreeToneCurve(cpy, Linear);
 
-    xform = cmsCreateTransformTHR(cpy2, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
-    cmsCloseProfile(h);
+    xform = cmsCreateTransformTHR(cpy, h, TYPE_GRAY_8, h, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    cmsCloseProfile(cpy, h);
 
-    cmsDoTransform(xform, In, Out, 4);
+    cmsDoTransform(cpy, xform, In, Out, 4);
 
-
-    cmsDeleteTransform(xform);
+    cmsDeleteTransform(cpy, xform);
     cmsDeleteContext(ctx);
     cmsDeleteContext(cpy);
-    cmsDeleteContext(cpy2);
 
     for (i=0; i < 4; i++)
         if (Out[i] != In[i]) return 0;

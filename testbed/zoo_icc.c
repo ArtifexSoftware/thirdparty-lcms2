@@ -40,7 +40,7 @@ static char ZOORawWrite[cmsMAX_PATH]  = "c:\\colormaps\\rawwrite\\";
 
 // Read all tags on a profile given by its handle
 static
-void ReadAllTags(cmsHPROFILE h)
+void ReadAllTags(cmsContext ContextID, cmsHPROFILE h)
 {
     cmsInt32Number i, n;
     cmsTagSignature sig;
@@ -56,7 +56,7 @@ void ReadAllTags(cmsHPROFILE h)
 
 // Read all tags on a profile given by its handle
 static
-void ReadAllRAWTags(cmsHPROFILE h)
+void ReadAllRAWTags(cmsContext ContextID, cmsHPROFILE h)
 {
     cmsInt32Number i, n;
     cmsTagSignature sig;
@@ -72,7 +72,7 @@ void ReadAllRAWTags(cmsHPROFILE h)
 
 
 static
-void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
+void PrintInfo(cmsContext ContextID, cmsHPROFILE h, cmsInfoType Info)
 {
     wchar_t* text;
     cmsInt32Number len;
@@ -90,71 +90,71 @@ void PrintInfo(cmsHPROFILE h, cmsInfoType Info)
 
 
 static
-void PrintAllInfos(cmsHPROFILE h)
+void PrintAllInfos(cmsContext ContextID, cmsHPROFILE h)
 {
-     PrintInfo(h, cmsInfoDescription);
-     PrintInfo(h, cmsInfoManufacturer);
-     PrintInfo(h, cmsInfoModel);
-     PrintInfo(h, cmsInfoCopyright);
+     PrintInfo(ContextID, h, cmsInfoDescription);
+     PrintInfo(ContextID, h, cmsInfoManufacturer);
+     PrintInfo(ContextID, h, cmsInfoModel);
+     PrintInfo(ContextID, h, cmsInfoCopyright);
      printf("\n\n");
 }
 
 static
-void ReadAllLUTS(cmsHPROFILE h)
+void ReadAllLUTS(cmsContext ContextID, cmsHPROFILE h)
 {
     cmsPipeline* a;
     cmsCIEXYZ Black;
 
-    a = _cmsReadInputLUT(h, INTENT_PERCEPTUAL);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_PERCEPTUAL);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadInputLUT(h, INTENT_RELATIVE_COLORIMETRIC);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadInputLUT(h, INTENT_SATURATION);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_SATURATION);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadInputLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
-    if (a) cmsPipelineFree(ContextID, a);
-
-
-    a = _cmsReadOutputLUT(h, INTENT_PERCEPTUAL);
-    if (a) cmsPipelineFree(ContextID, a);
-
-    a = _cmsReadOutputLUT(h, INTENT_RELATIVE_COLORIMETRIC);
-    if (a) cmsPipelineFree(ContextID, a);
-
-    a = _cmsReadOutputLUT(h, INTENT_SATURATION);
-    if (a) cmsPipelineFree(ContextID, a);
-
-    a = _cmsReadOutputLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
+    a = _cmsReadInputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC);
     if (a) cmsPipelineFree(ContextID, a);
 
 
-    a = _cmsReadDevicelinkLUT(h, INTENT_PERCEPTUAL);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_PERCEPTUAL);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadDevicelinkLUT(h, INTENT_RELATIVE_COLORIMETRIC);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadDevicelinkLUT(h, INTENT_SATURATION);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_SATURATION);
     if (a) cmsPipelineFree(ContextID, a);
 
-    a = _cmsReadDevicelinkLUT(h, INTENT_ABSOLUTE_COLORIMETRIC);
+    a = _cmsReadOutputLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC);
     if (a) cmsPipelineFree(ContextID, a);
 
 
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_PERCEPTUAL, 0);
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_SATURATION, 0);
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
-    cmsDetectTAC(h);
+    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_PERCEPTUAL);
+    if (a) cmsPipelineFree(ContextID, a);
+
+    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_RELATIVE_COLORIMETRIC);
+    if (a) cmsPipelineFree(ContextID, a);
+
+    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_SATURATION);
+    if (a) cmsPipelineFree(ContextID, a);
+
+    a = _cmsReadDevicelinkLUT(ContextID, h, INTENT_ABSOLUTE_COLORIMETRIC);
+    if (a) cmsPipelineFree(ContextID, a);
+
+
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_PERCEPTUAL, 0);
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_SATURATION, 0);
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_ABSOLUTE_COLORIMETRIC, 0);
+    cmsDetectTAC(ContextID, h);
 }
 
 // Check one specimen in the ZOO
 
 static
-cmsInt32Number CheckSingleSpecimen(const char* Profile)
+cmsInt32Number CheckSingleSpecimen(cmsContext ContextID, const char* Profile)
 {
     char BuffSrc[256];
     char BuffDst[256];
@@ -168,27 +168,27 @@ cmsInt32Number CheckSingleSpecimen(const char* Profile)
 
     printf("%s\n", Profile);
 
-    PrintAllInfos(h);
-    ReadAllTags(h);
-    ReadAllLUTS(h);
- // ReadAllRAWTags(h);
+    PrintAllInfos(ContextID, h);
+    ReadAllTags(ContextID, h);
+    ReadAllLUTS(ContextID, h);
+ // ReadAllRAWTags(ContextID, h);
 
 
     cmsSaveProfileToFile(ContextID, h, BuffDst);
-    cmsCloseProfile(h);
+    cmsCloseProfile(ContextID, h);
 
     h = cmsOpenProfileFromFile(BuffDst, "r");
     if (h == NULL) return 0;
-    ReadAllTags(h);
+    ReadAllTags(ContextID, h);
 
 
-    cmsCloseProfile(h);
+    cmsCloseProfile(ContextID, h);
 
     return 1;
 }
 
 static
-cmsInt32Number CheckRAWSpecimen(const char* Profile)
+cmsInt32Number CheckRAWSpecimen(cmsContext ContextID, const char* Profile)
 {
     char BuffSrc[256];
     char BuffDst[256];
@@ -200,15 +200,15 @@ cmsInt32Number CheckRAWSpecimen(const char* Profile)
     h = cmsOpenProfileFromFile(BuffSrc, "r");
     if (h == NULL) return 0;
 
-    ReadAllTags(h);
-    ReadAllRAWTags(h);
+    ReadAllTags(ContextID, h);
+    ReadAllRAWTags(ContextID, h);
     cmsSaveProfileToFile(ContextID, h, BuffDst);
-    cmsCloseProfile(h);
+    cmsCloseProfile(ContextID, h);
 
     h = cmsOpenProfileFromFile(BuffDst, "r");
     if (h == NULL) return 0;
-    ReadAllTags(h);
-    cmsCloseProfile(h);
+    ReadAllTags(ContextID, h);
+    cmsCloseProfile(ContextID, h);
 
     return 1;
 }
@@ -230,7 +230,7 @@ static int rgb = 0,
 
 
 static
-int count_stats(const char* Profile)
+int count_stats(cmsContext ContextID, const char* Profile)
 {
     char BuffSrc[256];
     cmsHPROFILE h;
@@ -262,20 +262,19 @@ int count_stats(const char* Profile)
     default: other++;
     }
 
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_PERCEPTUAL, 0);
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsDetectDestinationBlackPoint(&Black, h, INTENT_SATURATION, 0);
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_PERCEPTUAL, 0);
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsDetectDestinationBlackPoint(ContextID, &Black, h, INTENT_SATURATION, 0);
 
-    cmsCloseProfile(h);
+    cmsCloseProfile(ContextID, h);
 
     return 1;
 }
 
 
 
-void CheckProfileZOO(void)
+void CheckProfileZOO(cmsContext ContextID)
 {
-
     struct _finddata_t c_file;
     intptr_t hFile;
 
@@ -290,10 +289,10 @@ void CheckProfileZOO(void)
             if (strcmp(c_file.name, ".") != 0 &&
                 strcmp(c_file.name, "..") != 0) {
 
-                    CheckSingleSpecimen( c_file.name);
-                    CheckRAWSpecimen( c_file.name);
+                    CheckSingleSpecimen(ContextID, c_file.name);
+                    CheckRAWSpecimen(ContextID, c_file.name);
 
-                    count_stats(c_file.name);
+                    count_stats(ContextID, c_file.name);
 
                     TestMemoryLeaks(FALSE);
 
