@@ -78,7 +78,7 @@ cmsInt32Number CheckMutexPlugin(void);
 cmsInt32Number CheckOptimizationPluginLeak(void);
 
 // Zoo
-void CheckProfileZOO(void);
+void CheckProfileZOO(cmsContext ContextID);
 
 #endif
 
