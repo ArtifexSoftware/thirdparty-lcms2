@@ -294,7 +294,6 @@ cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromMem(cmsContext ContextID, void *Buff
         return NULL;
     }
 
-    ContextID = ContextID;
     iohandler ->stream  = (void*) fm;
     iohandler ->UsedSpace = 0;
     iohandler ->PhysicalFile[0] = 0;

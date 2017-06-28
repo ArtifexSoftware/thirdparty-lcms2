@@ -4947,7 +4947,6 @@ cmsBool AllocElem(cmsContext ContextID, _cmsDICelem* e,  cmsUInt32Number Count)
         return FALSE;
     }
 
-    ContextID = ContextID;
     return TRUE;
 }
 

@@ -41,8 +41,6 @@ cmsMLU* CMSEXPORT cmsMLUalloc(cmsContext ContextID, cmsUInt32Number nItems)
     mlu = (cmsMLU*) _cmsMallocZero(ContextID, sizeof(cmsMLU));
     if (mlu == NULL) return NULL;
 
-    ContextID = ContextID;
-
     // Create entry array
     mlu ->Entries = (_cmsMLUentry*) _cmsCalloc(ContextID, nItems, sizeof(_cmsMLUentry));
     if (mlu ->Entries == NULL) {
