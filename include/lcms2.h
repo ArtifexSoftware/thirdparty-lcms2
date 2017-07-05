@@ -650,9 +650,9 @@ typedef void* cmsHTRANSFORM;
 
 // Format of pixel is defined by one cmsUInt32Number, using bit fields as follows
 //
-//                               2                1          0
-//                          3 2 10987 6 5 4 3 2 1 098 7654 321
-//                          A O TTTTT U Y F P X S EEE CCCC BBB
+//                              2               1            0
+//                         543210 9 8 76543 2 1 0 9 8 7654 321
+//                         EEEEEE A O TTTTT Y F P X S CCCC BBB
 //
 //            A: Floating point -- With this flag we can differentiate 16 bits as float and as int
 //            O: Optimized -- previous optimization already returns the final 8-bit value
@@ -666,28 +666,28 @@ typedef void* cmsHTRANSFORM;
 //            B: bytes per sample
 //            Y: Swap first - changes ABGR to BGRA and KCMY to CMYK
 
-#define FLOAT_SH(a)            ((a) << 22)
-#define OPTIMIZED_SH(s)        ((s) << 21)
-#define COLORSPACE_SH(s)       ((s) << 16)
-#define SWAPFIRST_SH(s)        ((s) << 14)
-#define FLAVOR_SH(s)           ((s) << 13)
-#define PLANAR_SH(p)           ((p) << 12)
-#define ENDIAN16_SH(e)         ((e) << 11)
-#define DOSWAP_SH(e)           ((e) << 10)
-#define EXTRA_SH(e)            ((e) << 7)
+#define EXTRA_SH(e)            ((e) << 19)
+#define FLOAT_SH(a)            ((a) << 18)
+#define OPTIMIZED_SH(s)        ((s) << 17)
+#define COLORSPACE_SH(s)       ((s) << 12)
+#define SWAPFIRST_SH(s)        ((s) << 11)
+#define FLAVOR_SH(s)           ((s) << 10)
+#define PLANAR_SH(p)           ((p) << 9)
+#define ENDIAN16_SH(e)         ((e) << 8)
+#define DOSWAP_SH(e)           ((e) << 7)
 #define CHANNELS_SH(c)         ((c) << 3)
 #define BYTES_SH(b)            (b)
 
 // These macros unpack format specifiers into integers
-#define T_FLOAT(a)            (((a)>>22)&1)
-#define T_OPTIMIZED(o)        (((o)>>21)&1)
-#define T_COLORSPACE(s)       (((s)>>16)&31)
-#define T_SWAPFIRST(s)        (((s)>>14)&1)
-#define T_FLAVOR(s)           (((s)>>13)&1)
-#define T_PLANAR(p)           (((p)>>12)&1)
-#define T_ENDIAN16(e)         (((e)>>11)&1)
-#define T_DOSWAP(e)           (((e)>>10)&1)
-#define T_EXTRA(e)            (((e)>>7)&7)
+#define T_EXTRA(e)            (((e)>>19)&63)
+#define T_FLOAT(a)            (((a)>>18)&1)
+#define T_OPTIMIZED(o)        (((o)>>17)&1)
+#define T_COLORSPACE(s)       (((s)>>12)&31)
+#define T_SWAPFIRST(s)        (((s)>>11)&1)
+#define T_FLAVOR(s)           (((s)>>10)&1)
+#define T_PLANAR(p)           (((p)>>9)&1)
+#define T_ENDIAN16(e)         (((e)>>8)&1)
+#define T_DOSWAP(e)           (((e)>>7)&1)
 #define T_CHANNELS(c)         (((c)>>3)&15)
 #define T_BYTES(b)            ((b)&7)
 
