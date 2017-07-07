@@ -26,7 +26,7 @@
 // Version 2.8
 //
 
-#ifndef _lcms2_H
+#ifndef _lcms2art_H
 
 // ********** Configuration toggles ****************************************
 
@@ -78,7 +78,18 @@ extern "C" {
 #endif
 
 // Version/release
-#define LCMS_VERSION        2080
+// Vanilla LCMS2 uses values from 2000-2080. This is
+// used as an unsigned number. We want any attempt to
+// use OUR numbers with a mainline LCMS to fail, so
+// we have to go under 2000-2080. Let's subtract
+// 2000 from the mainline release.
+#define LCMS_VERSION              (2080 - 2000)
+
+// We expect any LCMS_ART release to fall within the
+// following rance.
+#define LCMS_ART_VERSION_MIN (0)
+#define LCMS_ART_VERSION_MAX (999)
+
 
 // I will give the chance of redefining basic types for compilers that are not fully C99 compliant
 #ifndef CMS_BASIC_TYPES_ALREADY_DEFINED
@@ -1901,5 +1912,5 @@ CMSAPI cmsBool          CMSEXPORT cmsDesaturateLab(cmsContext ContextID, cmsCIEL
 #   endif
 #endif
 
-#define _lcms2_H
+#define _lcms2art_H
 #endif

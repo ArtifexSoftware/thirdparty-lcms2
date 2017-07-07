@@ -1,3 +1,13 @@
+------------------------
+2.8.art Featured release
+------------------------
+
+Forked LCMS. This is binary incompatible with normal LCMS2.
+Removed 'pickled' contexts.
+Added explicit passing of cmsContextIDs to all API functions.
+Removed the 'THR' API functions as now unnecessary.
+Changed LCMS_VERSION (and checking logic).
+Extend T_EXTRA etc to allow for 63 extra channels.
 
 -----------------------
 2.8 Featured release

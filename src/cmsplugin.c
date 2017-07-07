@@ -561,7 +561,14 @@ cmsBool CMSEXPORT cmsPluginTHR(cmsContext id, void* Plug_in)
                 return FALSE;
             }
 
-            if (Plugin ->ExpectedVersion > LCMS_VERSION) {
+            if (Plugin ->ExpectedVersion < LCMS_ART_VERSION_MIN ||
+                Plugin ->ExpectedVersion > LCMS_ART_VERSION_MAX) {
+                cmsSignalError(id, cmsERROR_UNKNOWN_EXTENSION, "plugin version %d not in acceptable version range. LCMS2.art cannot use LCMS2 plugins!",
+                    Plugin ->ExpectedVersion);
+                return FALSE;
+            }
+
+	    if (Plugin ->ExpectedVersion > LCMS_VERSION) {
                 cmsSignalError(id, cmsERROR_UNKNOWN_EXTENSION, "plugin needs Little CMS %d, current version is %d",
                     Plugin ->ExpectedVersion, LCMS_VERSION);
                 return FALSE;

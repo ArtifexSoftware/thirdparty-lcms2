@@ -28,7 +28,7 @@
 // functions to do low level operations. All plug-in related structures
 // are defined here. Including this file forces to include the standard API too.
 
-#ifndef _lcms_plugin_H
+#ifndef _lcms2art_plugin_H
 
 // Deal with Microsoft's attempt at deprecating C standard runtime functions
 #ifdef _MSC_VER
@@ -42,8 +42,8 @@
 #    endif
 #endif
 
-#ifndef _lcms2_H
-#include "lcms2.h"
+#ifndef _lcms2art_H
+#include "lcms2art.h"
 #endif
 
 // We need some standard C functions.
@@ -657,5 +657,5 @@ CMSAPI void    CMSEXPORT _cmsUnlockMutex(cmsContext ContextID, void* mtx);
 #   endif
 #endif
 
-#define _lcms_plugin_H
+#define _lcms2art_plugin_H
 #endif
