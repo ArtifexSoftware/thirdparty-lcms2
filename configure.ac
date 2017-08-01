@@ -7,7 +7,7 @@ AC_PREREQ(2.60)
 #
 # Set the package name and version
 #
-AC_INIT(lcms2,2.8)
+AC_INIT(lcms2art,2.8)
 
 # Specify directory where m4 macros may be found.
 AC_CONFIG_MACRO_DIR([m4])
@@ -127,7 +127,7 @@ AC_ARG_WITH(tiff,
                 CPPFLAGS="$CPPFLAGS -I$TIFF_DIR/include"
                 LDFLAGS="$LDFLAGS -L$TIFF_DIR/lib"
               fi
-              [with_tiff='yes']  
+              [with_tiff='yes']
             fi
             ],
 	        [with_tiff='yes'])
@@ -153,7 +153,7 @@ if test "$with_threads" != 'no'
 then
 
   ACX_PTHREAD()
- 
+
   if test "$acx_pthread_ok" = yes
   then
     have_threads=yes
@@ -349,10 +349,10 @@ AM_CONDITIONAL(HasTIFF, test "$have_tiff" = 'yes')
 AC_SUBST(LIB_TIFF)
 
 
-# Libraries that the LCMS library depends on
-LCMS_LIB_DEPLIBS="$LIB_MATH $LIB_THREAD"
-LCMS_LIB_DEPLIBS=`echo $LCMS_LIB_DEPLIBS | sed -e 's/  */ /g'`
-AC_SUBST(LCMS_LIB_DEPLIBS)
+# Libraries that the LCMSART library depends on
+LCMSART_LIB_DEPLIBS="$LIB_MATH $LIB_THREAD"
+LCMSART_LIB_DEPLIBS=`echo $LCMSART_LIB_DEPLIBS | sed -e 's/  */ /g'`
+AC_SUBST(LCMSART_LIB_DEPLIBS)
 
 # Libraries that the jpegicc program depends on
 JPEGICC_DEPLIBS="$LIB_JPEG $LIB_MATH $LIB_THREAD"
@@ -370,7 +370,7 @@ LIBS=''
 # Perform substitutions
 #
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([lcms2.pc])
+AC_CONFIG_FILES([lcms2art.pc])
 AC_CONFIG_FILES([include/Makefile])
 AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([utils/tificc/Makefile])

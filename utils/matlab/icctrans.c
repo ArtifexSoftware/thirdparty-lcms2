@@ -23,7 +23,7 @@
 
 #include "mex.h"
 
-#include "lcms2.h"
+#include "lcms2art.h"
 #include "string.h"
 #include "stdarg.h"
 

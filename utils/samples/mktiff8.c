@@ -22,7 +22,7 @@
 
 // Creates a devicelink that decodes TIFF8 Lab files 
 
-#include "lcms2.h"
+#include "lcms2art.h"
 #include <stdlib.h>
 #include <math.h>
 
