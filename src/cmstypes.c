@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2016 Marti Maria Saguer
+//  Copyright (c) 1998-2017 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -3090,7 +3090,7 @@ cmsBool  Type_ColorantTable_Write(cmsContext ContextID, struct _cms_typehandler_
 
     for (i=0; i < nColors; i++) {
 
-        char root[33];
+        char root[cmsMAX_PATH];
         cmsUInt16Number PCS[3];
 
         memset(root, 0, sizeof(root));
@@ -3233,7 +3233,7 @@ cmsBool Type_NamedColor_Write(cmsContext ContextID, struct _cms_typehandler_stru
 
        cmsUInt16Number PCS[3];
        cmsUInt16Number Colorant[cmsMAXCHANNELS];
-       char Root[33];
+       char Root[cmsMAX_PATH];
 
         if (!cmsNamedColorInfo(ContextID, NamedColorList, i, Root, NULL, NULL, PCS, Colorant)) return 0;
         Root[32] = 0;

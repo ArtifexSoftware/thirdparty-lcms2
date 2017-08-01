@@ -1,7 +1,7 @@
 
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2016 Marti Maria Saguer
+//  Copyright (c) 1998-2017 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -96,13 +96,16 @@
 # ifndef vsnprintf
 #       define vsnprintf  _vsnprintf
 # endif
-#if _MSC_VER <= 1700 /* MSVC 2012 */
-#include <float.h>
-#define isnan(x) _isnan(x)
-#define isinf(x) (!_finite(x))
-#endif
-#endif
 
+/// Properly define some macros to accommodate
+/// older MSVC versions.
+# if _MSC_VER <= 1700
+        #include <float.h>
+        #define isnan _isnan
+        #define isinf(x) (!_finite((x)))
+# endif
+
+#endif
 
 // A fast way to convert from/to 16 <-> 8 bits
 #define FROM_8_TO_16(rgb) (cmsUInt16Number) ((((cmsUInt16Number) (rgb)) << 8)|(rgb))

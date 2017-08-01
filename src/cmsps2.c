@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2016 Marti Maria Saguer
+//  Copyright (c) 1998-2017 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -999,7 +999,7 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     cmsHTRANSFORM xform;
     cmsHPROFILE   hLab;
     int i, nColors;
-    char ColorName[32];
+    char ColorName[cmsMAX_PATH];
     cmsNAMEDCOLORLIST* NamedColorList;
 
     hLab  = cmsCreateLab4ProfileTHR(ContextID, NULL);
@@ -1417,7 +1417,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     cmsHTRANSFORM xform;
     int i, nColors, nColorant;
     cmsUInt32Number OutputFormat;
-    char ColorName[32];
+    char ColorName[cmsMAX_PATH];
     char Colorant[128];
     cmsNAMEDCOLORLIST* NamedColorList;
 

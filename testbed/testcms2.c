@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2016 Marti Maria Saguer
+//  Copyright (c) 1998-2017 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -3671,10 +3671,10 @@ cmsInt32Number CheckNamedColorList(void)
 {
     cmsNAMEDCOLORLIST* nc = NULL, *nc2;
     cmsInt32Number i, j, rc=1;
-    char Name[255];
+    char Name[cmsMAX_PATH];
     cmsUInt16Number PCS[3];
     cmsUInt16Number Colorant[cmsMAXCHANNELS];
-    char CheckName[255];
+    char CheckName[cmsMAX_PATH];
     cmsUInt16Number CheckPCS[3];
     cmsUInt16Number CheckColorant[cmsMAXCHANNELS];
     cmsHPROFILE h;

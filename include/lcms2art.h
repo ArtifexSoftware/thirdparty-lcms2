@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2016 Marti Maria Saguer
+//  Copyright (c) 1998-2017 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.8
+// Version 2.9b1
 //
 
 #ifndef _lcms2art_H
@@ -78,18 +78,17 @@ extern "C" {
 #endif
 
 // Version/release
-// Vanilla LCMS2 uses values from 2000-2080. This is
+// Vanilla LCMS2 uses values from 2000-2090. This is
 // used as an unsigned number. We want any attempt to
 // use OUR numbers with a mainline LCMS to fail, so
-// we have to go under 2000-2080. Let's subtract
+// we have to go under 2000-2090. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2080 - 2000)
+#define LCMS_VERSION              (2090 - 2000)
 
 // We expect any LCMS_ART release to fall within the
 // following rance.
 #define LCMS_ART_VERSION_MIN (0)
 #define LCMS_ART_VERSION_MAX (999)
-
 
 // I will give the chance of redefining basic types for compilers that are not fully C99 compliant
 #ifndef CMS_BASIC_TYPES_ALREADY_DEFINED
@@ -269,9 +268,9 @@ typedef int                  cmsBool;
 #endif
 
 // D50 XYZ normalized to Y=1.0
-#define cmsD50X             0.9642
-#define cmsD50Y             1.0
-#define cmsD50Z             0.8249
+#define cmsD50X  0.9642
+#define cmsD50Y  1.0
+#define cmsD50Z  0.8249
 
 // V4 perceptual black
 #define cmsPERCEPTUAL_BLACK_X  0.00336
@@ -279,8 +278,8 @@ typedef int                  cmsBool;
 #define cmsPERCEPTUAL_BLACK_Z  0.00287
 
 // Definitions in ICC spec
-#define cmsMagicNumber      0x61637370     // 'acsp'
-#define lcmsSignature       0x6c636d73     // 'lcms'
+#define cmsMagicNumber  0x61637370     // 'acsp'
+#define lcmsSignature   0x6c636d73     // 'lcms'
 
 
 // Base ICC type definitions

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2016 Marti Maria Saguer
+//  Copyright (c) 1998-2017 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -691,7 +691,7 @@ void PrintFloatResults(cmsContext ContextID, cmsFloat64Number Value[])
 static
 cmsUInt16Number GetIndex(cmsContext ContextID)
 {
-    char Buffer[4096], Name[40], Prefix[40], Suffix[40];
+    char Buffer[4096], Name[cmsMAX_PATH], Prefix[40], Suffix[40];
     int index, max;
     const cmsNAMEDCOLORLIST* NamedColorList;
 
