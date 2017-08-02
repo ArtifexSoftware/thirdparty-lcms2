@@ -209,20 +209,20 @@ _cmsParametricCurvesCollection *GetParametricCurveByType(cmsContext ContextID, i
 // no optimation curve is computed. nSegments may also be zero in the inverse case, where only the
 // optimization curve is given. Both features simultaneously is an error
 static
-cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsInt32Number nEntries,
-                                      cmsInt32Number nSegments, const cmsCurveSegment* Segments,
+cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsUInt32Number nEntries,
+                                      cmsUInt32Number nSegments, const cmsCurveSegment* Segments,
                                       const cmsUInt16Number* Values)
 {
     cmsToneCurve* p;
-    int i;
+    cmsUInt32Number i;
 
     // We allow huge tables, which are then restricted for smoothing operations
-    if (nEntries > 65530 || nEntries < 0) {
+    if (nEntries > 65530 || nEntries == 0) {
         cmsSignalError(ContextID, cmsERROR_RANGE, "Couldn't create tone curve of more than 65530 entries");
         return NULL;
     }
 
-    if (nEntries <= 0 && nSegments <= 0) {
+    if (nEntries == 0 && nSegments == 0) {
         cmsSignalError(ContextID, cmsERROR_RANGE, "Couldn't create tone curve with zero segments and no table");
         return NULL;
     }
@@ -232,7 +232,7 @@ cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsInt32Number nEntr
     if (!p) return NULL;
 
     // In this case, there are no segments
-    if (nSegments <= 0) {
+    if (nSegments == 0) {
         p ->Segments = NULL;
         p ->Evals = NULL;
     }
@@ -248,7 +248,7 @@ cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsInt32Number nEntr
 
     // This 16-bit table contains a limited precision representation of the whole curve and is kept for
     // increasing xput on certain operations.
-    if (nEntries <= 0) {
+    if (nEntries == 0) {
         p ->Table16 = NULL;
     }
     else {
@@ -274,7 +274,7 @@ cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsInt32Number nEntr
         p ->SegInterp = (cmsInterpParams**) _cmsCalloc(ContextID, nSegments, sizeof(cmsInterpParams*));
         if (p ->SegInterp == NULL) goto Error;
 
-        for (i=0; i< nSegments; i++) {
+        for (i=0; i < nSegments; i++) {
 
             // Type 0 is a special marker for table-based curves
             if (Segments[i].Type == 0)
@@ -395,7 +395,7 @@ cmsFloat64Number DefaultEvalParametricFn(cmsContext ContextID, cmsInt32Number Ty
              if (Val < 0)
                  Val = 0;
          }
-     }         
+     }
      break;
 
 
@@ -673,7 +673,7 @@ cmsFloat64Number EvalSegmentedFn(cmsContext ContextID, const cmsToneCurve *g, cm
     cmsFloat32Number Out32;
     cmsFloat64Number Out;
 
-    for (i = g->nSegments - 1; i >= 0; --i) {
+    for (i = (int) g->nSegments - 1; i >= 0; --i) {
 
         // Check for domain
         if ((R > g->Segments[i].x0) && (R <= g->Segments[i].x1)) {
@@ -727,13 +727,13 @@ const cmsUInt16Number* CMSEXPORT cmsGetToneCurveEstimatedTable(cmsContext Contex
 
 // Create an empty gamma curve, by using tables. This specifies only the limited-precision part, and leaves the
 // floating point description empty.
-cmsToneCurve* CMSEXPORT cmsBuildTabulatedToneCurve16(cmsContext ContextID, cmsInt32Number nEntries, const cmsUInt16Number Values[])
+cmsToneCurve* CMSEXPORT cmsBuildTabulatedToneCurve16(cmsContext ContextID, cmsUInt32Number nEntries, const cmsUInt16Number Values[])
 {
     return AllocateToneCurveStruct(ContextID, nEntries, 0, NULL, Values);
 }
 
 static
-int EntriesByGamma(cmsFloat64Number Gamma)
+cmsUInt32Number EntriesByGamma(cmsFloat64Number Gamma)
 {
     if (fabs(Gamma - 1.0) < 0.001) return 2;
     return 4096;
@@ -742,12 +742,12 @@ int EntriesByGamma(cmsFloat64Number Gamma)
 
 // Create a segmented gamma, fill the table
 cmsToneCurve* CMSEXPORT cmsBuildSegmentedToneCurve(cmsContext ContextID,
-                                                   cmsInt32Number nSegments, const cmsCurveSegment Segments[])
+                                                   cmsUInt32Number nSegments, const cmsCurveSegment Segments[])
 {
-    int i;
+    cmsUInt32Number i;
     cmsFloat64Number R, Val;
     cmsToneCurve* g;
-    int nGridPoints = 4096;
+    cmsUInt32Number nGridPoints = 4096;
 
     _cmsAssert(Segments != NULL);
 
@@ -762,7 +762,7 @@ cmsToneCurve* CMSEXPORT cmsBuildSegmentedToneCurve(cmsContext ContextID,
 
     // Once we have the floating point version, we can approximate a 16 bit table of 4096 entries
     // for performance reasons. This table would normally not be used except on 8/16 bits transforms.
-    for (i=0; i < nGridPoints; i++) {
+    for (i = 0; i < nGridPoints; i++) {
 
         R   = (cmsFloat64Number) i / (nGridPoints-1);
 
@@ -971,7 +971,7 @@ int GetInterval(cmsFloat64Number In, const cmsUInt16Number LutTable[], const str
     if (LutTable[0] < LutTable[p ->Domain[0]]) {
 
         // Table is overall ascending
-        for (i=p->Domain[0]-1; i >=0; --i) {
+        for (i = (int) p->Domain[0] - 1; i >= 0; --i) {
 
             y0 = LutTable[i];
             y1 = LutTable[i+1];
@@ -1006,7 +1006,7 @@ int GetInterval(cmsFloat64Number In, const cmsUInt16Number LutTable[], const str
 }
 
 // Reverse a gamma table
-cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, cmsInt32Number nResultSamples, const cmsToneCurve* InCurve)
+cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, cmsUInt32Number nResultSamples, const cmsToneCurve* InCurve)
 {
     cmsToneCurve *out;
     cmsFloat64Number a = 0, b = 0, y, x1, y1, x2, y2;
@@ -1035,7 +1035,7 @@ cmsToneCurve* CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, cmsInt32Numb
     Ascending = !cmsIsToneCurveDescending(ContextID, InCurve);
 
     // Iterate across Y axis
-    for (i=0; i <  nResultSamples; i++) {
+    for (i=0; i < (int) nResultSamples; i++) {
 
         y = (cmsFloat64Number) i * 65535.0 / (nResultSamples - 1);
 
@@ -1090,7 +1090,8 @@ cmsToneCurve* CMSEXPORT cmsReverseToneCurve(cmsContext ContextID, const cmsToneC
 //   Output: smoothed vector (z): vector from 1 to m.
 
 static
-cmsBool smooth2(cmsContext ContextID, cmsFloat32Number w[], cmsFloat32Number y[], cmsFloat32Number z[], cmsFloat32Number lambda, int m)
+cmsBool smooth2(cmsContext ContextID, cmsFloat32Number w[], cmsFloat32Number y[],
+                cmsFloat32Number z[], cmsFloat32Number lambda, int m)
 {
     int i, i1, i2;
     cmsFloat32Number *c, *d, *e;
@@ -1150,7 +1151,7 @@ cmsBool smooth2(cmsContext ContextID, cmsFloat32Number w[], cmsFloat32Number y[]
 cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, cmsFloat64Number lambda)
 {
     cmsFloat32Number w[MAX_NODES_IN_CURVE], y[MAX_NODES_IN_CURVE], z[MAX_NODES_IN_CURVE];
-    int i, nItems, Zeros, Poles;
+    cmsUInt32Number i, nItems, Zeros, Poles;
 
     if (Tab == NULL) return FALSE;
 
@@ -1173,7 +1174,7 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, c
         w[i+1] = 1.0;
     }
 
-    if (!smooth2(ContextID, w, y, z, (cmsFloat32Number) lambda, nItems)) return FALSE;
+    if (!smooth2(ContextID, w, y, z, (cmsFloat32Number) lambda, (int) nItems)) return FALSE;
 
     // Do some reality - checking...
     Zeros = Poles = 0;
@@ -1210,13 +1211,13 @@ cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, c
 // in a linear table. This way assures it is linear in 12 bits, which should be enought in most cases.
 cmsBool CMSEXPORT cmsIsToneCurveLinear(cmsContext ContextID, const cmsToneCurve* Curve)
 {
-    cmsUInt32Number i;
+    int i;
     int diff;
     cmsUNUSED_PARAMETER(ContextID);
 
     _cmsAssert(Curve != NULL);
 
-    for (i=0; i < Curve ->nEntries; i++) {
+    for (i=0; i < (int) Curve ->nEntries; i++) {
 
         diff = abs((int) Curve->Table16[i] - (int) _cmsQuantizeVal(i, Curve ->nEntries));
         if (diff > 0x0f)
@@ -1229,7 +1230,7 @@ cmsBool CMSEXPORT cmsIsToneCurveLinear(cmsContext ContextID, const cmsToneCurve*
 // Same, but for monotonicity
 cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID, const cmsToneCurve* t)
 {
-    int n;
+    cmsUInt32Number n;
     int i, last;
     cmsBool lDescending;
 
@@ -1246,7 +1247,7 @@ cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID, const cmsToneCu
 
         last = t ->Table16[0];
 
-        for (i = 1; i < n; i++) {
+        for (i = 1; i < (int) n; i++) {
 
             if (t ->Table16[i] - last > 2) // We allow some ripple
                 return FALSE;
@@ -1259,7 +1260,7 @@ cmsBool  CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID, const cmsToneCu
 
         last = t ->Table16[n-1];
 
-        for (i = n-2; i >= 0; --i) {
+        for (i = (int) n - 2; i >= 0; --i) {
 
             if (t ->Table16[i] - last > 2)
                 return FALSE;

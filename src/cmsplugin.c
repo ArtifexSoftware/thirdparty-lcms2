@@ -181,13 +181,16 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsContext ContextID, cmsIOHANDLER* io,
 
         tmp = _cmsAdjustEndianess32(ContextID, tmp);
         *n = *(cmsFloat32Number*)(void*)&tmp;
-        
+
         // Safeguard which covers against absurd values
         if (*n > 1E+20 || *n < -1E+20) return FALSE;
 
         #if defined(_MSC_VER) && _MSC_VER < 1800
            return TRUE;
+        #elif defined (__BORLANDC__)
+           return TRUE;
         #else
+
            // fpclassify() required by C99 (only provided by MSVC >= 1800, VS2013 onwards)
            return ((fpclassify(*n) == FP_ZERO) || (fpclassify(*n) == FP_NORMAL));
         #endif
@@ -225,7 +228,7 @@ cmsBool CMSEXPORT  _cmsRead15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* i
             return FALSE;
 
     if (n != NULL) {
-        *n = _cms15Fixed16toDouble(ContextID, _cmsAdjustEndianess32(ContextID, tmp));
+        *n = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, tmp));
     }
 
     return TRUE;
@@ -242,9 +245,9 @@ cmsBool CMSEXPORT  _cmsReadXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, cms
 
     if (XYZ != NULL) {
 
-        XYZ->X = _cms15Fixed16toDouble(ContextID, _cmsAdjustEndianess32(ContextID, xyz.X));
-        XYZ->Y = _cms15Fixed16toDouble(ContextID, _cmsAdjustEndianess32(ContextID, xyz.Y));
-        XYZ->Z = _cms15Fixed16toDouble(ContextID, _cmsAdjustEndianess32(ContextID, xyz.Z));
+        XYZ->X = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) xyz.X));
+        XYZ->Y = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) xyz.Y));
+        XYZ->Z = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) xyz.Z));
     }
     return TRUE;
 }
@@ -333,7 +336,7 @@ cmsBool CMSEXPORT  _cmsWrite15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* 
 
     _cmsAssert(io != NULL);
 
-    tmp = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, n));
+    tmp = _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, n));
     if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
@@ -347,9 +350,9 @@ cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, co
     _cmsAssert(io != NULL);
     _cmsAssert(XYZ != NULL);
 
-    xyz.X = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, XYZ->X));
-    xyz.Y = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, XYZ->Y));
-    xyz.Z = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, XYZ->Z));
+    xyz.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->X));
+    xyz.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Y));
+    xyz.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Z));
 
     return io -> Write(ContextID, io,  sizeof(cmsEncodedXYZNumber), &xyz);
 }
@@ -510,7 +513,7 @@ cmsBool CMSEXPORT _cmsIOPrintf(cmsContext ContextID, cmsIOHANDLER* io, const cha
         return FALSE;   // Truncated, which is a fatal error for us
     }
 
-    rc = io ->Write(ContextID, io, len, Buffer);
+    rc = io ->Write(ContextID, io, (cmsUInt32Number) len, Buffer);
 
     va_end(args);
 
@@ -998,5 +1001,3 @@ void* CMSEXPORT cmsGetContextUserData(cmsContext ContextID)
 {
     return _cmsContextGetClientChunk(ContextID, UserPtr);
 }
-
-

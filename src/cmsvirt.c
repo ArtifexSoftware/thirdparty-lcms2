@@ -289,7 +289,7 @@ cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLinkTHR(cmsContext ContextID,
 {
     cmsHPROFILE hICC;
     cmsPipeline* Pipeline;
-    int nChannels;
+    cmsUInt32Number nChannels;
 
     hICC = cmsCreateProfilePlaceholder(ContextID);
     if (!hICC)
@@ -396,7 +396,7 @@ cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLinkTHR(cmsContext ContextID,
     cmsHPROFILE hICC;
     cmsPipeline* LUT;
     cmsStage* CLUT;
-    int nChannels;
+    cmsUInt32Number nChannels;
 
     if (ColorSpace != cmsSigCmykData) {
         cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "InkLimiting: Only CMYK currently supported");
@@ -725,13 +725,13 @@ int bchswSampler(cmsContext ContextID, register const cmsUInt16Number In[], regi
 // contrast, Saturation and white point displacement
 
 cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID,
-    int nLUTPoints,
-    cmsFloat64Number Bright,
-    cmsFloat64Number Contrast,
-    cmsFloat64Number Hue,
-    cmsFloat64Number Saturation,
-    int TempSrc,
-    int TempDest)
+                                                       cmsUInt32Number nLUTPoints,
+                                                       cmsFloat64Number Bright,
+                                                       cmsFloat64Number Contrast,
+                                                       cmsFloat64Number Hue,
+                                                       cmsFloat64Number Saturation,
+                                                       cmsUInt32Number TempSrc,
+                                                       cmsUInt32Number TempDest)
 {
     cmsHPROFILE hICC;
     cmsPipeline* Pipeline;
@@ -739,7 +739,7 @@ cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID,
     cmsCIExyY WhitePnt;
     cmsStage* CLUT;
     cmsUInt32Number Dimensions[MAX_INPUT_DIMENSIONS];
-    int i;
+    cmsUInt32Number i;
 
     bchsw.Brightness = Bright;
     bchsw.Contrast   = Contrast;
@@ -810,13 +810,13 @@ Error:
 }
 
 
-CMSAPI cmsHPROFILE   CMSEXPORT cmsCreateBCHSWabstractProfile(int nLUTPoints,
+CMSAPI cmsHPROFILE   CMSEXPORT cmsCreateBCHSWabstractProfile(cmsUInt32Number nLUTPoints,
                                                              cmsFloat64Number Bright,
                                                              cmsFloat64Number Contrast,
                                                              cmsFloat64Number Hue,
                                                              cmsFloat64Number Saturation,
-                                                             int TempSrc,
-                                                             int TempDest)
+                                                             cmsUInt32Number TempSrc,
+                                                             cmsUInt32Number TempDest)
 {
     return cmsCreateBCHSWabstractProfileTHR(NULL, nLUTPoints, Bright, Contrast, Hue, Saturation, TempSrc, TempDest);
 }
@@ -945,7 +945,7 @@ cmsHPROFILE CreateNamedColorDevicelink(cmsContext ContextID, cmsHTRANSFORM xform
 {
     _cmsTRANSFORM* v = (_cmsTRANSFORM*) xform;
     cmsHPROFILE hICC = NULL;
-    int i, nColors;
+    cmsUInt32Number i, nColors;
     cmsNAMEDCOLORLIST *nc2 = NULL, *Original = NULL;
 
     // Create an empty placeholder
@@ -1062,7 +1062,7 @@ cmsHPROFILE CMSEXPORT cmsTransform2DeviceLink(cmsContext ContextID, cmsHTRANSFOR
 {
     cmsHPROFILE hProfile = NULL;
     cmsUInt32Number FrmIn, FrmOut, ChansIn, ChansOut;
-    cmsUInt32Number ColorSpaceBitsIn, ColorSpaceBitsOut;
+    int ColorSpaceBitsIn, ColorSpaceBitsOut;
     _cmsTRANSFORM* xform = (_cmsTRANSFORM*) hTransform;
     cmsPipeline* LUT = NULL;
     cmsStage* mpe;

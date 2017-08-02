@@ -49,8 +49,8 @@ typedef struct {
     cmsContext ContextID;
 
     // Number of channels
-    int nInputs;
-    int nOutputs;
+    cmsUInt32Number nInputs;
+    cmsUInt32Number nOutputs;
 
     _cmsInterpFn16 EvalCurveIn16[MAX_INPUT_DIMENSIONS];       // The maximum number of input channels is known in advance
     cmsInterpParams*  ParamsCurveIn16[MAX_INPUT_DIMENSIONS];
@@ -91,8 +91,8 @@ typedef struct {
 
 // Curves, optimization is shared between 8 and 16 bits
 typedef struct {
-    int nCurves;                  // Number of curves
-    int nElements;                // Elements in curves
+    cmsUInt32Number nCurves;      // Number of curves
+    cmsUInt32Number nElements;    // Elements in curves
     cmsUInt16Number** Curves;     // Points to a dynamically  allocated array
 
 } Curves16Data;
@@ -303,7 +303,7 @@ void PrelinEval16(cmsContext ContextID, register const cmsUInt16Number Input[],
     Prelin16Data* p16 = (Prelin16Data*) D;
     cmsUInt16Number  StageABC[MAX_INPUT_DIMENSIONS];
     cmsUInt16Number  StageDEF[cmsMAXCHANNELS];
-    int i;
+    cmsUInt32Number i;
 
     for (i=0; i < p16 ->nInputs; i++) {
 
@@ -348,15 +348,15 @@ void* Prelin16dup(cmsContext ContextID, const void* ptr)
 static
 Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
                                const cmsInterpParams* ColorMap,
-                               int nInputs, cmsToneCurve** In,
-                               int nOutputs, cmsToneCurve** Out )
+                               cmsUInt32Number nInputs, cmsToneCurve** In,
+                               cmsUInt32Number nOutputs, cmsToneCurve** Out )
 {
-    int i;
+    cmsUInt32Number i;
     Prelin16Data* p16 = (Prelin16Data*)_cmsMallocZero(ContextID, sizeof(Prelin16Data));
     if (p16 == NULL) return NULL;
 
     p16 ->nInputs = nInputs;
-    p16 -> nOutputs = nOutputs;
+    p16 ->nOutputs = nOutputs;
 
 
     for (i=0; i < nInputs; i++) {
@@ -404,7 +404,7 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-int XFormSampler16(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+cmsInt32Number XFormSampler16(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
 {
     cmsPipeline* Lut = (cmsPipeline*) Cargo;
     cmsFloat32Number InFloat[cmsMAXCHANNELS], OutFloat[cmsMAXCHANNELS];
@@ -451,7 +451,7 @@ cmsBool AllCurvesAreLinear(cmsContext ContextID, cmsStage* mpe)
 // is to fix scum dot on broken profiles/transforms. Works on 1, 3 and 4 channels
 static
 cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cmsUInt16Number Value[],
-                  int nChannelsOut, int nChannelsIn)
+                  cmsUInt32Number nChannelsOut, cmsUInt32Number nChannelsIn)
 {
     _cmsStageCLutData* Grid = (_cmsStageCLutData*) CLUT ->Data;
     cmsInterpParams* p16  = Grid ->Params;
@@ -481,10 +481,10 @@ cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cm
             ((pz - z0) != 0) ||
             ((pw - w0) != 0)) return FALSE; // Not on exact node
 
-        index = p16 -> opta[3] * x0 +
-                p16 -> opta[2] * y0 +
-                p16 -> opta[1] * z0 +
-                p16 -> opta[0] * w0;
+        index = (int) p16 -> opta[3] * x0 +
+                (int) p16 -> opta[2] * y0 +
+                (int) p16 -> opta[1] * z0 +
+                (int) p16 -> opta[0] * w0;
     }
     else
         if (nChannelsIn == 3) {
@@ -501,9 +501,9 @@ cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cm
                 ((py - y0) != 0) ||
                 ((pz - z0) != 0)) return FALSE;  // Not on exact node
 
-            index = p16 -> opta[2] * x0 +
-                    p16 -> opta[1] * y0 +
-                    p16 -> opta[0] * z0;
+            index = (int) p16 -> opta[2] * x0 +
+                    (int) p16 -> opta[1] * y0 +
+                    (int) p16 -> opta[0] * z0;
         }
         else
             if (nChannelsIn == 1) {
@@ -514,14 +514,14 @@ cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cm
 
                 if (((px - x0) != 0)) return FALSE; // Not on exact node
 
-                index = p16 -> opta[0] * x0;
+                index = (int) p16 -> opta[0] * x0;
             }
             else {
                 cmsSignalError(ContextID, cmsERROR_INTERNAL, "(internal) %d Channels are not supported on PatchLUT", nChannelsIn);
                 return FALSE;
             }
 
-            for (i = 0; i < nChannelsOut; i++)
+            for (i = 0; i < (int) nChannelsOut; i++)
                 Grid->Tab.T[index + i] = Value[i];
 
             return TRUE;
@@ -529,9 +529,9 @@ cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cm
 
 // Auxiliary, to see if two values are equal or very different
 static
-cmsBool WhitesAreEqual(int n, cmsUInt16Number White1[], cmsUInt16Number White2[] )
+cmsBool WhitesAreEqual(cmsUInt32Number n, cmsUInt16Number White1[], cmsUInt16Number White2[] )
 {
-    int i;
+    cmsUInt32Number i;
 
     for (i=0; i < n; i++) {
 
@@ -633,7 +633,7 @@ cmsBool OptimizeByResampling(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
     cmsStage* mpe;
     cmsStage* CLUT;
     cmsStage *KeepPreLin = NULL, *KeepPostLin = NULL;
-    int nGridPoints;
+    cmsUInt32Number nGridPoints;
     cmsColorSpaceSignature ColorSpace, OutputColorSpace;
     cmsStage *NewPreLin = NULL;
     cmsStage *NewPostLin = NULL;
@@ -645,12 +645,12 @@ cmsBool OptimizeByResampling(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32N
     // This is a loosy optimization! does not apply in floating-point cases
     if (_cmsFormatterIsFloat(*InputFormat) || _cmsFormatterIsFloat(*OutputFormat)) return FALSE;
 
-    ColorSpace       = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*InputFormat));
-    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
+    ColorSpace       = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*InputFormat));
+    OutputColorSpace = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*OutputFormat));
 
     // Color space must be specified
-    if (ColorSpace == (cmsColorSpaceSignature)-1 ||
-        OutputColorSpace == (cmsColorSpaceSignature)-1) return FALSE;
+    if (ColorSpace == (cmsColorSpaceSignature)0 ||
+        OutputColorSpace == (cmsColorSpaceSignature)0) return FALSE;
 
     nGridPoints      = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
 
@@ -808,7 +808,7 @@ void SlopeLimiting(cmsContext ContextID, cmsToneCurve* g)
 {
     int BeginVal, EndVal;
     int AtBegin = (int) floor((cmsFloat64Number) g ->nEntries * 0.02 + 0.5);   // Cutoff at 2%
-    int AtEnd   = g ->nEntries - AtBegin - 1;                                  // And 98%
+    int AtEnd   = (int) g ->nEntries - AtBegin - 1;                                  // And 98%
     cmsFloat64Number Val, Slope, beta;
     int i;
 
@@ -869,9 +869,9 @@ Prelin8Data* PrelinOpt8alloc(cmsContext ContextID, const cmsInterpParams* p, cms
 
 
         // Move to 0..1.0 in fixed domain
-        v1 = _cmsToFixedDomain(Input[0] * p -> Domain[0]);
-        v2 = _cmsToFixedDomain(Input[1] * p -> Domain[1]);
-        v3 = _cmsToFixedDomain(Input[2] * p -> Domain[2]);
+        v1 = _cmsToFixedDomain((int) (Input[0] * p -> Domain[0]));
+        v2 = _cmsToFixedDomain((int) (Input[1] * p -> Domain[1]));
+        v3 = _cmsToFixedDomain((int) (Input[2] * p -> Domain[2]));
 
         // Store the precalculated table of nodes
         p8 ->X0[i] = (p->opta[2] * FIXED_TO_INT(v1));
@@ -915,28 +915,28 @@ void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
     cmsS15Fixed16Number    rx, ry, rz;
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
     int                    OutChan;
-    register cmsS15Fixed16Number    X0, X1, Y0, Y1, Z0, Z1;
+    register cmsS15Fixed16Number X0, X1, Y0, Y1, Z0, Z1;
     Prelin8Data* p8 = (Prelin8Data*) D;
     register const cmsInterpParams* p = p8 ->p;
-    int                    TotalOut = p -> nOutputs;
+    int                    TotalOut = (int) p -> nOutputs;
     const cmsUInt16Number* LutTable = (const cmsUInt16Number*) p->Table;
     cmsUNUSED_PARAMETER(ContextID);
 
-    r = Input[0] >> 8;
-    g = Input[1] >> 8;
-    b = Input[2] >> 8;
+    r = (cmsUInt8Number) (Input[0] >> 8);
+    g = (cmsUInt8Number) (Input[1] >> 8);
+    b = (cmsUInt8Number) (Input[2] >> 8);
 
-    X0 = X1 = p8->X0[r];
-    Y0 = Y1 = p8->Y0[g];
-    Z0 = Z1 = p8->Z0[b];
+    X0 = X1 = (cmsS15Fixed16Number) p8->X0[r];
+    Y0 = Y1 = (cmsS15Fixed16Number) p8->Y0[g];
+    Z0 = Z1 = (cmsS15Fixed16Number) p8->Z0[b];
 
     rx = p8 ->rx[r];
     ry = p8 ->ry[g];
     rz = p8 ->rz[b];
 
-    X1 = X0 + ((rx == 0) ? 0 : p ->opta[2]);
-    Y1 = Y0 + ((ry == 0) ? 0 : p ->opta[1]);
-    Z1 = Z0 + ((rz == 0) ? 0 : p ->opta[0]);
+    X1 = X0 + (cmsS15Fixed16Number)((rx == 0) ? 0 :  p ->opta[2]);
+    Y1 = Y0 + (cmsS15Fixed16Number)((ry == 0) ? 0 :  p ->opta[1]);
+    Z1 = Z0 + (cmsS15Fixed16Number)((rz == 0) ? 0 :  p ->opta[0]);
 
 
     // These are the 6 Tetrahedral
@@ -989,9 +989,8 @@ void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
                                 c1 = c2 = c3 = 0;
                             }
 
-
                             Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
-                            Output[OutChan] = (cmsUInt16Number)c0 + ((Rest + (Rest >> 16)) >> 16);
+                            Output[OutChan] = (cmsUInt16Number) (c0 + ((Rest + (Rest >> 16)) >> 16));
 
     }
 }
@@ -1003,8 +1002,8 @@ void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
 static
 cmsBool IsDegenerated(const cmsToneCurve* g)
 {
-    int i, Zeros = 0, Poles = 0;
-    int nEntries = g ->nEntries;
+    cmsUInt32Number i, Zeros = 0, Poles = 0;
+    cmsUInt32Number nEntries = g ->nEntries;
 
     for (i=0; i < nEntries; i++) {
 
@@ -1026,7 +1025,7 @@ static
 cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut, cmsUInt32Number Intent, cmsUInt32Number* InputFormat, cmsUInt32Number* OutputFormat, cmsUInt32Number* dwFlags)
 {
     cmsPipeline* OriginalLut;
-    int nGridPoints;
+    cmsUInt32Number nGridPoints;
     cmsToneCurve *Trans[cmsMAXCHANNELS], *TransReverse[cmsMAXCHANNELS];
     cmsUInt32Number t, i;
     cmsFloat32Number v, In[cmsMAXCHANNELS], Out[cmsMAXCHANNELS];
@@ -1064,8 +1063,13 @@ cmsBool OptimizeByComputingLinearization(cmsContext ContextID, cmsPipeline** Lut
             if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
-    ColorSpace       = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*InputFormat));
-    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
+    ColorSpace       = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*InputFormat));
+    OutputColorSpace = _cmsICCcolorSpace(ContextID, (int) T_COLORSPACE(*OutputFormat));
+
+    // Color space must be specified
+    if (ColorSpace == (cmsColorSpaceSignature)0 ||
+        OutputColorSpace == (cmsColorSpaceSignature)0) return FALSE;
+
     nGridPoints      = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, *dwFlags);
 
     // Empty gamma containers
@@ -1234,6 +1238,7 @@ Error:
     return FALSE;
 
     cmsUNUSED_PARAMETER(Intent);
+    cmsUNUSED_PARAMETER(lIsLinear);
 }
 
 
@@ -1243,7 +1248,7 @@ static
 void CurvesFree(cmsContext ContextID, void* ptr)
 {
      Curves16Data* Data = (Curves16Data*) ptr;
-     int i;
+     cmsUInt32Number i;
 
      for (i=0; i < Data -> nCurves; i++) {
 
@@ -1258,7 +1263,7 @@ static
 void* CurvesDup(cmsContext ContextID, const void* ptr)
 {
     Curves16Data* Data = (Curves16Data*)_cmsDupMem(ContextID, ptr, sizeof(Curves16Data));
-    int i;
+    cmsUInt32Number i;
 
     if (Data == NULL) return NULL;
 
@@ -1273,9 +1278,9 @@ void* CurvesDup(cmsContext ContextID, const void* ptr)
 
 // Precomputes tables for 8-bit on input devicelink.
 static
-Curves16Data* CurvesAlloc(cmsContext ContextID, int nCurves, int nElements, cmsToneCurve** G)
+Curves16Data* CurvesAlloc(cmsContext ContextID, cmsUInt32Number nCurves, cmsUInt32Number nElements, cmsToneCurve** G)
 {
-    int i, j;
+    cmsUInt32Number i, j;
     Curves16Data* c16;
 
     c16 = (Curves16Data*)_cmsMallocZero(ContextID, sizeof(Curves16Data));
@@ -1304,7 +1309,7 @@ Curves16Data* CurvesAlloc(cmsContext ContextID, int nCurves, int nElements, cmsT
             return NULL;
         }
 
-        if (nElements == 256) {
+        if (nElements == 256U) {
 
             for (j=0; j < nElements; j++) {
 
@@ -1328,8 +1333,8 @@ void FastEvaluateCurves8(cmsContext ContextID, register const cmsUInt16Number In
                           register const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
-    cmsUInt8Number x;
-    int i;
+    int x;
+    cmsUInt32Number i;
     cmsUNUSED_PARAMETER(ContextID);
 
     for (i=0; i < Data ->nCurves; i++) {
@@ -1346,7 +1351,7 @@ void FastEvaluateCurves16(cmsContext ContextID, register const cmsUInt16Number I
                           register const void* D)
 {
     Curves16Data* Data = (Curves16Data*) D;
-    int i;
+    cmsUInt32Number i;
     cmsUNUSED_PARAMETER(ContextID);
 
     for (i=0; i < Data ->nCurves; i++) {
@@ -1529,9 +1534,9 @@ void MatShaperEval16(cmsContext ContextID, register const cmsUInt16Number In[],
 
     // In this case (and only in this case!) we can use this simplification since
     // In[] is assured to come from a 8 bit number. (a << 8 | a)
-    ri = In[0] & 0xFF;
-    gi = In[1] & 0xFF;
-    bi = In[2] & 0xFF;
+    ri = In[0] & 0xFFU;
+    gi = In[1] & 0xFFU;
+    bi = In[2] & 0xFFU;
 
     // Across first shaper, which also converts to 1.14 fixed point
     r = p->Shaper1R[ri];
@@ -1544,9 +1549,9 @@ void MatShaperEval16(cmsContext ContextID, register const cmsUInt16Number In[],
     l3 =  (p->Mat[2][0] * r + p->Mat[2][1] * g + p->Mat[2][2] * b + p->Off[2] + 0x2000) >> 14;
 
     // Now we have to clip to 0..1.0 range
-    ri = (l1 < 0) ? 0 : ((l1 > 16384) ? 16384 : l1);
-    gi = (l2 < 0) ? 0 : ((l2 > 16384) ? 16384 : l2);
-    bi = (l3 < 0) ? 0 : ((l3 > 16384) ? 16384 : l3);
+    ri = (l1 < 0) ? 0 : ((l1 > 16384) ? 16384U : l1);
+    gi = (l2 < 0) ? 0 : ((l2 > 16384) ? 16384U : l2);
+    bi = (l3 < 0) ? 0 : ((l3 > 16384) ? 16384U : l3);
 
     // And across second shaper,
     Out[0] = p->Shaper2R[ri];
@@ -1890,7 +1895,7 @@ cmsBool  _cmsRegisterOptimizationPlugin(cmsContext ContextID, cmsPluginBase* Dat
 // The entry point for LUT optimization
 cmsBool _cmsOptimizePipeline(cmsContext ContextID,
                              cmsPipeline**    PtrLut,
-                             int              Intent,
+                             cmsUInt32Number  Intent,
                              cmsUInt32Number* InputFormat,
                              cmsUInt32Number* OutputFormat,
                              cmsUInt32Number* dwFlags)
@@ -1951,6 +1956,3 @@ cmsBool _cmsOptimizePipeline(cmsContext ContextID,
     // Only simple optimizations succeeded
     return AnySuccess;
 }
-
-
-

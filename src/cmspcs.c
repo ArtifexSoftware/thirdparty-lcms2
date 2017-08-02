@@ -668,9 +668,9 @@ cmsFloat64Number CMSEXPORT cmsCIE2000DeltaE(cmsContext ContextID, const cmsCIELa
 
 // This function returns a number of gridpoints to be used as LUT table. It assumes same number
 // of gripdpoints in all dimensions. Flags may override the choice.
-int _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags)
+cmsUInt32Number _cmsReasonableGridpointsByColorspace(cmsContext ContextID, cmsColorSpaceSignature Colorspace, cmsUInt32Number dwFlags)
 {
-    int nChannels;
+    cmsUInt32Number nChannels;
 
     // Already specified?
     if (dwFlags & 0x00FF0000) {
@@ -814,7 +814,7 @@ cmsColorSpaceSignature CMSEXPORT _cmsICCcolorSpace(cmsContext ContextID, int Our
        case PT_MCH14: return cmsSigMCHEData;
        case PT_MCH15: return cmsSigMCHFData;
 
-       default:  return (cmsColorSpaceSignature) (-1);
+       default:  return (cmsColorSpaceSignature) 0;
        }
     cmsUNUSED_PARAMETER(ContextID);
 }
@@ -883,7 +883,7 @@ int CMSEXPORT _cmsLCMScolorSpace(cmsContext ContextID, cmsColorSpaceSignature Pr
     case cmsSigMCHFData:
     case cmsSig15colorData:return PT_MCH15;
 
-    default:  return (cmsColorSpaceSignature) (-1);
+    default:  return (cmsColorSpaceSignature) 0;
     }
 }
 

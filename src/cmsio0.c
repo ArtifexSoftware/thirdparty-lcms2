@@ -521,7 +521,7 @@ cmsInt32Number CMSEXPORT cmsGetTagCount(cmsContext ContextID, cmsHPROFILE hProfi
     cmsUNUSED_PARAMETER(ContextID);
     if (Icc == NULL) return -1;
 
-    return  Icc->TagCount;
+    return  (cmsInt32Number) Icc->TagCount;
 }
 
 // Return the tag signature of a given tag number
@@ -540,9 +540,9 @@ cmsTagSignature CMSEXPORT cmsGetTagSignature(cmsContext ContextID, cmsHPROFILE h
 static
 int SearchOneTag(_cmsICCPROFILE* Profile, cmsTagSignature sig)
 {
-    cmsUInt32Number i;
+    int i;
 
-    for (i=0; i < Profile -> TagCount; i++) {
+    for (i=0; i < (int) Profile -> TagCount; i++) {
 
         if (sig == Profile -> TagNames[i])
             return i;
@@ -636,7 +636,7 @@ cmsBool _cmsNewTag(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsTagSignature si
             return FALSE;
         }
 
-        *NewPos = Icc ->TagCount;
+        *NewPos = (int) Icc ->TagCount;
         Icc -> TagCount++;
     }
 
@@ -667,10 +667,10 @@ cmsUInt32Number _validatedVersion(cmsUInt32Number DWord)
     cmsUInt8Number temp2;
 
     if (*pByte > 0x09) *pByte = (cmsUInt8Number) 0x09;
-    temp1 = *(pByte+1) & 0xf0;
-    temp2 = *(pByte+1) & 0x0f;
-    if (temp1 > 0x90) temp1 = 0x90;
-    if (temp2 > 0x09) temp2 = 0x09;
+    temp1 = (cmsUInt8Number) (*(pByte+1) & 0xf0);
+    temp2 = (cmsUInt8Number) (*(pByte+1) & 0x0f);
+    if (temp1 > 0x90U) temp1 = 0x90U;
+    if (temp2 > 0x09U) temp2 = 0x09U;
     *(pByte+1) = (cmsUInt8Number)(temp1 | temp2);
     *(pByte+2) = (cmsUInt8Number)0;
     *(pByte+3) = (cmsUInt8Number)0;
@@ -778,7 +778,7 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     cmsICCHeader Header;
     cmsUInt32Number i;
     cmsTagEntry Tag;
-    cmsInt32Number Count = 0;
+    cmsUInt32Number Count;
 
     Header.size        = _cmsAdjustEndianess32(ContextID, UsedSpace);
     Header.cmmId       = _cmsAdjustEndianess32(ContextID, lcmsSignature);
@@ -809,9 +809,9 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     Header.renderingIntent = _cmsAdjustEndianess32(ContextID, Icc -> RenderingIntent);
 
     // Illuminant is always D50
-    Header.illuminant.X = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->X));
-    Header.illuminant.Y = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Y));
-    Header.illuminant.Z = _cmsAdjustEndianess32(ContextID, _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Z));
+    Header.illuminant.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->X));
+    Header.illuminant.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Y));
+    Header.illuminant.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, cmsD50_XYZ(ContextID)->Z));
 
     // Created by LittleCMS (that's me!)
     Header.creator      = _cmsAdjustEndianess32(ContextID, lcmsSignature);
@@ -827,6 +827,7 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
     // Saves Tag directory
 
     // Get true count
+    Count = 0;
     for (i=0;  i < Icc -> TagCount; i++) {
         if (Icc ->TagNames[i] != (cmsTagSignature) 0)
             Count++;
@@ -839,9 +840,9 @@ cmsBool _cmsWriteHeader(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsUInt32Numb
 
         if (Icc ->TagNames[i] == (cmsTagSignature) 0) continue;   // It is just a placeholder
 
-        Tag.sig    = (cmsTagSignature) _cmsAdjustEndianess32(ContextID, (cmsInt32Number) Icc -> TagNames[i]);
-        Tag.offset = _cmsAdjustEndianess32(ContextID, (cmsInt32Number) Icc -> TagOffsets[i]);
-        Tag.size   = _cmsAdjustEndianess32(ContextID, (cmsInt32Number) Icc -> TagSizes[i]);
+        Tag.sig    = (cmsTagSignature) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) Icc -> TagNames[i]);
+        Tag.offset = _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) Icc -> TagOffsets[i]);
+        Tag.size   = _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) Icc -> TagSizes[i]);
 
         if (!Icc ->IOhandler -> Write(ContextID, Icc-> IOhandler, sizeof(cmsTagEntry), &Tag)) return FALSE;
     }
@@ -1765,7 +1766,7 @@ Error:
 // raw data written does not exactly correspond with the raw data proposed to cmsWriteRaw data, but this approach allows
 // to write a tag as raw data and the read it as handled.
 
-cmsInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig, void* data, cmsUInt32Number BufferSize)
+cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig, void* data, cmsUInt32Number BufferSize)
 {
     _cmsICCPROFILE* Icc = (_cmsICCPROFILE*) hProfile;
     void *Object;

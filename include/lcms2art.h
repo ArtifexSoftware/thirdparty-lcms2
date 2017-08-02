@@ -1138,7 +1138,7 @@ typedef struct {
     cmsCIEXYZ        whitePoint;
     cmsFloat64Number Yb;
     cmsFloat64Number La;
-    int              surround;
+    cmsUInt32Number  surround;
     cmsFloat64Number D_value;
 
     } cmsViewingConditions;
@@ -1166,16 +1166,16 @@ typedef struct {
 // The internal representation is none of your business.
 typedef struct _cms_curve_struct cmsToneCurve;
 
-CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildSegmentedToneCurve(cmsContext ContextID, cmsInt32Number nSegments, const cmsCurveSegment Segments[]);
+CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildSegmentedToneCurve(cmsContext ContextID, cmsUInt32Number nSegments, const cmsCurveSegment Segments[]);
 CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildParametricToneCurve(cmsContext ContextID, cmsInt32Number Type, const cmsFloat64Number Params[]);
 CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildGamma(cmsContext ContextID, cmsFloat64Number Gamma);
-CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildTabulatedToneCurve16(cmsContext ContextID, cmsInt32Number nEntries, const cmsUInt16Number values[]);
+CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildTabulatedToneCurve16(cmsContext ContextID, cmsUInt32Number nEntries, const cmsUInt16Number values[]);
 CMSAPI cmsToneCurve*     CMSEXPORT cmsBuildTabulatedToneCurveFloat(cmsContext ContextID, cmsUInt32Number nEntries, const cmsFloat32Number values[]);
 CMSAPI void              CMSEXPORT cmsFreeToneCurve(cmsContext ContextID, cmsToneCurve* Curve);
 CMSAPI void              CMSEXPORT cmsFreeToneCurveTriple(cmsContext ContextID, cmsToneCurve* Curve[3]);
 CMSAPI cmsToneCurve*     CMSEXPORT cmsDupToneCurve(cmsContext ContextID, const cmsToneCurve* Src);
 CMSAPI cmsToneCurve*     CMSEXPORT cmsReverseToneCurve(cmsContext ContextID, const cmsToneCurve* InGamma);
-CMSAPI cmsToneCurve*     CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, cmsInt32Number nResultSamples, const cmsToneCurve* InGamma);
+CMSAPI cmsToneCurve*     CMSEXPORT cmsReverseToneCurveEx(cmsContext ContextID, cmsUInt32Number nResultSamples, const cmsToneCurve* InGamma);
 CMSAPI cmsToneCurve*     CMSEXPORT cmsJoinToneCurve(cmsContext ContextID, const cmsToneCurve* X,  const cmsToneCurve* Y, cmsUInt32Number nPoints);
 CMSAPI cmsBool           CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, cmsFloat64Number lambda);
 CMSAPI cmsFloat32Number  CMSEXPORT cmsEvalToneCurveFloat(cmsContext ContextID, const cmsToneCurve* Curve, cmsFloat32Number v);
@@ -1219,7 +1219,7 @@ CMSAPI cmsBool           CMSEXPORT cmsPipelineSetSaveAs8bitsFlag(cmsContext Cont
 // Where to place/locate the stages in the pipeline chain
 typedef enum { cmsAT_BEGIN, cmsAT_END } cmsStageLoc;
 
-CMSAPI int               CMSEXPORT cmsPipelineInsertStage(cmsContext ContextID, cmsPipeline* lut, cmsStageLoc loc, cmsStage* mpe);
+CMSAPI cmsBool           CMSEXPORT cmsPipelineInsertStage(cmsContext ContextID, cmsPipeline* lut, cmsStageLoc loc, cmsStage* mpe);
 CMSAPI void              CMSEXPORT cmsPipelineUnlinkStage(cmsContext ContextID, cmsPipeline* lut, cmsStageLoc loc, cmsStage** mpe);
 
 // This function is quite useful to analyze the structure of a Pipeline and retrieve the Stage elements
@@ -1442,7 +1442,7 @@ CMSAPI cmsBool           CMSEXPORT cmsLinkTag(cmsContext ContextID, cmsHPROFILE 
 CMSAPI cmsTagSignature   CMSEXPORT cmsTagLinkedTo(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig);
 
 // Read and write raw data
-CMSAPI cmsInt32Number    CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig, void* Buffer, cmsUInt32Number BufferSize);
+CMSAPI cmsUInt32Number   CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig, void* Buffer, cmsUInt32Number BufferSize);
 CMSAPI cmsBool           CMSEXPORT cmsWriteRawTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSignature sig, const void* data, cmsUInt32Number Size);
 
 // Access header data
@@ -1593,21 +1593,21 @@ CMSAPI cmsHPROFILE      CMSEXPORT cmsCreate_sRGBProfileTHR(cmsContext ContextID)
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreate_sRGBProfile(void);
 
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID,
-                                                             int nLUTPoints,
+                                                             cmsUInt32Number nLUTPoints,
                                                              cmsFloat64Number Bright,
                                                              cmsFloat64Number Contrast,
                                                              cmsFloat64Number Hue,
                                                              cmsFloat64Number Saturation,
-                                                             int TempSrc,
-                                                             int TempDest);
+                                                             cmsUInt32Number TempSrc,
+                                                             cmsUInt32Number TempDest);
 
-CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfile(int nLUTPoints,
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfile(cmsUInt32Number nLUTPoints,
                                                              cmsFloat64Number Bright,
                                                              cmsFloat64Number Contrast,
                                                              cmsFloat64Number Hue,
                                                              cmsFloat64Number Saturation,
-                                                             int TempSrc,
-                                                             int TempDest);
+                                                             cmsUInt32Number TempSrc,
+                                                             cmsUInt32Number TempDest);
 
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateNULLProfileTHR(cmsContext ContextID);
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateNULLProfile(void);

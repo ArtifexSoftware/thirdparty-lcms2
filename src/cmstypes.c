@@ -412,8 +412,8 @@ Error:
 static
 cmsBool  SaveOneChromaticity(cmsContext ContextID, cmsFloat64Number x, cmsFloat64Number y, cmsIOHANDLER* io)
 {
-    if (!_cmsWriteUInt32Number(ContextID, io, _cmsDoubleTo15Fixed16(ContextID, x))) return FALSE;
-    if (!_cmsWriteUInt32Number(ContextID, io, _cmsDoubleTo15Fixed16(ContextID, y))) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, x))) return FALSE;
+    if (!_cmsWriteUInt32Number(ContextID, io, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, y))) return FALSE;
 
     return TRUE;
 }
@@ -1673,10 +1673,10 @@ Byte Position   Field Length (bytes)  Content Encoded as...
 
 // Read 8 bit tables as gamma functions
 static
-cmsBool  Read8bitTables(cmsContext ContextID, cmsIOHANDLER* io, cmsPipeline* lut, int nChannels)
+cmsBool  Read8bitTables(cmsContext ContextID, cmsIOHANDLER* io, cmsPipeline* lut, cmsUInt32Number nChannels)
 {
     cmsUInt8Number* Temp = NULL;
-    int i, j;
+    cmsUInt32Number i, j;
     cmsToneCurve* Tables[cmsMAXCHANNELS];
 
     if (nChannels > cmsMAXCHANNELS) return FALSE;
@@ -1901,7 +1901,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     _cmsStageToneCurvesData* PreMPE = NULL, *PostMPE = NULL;
     _cmsStageMatrixData* MatMPE = NULL;
     _cmsStageCLutData* clut = NULL;
-    int clutPoints;
+    cmsUInt32Number clutPoints;
     cmsUNUSED_PARAMETER(self);
 
     // Disassemble the LUT into components.
@@ -2022,9 +2022,10 @@ void Type_LUT8_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, 
 
 // Read 16 bit tables as gamma functions
 static
-cmsBool  Read16bitTables(cmsContext ContextID, cmsIOHANDLER* io, cmsPipeline* lut, int nChannels, int nEntries)
+cmsBool  Read16bitTables(cmsContext ContextID, cmsIOHANDLER* io, cmsPipeline* lut,
+                                    cmsUInt32Number nChannels, cmsUInt32Number nEntries)
 {
-    int i;
+    cmsUInt32Number i;
     cmsToneCurve* Tables[cmsMAXCHANNELS];
 
     // Maybe an empty table? (this is a lcms extension)
@@ -2066,10 +2067,10 @@ Error:
 static
 cmsBool Write16bitTables(cmsContext ContextID, cmsIOHANDLER* io, _cmsStageToneCurvesData* Tables)
 {
-    int j;
+    cmsUInt32Number j;
     cmsUInt32Number i;
     cmsUInt16Number val;
-    int nEntries;
+    cmsUInt32Number nEntries;
 
     _cmsAssert(Tables != NULL);
 
@@ -2191,7 +2192,7 @@ cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
     _cmsStageToneCurvesData* PreMPE = NULL, *PostMPE = NULL;
     _cmsStageMatrixData* MatMPE = NULL;
     _cmsStageCLutData* clut = NULL;
-    int i, InputChannels, OutputChannels, clutPoints;
+    cmsUInt32Number i, InputChannels, OutputChannels, clutPoints;
     cmsUNUSED_PARAMETER(self);
 
     // Disassemble the LUT into components.
@@ -2379,7 +2380,8 @@ cmsStage* ReadMatrix(cmsContext ContextID, struct _cms_typehandler_struct* self,
 //  V4 stuff. Read CLUT part for LutAtoB and LutBtoA
 
 static
-cmsStage* ReadCLUT(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number Offset, int InputChannels, int OutputChannels)
+cmsStage* ReadCLUT(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io,
+                   cmsUInt32Number Offset, cmsUInt32Number InputChannels, cmsUInt32Number OutputChannels)
 {
     cmsUInt8Number  gridPoints8[cmsMAXCHANNELS]; // Number of grid points in each dimension.
     cmsUInt32Number GridPoints[cmsMAXCHANNELS], i;
@@ -2735,7 +2737,7 @@ static
 cmsBool Type_LUTA2B_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsPipeline* Lut = (cmsPipeline*) Ptr;
-    int inputChan, outputChan;
+    cmsUInt32Number inputChan, outputChan;
     cmsStage *A = NULL, *B = NULL, *M = NULL;
     cmsStage * Matrix = NULL;
     cmsStage * CLUT = NULL;
@@ -2783,7 +2785,7 @@ cmsBool Type_LUTA2B_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
 
     if (CLUT != NULL) {
         offsetC = io ->Tell(ContextID, io) - BaseOffset;
-        if (!WriteCLUT(ContextID, self, io, Lut ->SaveAs8Bits ? 1 : 2, CLUT)) return FALSE;
+        if (!WriteCLUT(ContextID, self, io, (Lut ->SaveAs8Bits ? 1U : 2U), CLUT)) return FALSE;
 
     }
     if (M != NULL) {
@@ -2923,7 +2925,7 @@ static
 cmsBool  Type_LUTB2A_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsPipeline* Lut = (cmsPipeline*) Ptr;
-    int inputChan, outputChan;
+    cmsUInt32Number inputChan, outputChan;
     cmsStage *A = NULL, *B = NULL, *M = NULL;
     cmsStage *Matrix = NULL;
     cmsStage *CLUT = NULL;
@@ -2965,7 +2967,7 @@ cmsBool  Type_LUTB2A_Write(cmsContext ContextID, struct _cms_typehandler_struct*
 
     if (CLUT != NULL) {
         offsetC = io ->Tell(ContextID, io) - BaseOffset;
-        if (!WriteCLUT(ContextID, self, io, Lut ->SaveAs8Bits ? 1 : 2, CLUT)) return FALSE;
+        if (!WriteCLUT(ContextID, self, io, (Lut ->SaveAs8Bits ? 1U : 2U), CLUT)) return FALSE;
 
     }
     if (M != NULL) {
@@ -3082,7 +3084,7 @@ static
 cmsBool  Type_ColorantTable_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsNAMEDCOLORLIST* NamedColorList = (cmsNAMEDCOLORLIST*) Ptr;
-    int i, nColors;
+    cmsUInt32Number i, nColors;
 
     nColors = cmsNamedColorCount(ContextID, NamedColorList);
 
@@ -3213,7 +3215,7 @@ cmsBool Type_NamedColor_Write(cmsContext ContextID, struct _cms_typehandler_stru
     cmsNAMEDCOLORLIST* NamedColorList = (cmsNAMEDCOLORLIST*) Ptr;
     char                prefix[33];     // Prefix for each color name
     char                suffix[33];     // Suffix for each color name
-    int i, nColors;
+    cmsUInt32Number     i, nColors;
 
     nColors = cmsNamedColorCount(ContextID, NamedColorList);
 
@@ -4150,7 +4152,7 @@ void *Type_MPEcurve_Read(cmsContext ContextID, struct _cms_typehandler_struct* s
     }
 
     _cmsFree(ContextID, GammaTables);
-    *nItems = (mpe != NULL) ? 1 : 0;
+    *nItems = (mpe != NULL) ? 1U : 0;
     return mpe;
 
     cmsUNUSED_PARAMETER(SizeOfTag);
@@ -4287,7 +4289,7 @@ void *Type_MPEmatrix_Read(cmsContext ContextID, struct _cms_typehandler_struct* 
     if (InputChans >= cmsMAXCHANNELS) return NULL;
     if (OutputChans >= cmsMAXCHANNELS) return NULL;
 
-    nElems = InputChans * OutputChans;
+    nElems = (cmsUInt32Number) InputChans * OutputChans;
 
     Matrix = (cmsFloat64Number*) _cmsCalloc(ContextID, nElems, sizeof(cmsFloat64Number));
     if (Matrix == NULL) return NULL;
@@ -4392,7 +4394,7 @@ void *Type_MPEclut_Read(cmsContext ContextID, struct _cms_typehandler_struct* se
         goto Error;
 
     // Copy MAX_INPUT_DIMENSIONS at most. Expand to cmsUInt32Number
-    nMaxGrids = InputChans > MAX_INPUT_DIMENSIONS ? MAX_INPUT_DIMENSIONS : InputChans;
+    nMaxGrids = InputChans > MAX_INPUT_DIMENSIONS ? (cmsUInt32Number) MAX_INPUT_DIMENSIONS : InputChans;
 
     for (i = 0; i < nMaxGrids; i++) {
         if (Dimensions8[i] == 1) goto Error; // Impossible value, 0 for no CLUT and then 2 at least
@@ -4571,7 +4573,7 @@ static
 cmsBool Type_MPE_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
 {
     cmsUInt32Number i, BaseOffset, DirectoryPos, CurrentPos;
-    int inputChan, outputChan;
+    cmsUInt32Number inputChan, outputChan;
     cmsUInt32Number ElemCount;
     cmsUInt32Number *ElementOffsets = NULL, *ElementSizes = NULL, Before;
     cmsStageSignature ElementSig;

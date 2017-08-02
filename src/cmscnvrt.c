@@ -363,11 +363,13 @@ cmsBool IsEmptyLayer(cmsContext ContextID, cmsMAT3* m, cmsVEC3* off)
 
 // Compute the conversion layer
 static
-cmsBool ComputeConversion(cmsContext ContextID, int i, cmsHPROFILE hProfiles[],
-                                 cmsUInt32Number Intent,
-                                 cmsBool BPC,
-                                 cmsFloat64Number AdaptationState,
-                                 cmsMAT3* m, cmsVEC3* off)
+cmsBool ComputeConversion(cmsContext ContextID,
+                          cmsUInt32Number i,
+                          cmsHPROFILE hProfiles[],
+                          cmsUInt32Number Intent,
+                          cmsBool BPC,
+                          cmsFloat64Number AdaptationState,
+                          cmsMAT3* m, cmsVEC3* off)
 {
 
     int k;
@@ -681,7 +683,7 @@ cmsPipeline*  CMSEXPORT _cmsDefaultICCintents(cmsContext     ContextID,
 
 // Translate black-preserving intents to ICC ones
 static
-int TranslateNonICCIntents(int Intent)
+cmsUInt32Number TranslateNonICCIntents(cmsUInt32Number Intent)
 {
     switch (Intent) {
         case INTENT_PRESERVE_K_ONLY_PERCEPTUAL:
@@ -1160,4 +1162,3 @@ cmsBool  _cmsRegisterRenderingIntentPlugin(cmsContext id, cmsPluginBase* Data)
 
     return TRUE;
 }
-

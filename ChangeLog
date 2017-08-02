@@ -1,4 +1,16 @@
 ------------------------
+2.9.art Featured release
+------------------------
+
+Merge 2.9 with 2.8.art.
+
+------------------------
+2.9 Maintenance release
+------------------------
+
+No changelog provided.
+
+------------------------
 2.8.art Featured release
 ------------------------
 
@@ -15,7 +27,7 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 
 Changed ChangeLog direction
 Fixed many typos in comments, thanks to Stefan Weil for doing that.
-Fixed localization bug, added a new test case crayons.icc thanks to Richard Hughes for providing the profile. 
+Fixed localization bug, added a new test case crayons.icc thanks to Richard Hughes for providing the profile.
 Fixed a bug in optimizer that made some formats (i.e, bits planar) unavailable
 Fixed misalignment problems on Alpha. The compiler does not align strings, and accessing begin of string as a uint16 makes code to fail.
 Added some extra checks to the tools and examples.
@@ -31,7 +43,7 @@ Fixed for XCODE project
 2.7 Maintenance release
 -----------------------
 
-Added a version retrieval function 
+Added a version retrieval function
 Added an option in transicc for working in bounded mode
 Fixed wrong handling of extra channels in some formatters.
 Added a project for VS2013
@@ -41,13 +53,13 @@ Added a global optimization that merges consecutive matrices in pipelines. Fixes
 Added a flag  to clip negative values in unbounded transforms (only gray, rgb, cmyk)
 Move unused var suppresor before the `return` statements.
 Remove dead code.
-Add missing comma in CGATS parser    
+Add missing comma in CGATS parser
 utils/jpgicc/iccjpeg.c: Fix check if unsigned variable 'total_length'… …
 Some maintenance fixes
 Remove unused vcproj files
 Added a function to retrieve the iohandler of a given profile object
 Added a safety check on named color lists
-Fixed a macro clash on SNONE. 
+Fixed a macro clash on SNONE.
 Fixed a possible segmentation fault in a non-happy path
 
 -----------------------
@@ -80,7 +92,7 @@ Fixed a bug in parametric curves
 Added some fixes from XhmikosR
 Added TIFF Lab16 handling on tifficc
 More changes from Artifex
-Added identity curves support for write V2 LUT 
+Added identity curves support for write V2 LUT
 Added a way to read the profile creator from header
 Added a reference for Mac MLU tag
 Fixed devicelink generation for 8 bits
@@ -88,7 +100,7 @@ Several minor issues found by cppcheck
 Several improvements in cgats parser.
 Fixed some bugs on floating point curves.
 Fixed a bug on  big endian platforms not supporting uint64 or long long.
-Added error descriptions on cmsSmoothToneCurve 
+Added error descriptions on cmsSmoothToneCurve
 Added new cmsPlugInTHR() and fixed some race conditions (thanks to Artifex)
 update black point detection algorithm to reflect ICC changes
 Fixed some 64 bit warnings on size_t to uint32 conversions
@@ -136,7 +148,7 @@ Updated to ICC spec 4.3
 Adding a memory alignment macro for CGATS parser
 Fixed a bug on the range of data in transicc, when colorant tag is specified
 Fixed Absolute colorimetric intent issues
-Fixed encoding for floating point tags in Lab/XYZ 
+Fixed encoding for floating point tags in Lab/XYZ
 Fixed a 0 byte allocation issue in _cmsCreateSubAllocChunk
 
 -----------------------
@@ -144,15 +156,15 @@ Fixed a 0 byte allocation issue in _cmsCreateSubAllocChunk
 -----------------------
 
 Pascal unit now is supported by Free Pascal Compiler
-Fixed a bug on ReadRAWtag 
+Fixed a bug on ReadRAWtag
 Added dictionary metatag support
 Fixed a bug in black preservation and sligtly non-monotonic curves
 Added named color functionality
 Fixed a bug that made crash black preservation on CMYK2CMYK devicelinks
 Added functions to retrieve formatters from transforms
 Profiles with weird curves are not prone to p`relinearization optimization.
-changed memmove to memcpy in cache for xput improvement 
-Fixed GBD bug (out of bounds memory overwrite) 
+changed memmove to memcpy in cache for xput improvement
+Fixed GBD bug (out of bounds memory overwrite)
 Fixed some potential issues as NULL dereferencing
 Updated linkicc to 2.1, cleanup
 Removed pthreads need
@@ -170,10 +182,10 @@ linkicc now stores the rendering intent in the profile header
 Fixed several integer overflow and other integrity checks, thanks to Chris Evans
 Fixed an issue on curve inversion
 Fixed memory leaks on when recovering from errors
-Fixed a bug in psid and profile sequence tags 
+Fixed a bug in psid and profile sequence tags
 Fixed a bug in device link creation on v4 profiles
 Fixed a bug in tificc in floating point formats
-Peliminary Delphi wrapper 
+Peliminary Delphi wrapper
 Fixed some typos in error messages
 Added cmsTagLinkedTo
 Fixed VC2010, VC2008 projects
@@ -188,6 +200,3 @@ Fixed a bug on V2 CHAD construction, affects absolute colorimetric intent
 -----------------------
 2.0 Major version bump
 -----------------------
-
-
-

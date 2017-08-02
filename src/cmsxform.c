@@ -804,7 +804,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
                             p->FromInputFloat = _cmsGetFormatter(ContextID, *InputFormat, cmsFormatterInput, CMS_PACK_FLAGS_FLOAT).FmtFloat;
                             p->ToOutputFloat = _cmsGetFormatter(ContextID, *OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_FLOAT).FmtFloat;
 
-                            // Save the day?
+                            // Save the day? (Ignore the warning)
                             if (Plugin->OldXform) {
                                    p->OldXform = (_cmsTransformFn) p->xform;
                                    p->xform = _cmsTransform2toTransformAdaptor;
@@ -850,7 +850,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
         }
         else {
 
-            int BytesPerPixelInput;
+            cmsUInt32Number BytesPerPixelInput;
 
             p ->FromInput = _cmsGetFormatter(ContextID, *InputFormat,  cmsFormatterInput, CMS_PACK_FLAGS_16BITS).Fmt16;
             p ->ToOutput  = _cmsGetFormatter(ContextID, *OutputFormat, cmsFormatterOutput, CMS_PACK_FLAGS_16BITS).Fmt16;
@@ -899,13 +899,13 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
 }
 
 static
-cmsBool GetXFormColorSpaces(cmsContext ContextID, int nProfiles, cmsHPROFILE hProfiles[], cmsColorSpaceSignature* Input, cmsColorSpaceSignature* Output)
+cmsBool GetXFormColorSpaces(cmsContext ContextID, cmsUInt32Number nProfiles, cmsHPROFILE hProfiles[], cmsColorSpaceSignature* Input, cmsColorSpaceSignature* Output)
 {
     cmsColorSpaceSignature ColorSpaceIn, ColorSpaceOut;
     cmsColorSpaceSignature PostColorSpace;
-    int i;
+    cmsUInt32Number i;
 
-    if (nProfiles <= 0) return FALSE;
+    if (nProfiles == 0) return FALSE;
     if (hProfiles[0] == NULL) return FALSE;
 
     *Input = PostColorSpace = cmsGetColorSpace(ContextID, hProfiles[0]);
@@ -954,7 +954,7 @@ cmsBool GetXFormColorSpaces(cmsContext ContextID, int nProfiles, cmsHPROFILE hPr
 static
 cmsBool  IsProperColorSpace(cmsContext ContextID, cmsColorSpaceSignature Check, cmsUInt32Number dwFormat)
 {
-    int Space1 = T_COLORSPACE(dwFormat);
+    int Space1 = (int) T_COLORSPACE(dwFormat);
     int Space2 = _cmsLCMScolorSpace(ContextID, Check);
 
     if (Space1 == PT_ANY) return TRUE;
@@ -1210,7 +1210,7 @@ cmsHTRANSFORM CMSEXPORT cmsCreateTransformTHR(cmsContext ContextID,
     hArray[0] = Input;
     hArray[1] = Output;
 
-    return cmsCreateMultiprofileTransformTHR(ContextID, hArray, Output == NULL ? 1 : 2, InputFormat, OutputFormat, Intent, dwFlags);
+    return cmsCreateMultiprofileTransformTHR(ContextID, hArray, Output == NULL ? 1U : 2U, InputFormat, OutputFormat, Intent, dwFlags);
 }
 
 CMSAPI cmsHTRANSFORM CMSEXPORT cmsCreateTransform(cmsHPROFILE Input,

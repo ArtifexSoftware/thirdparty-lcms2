@@ -97,21 +97,21 @@ cmsUInt8Number* UnrollChunkyBytes(cmsContext ContextID, register _cmsTRANSFORM* 
                                   register cmsUInt8Number* accum,
                                   register cmsUInt32Number Stride)
 {
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number nChan      = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap     = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra      = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
     cmsUInt16Number v;
-    int i;
+    cmsUInt32Number i;
 
     if (ExtraFirst) {
         accum += Extra;
     }
 
     for (i=0; i < nChan; i++) {
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         v = FROM_8_TO_16(*accum);
         v = Reverse ? REVERSE_FLAVOR_16(v) : v;
@@ -144,11 +144,11 @@ cmsUInt8Number* UnrollPlanarBytes(cmsContext ContextID, register _cmsTRANSFORM* 
                                   register cmsUInt8Number* accum,
                                   register cmsUInt32Number Stride)
 {
-    int nChan     = T_CHANNELS(info -> InputFormat);
-    int DoSwap    = T_DOSWAP(info ->InputFormat);
-    int SwapFirst = T_SWAPFIRST(info ->InputFormat);
-    int Reverse   = T_FLAVOR(info ->InputFormat);
-    int i;
+    cmsUInt32Number nChan     = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap    = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number SwapFirst = T_SWAPFIRST(info ->InputFormat);
+    cmsUInt32Number Reverse   = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number i;
     cmsUInt8Number* Init = accum;
 
     if (DoSwap ^ SwapFirst) {
@@ -157,7 +157,7 @@ cmsUInt8Number* UnrollPlanarBytes(cmsContext ContextID, register _cmsTRANSFORM* 
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
         cmsUInt16Number v = FROM_8_TO_16(*accum);
 
         wIn[index] = Reverse ? REVERSE_FLAVOR_16(v) : v;
@@ -474,14 +474,14 @@ cmsUInt8Number* UnrollAnyWords(cmsContext ContextID, register _cmsTRANSFORM* inf
                                register cmsUInt8Number* accum,
                                register cmsUInt32Number Stride)
 {
-    int nChan       = T_CHANNELS(info -> InputFormat);
-    int SwapEndian  = T_ENDIAN16(info -> InputFormat);
-    int DoSwap      = T_DOSWAP(info ->InputFormat);
-    int Reverse     = T_FLAVOR(info ->InputFormat);
-    int SwapFirst   = T_SWAPFIRST(info -> InputFormat);
-    int Extra       = T_EXTRA(info -> InputFormat);
-    int ExtraFirst  = DoSwap ^ SwapFirst;
-    int i;
+   cmsUInt32Number nChan       = T_CHANNELS(info -> InputFormat);
+   cmsUInt32Number SwapEndian  = T_ENDIAN16(info -> InputFormat);
+   cmsUInt32Number DoSwap      = T_DOSWAP(info ->InputFormat);
+   cmsUInt32Number Reverse     = T_FLAVOR(info ->InputFormat);
+   cmsUInt32Number SwapFirst   = T_SWAPFIRST(info -> InputFormat);
+   cmsUInt32Number Extra       = T_EXTRA(info -> InputFormat);
+   cmsUInt32Number ExtraFirst  = DoSwap ^ SwapFirst;
+   cmsUInt32Number i;
 
     if (ExtraFirst) {
         accum += Extra * sizeof(cmsUInt16Number);
@@ -489,7 +489,7 @@ cmsUInt8Number* UnrollAnyWords(cmsContext ContextID, register _cmsTRANSFORM* inf
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
         cmsUInt16Number v = *(cmsUInt16Number*) accum;
 
         if (SwapEndian)
@@ -523,11 +523,11 @@ cmsUInt8Number* UnrollPlanarWords(cmsContext ContextID, register _cmsTRANSFORM* 
                                   register cmsUInt8Number* accum,
                                   register cmsUInt32Number Stride)
 {
-    int nChan = T_CHANNELS(info -> InputFormat);
-    int DoSwap= T_DOSWAP(info ->InputFormat);
-    int Reverse= T_FLAVOR(info ->InputFormat);
-    int SwapEndian = T_ENDIAN16(info -> InputFormat);
-    int i;
+    cmsUInt32Number nChan = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap= T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse= T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapEndian = T_ENDIAN16(info -> InputFormat);
+    cmsUInt32Number i;
     cmsUInt8Number* Init = accum;
 
     if (DoSwap) {
@@ -536,7 +536,7 @@ cmsUInt8Number* UnrollPlanarWords(cmsContext ContextID, register _cmsTRANSFORM* 
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
         cmsUInt16Number v = *(cmsUInt16Number*) accum;
 
         if (SwapEndian)
@@ -921,17 +921,17 @@ cmsUInt8Number* UnrollDoubleTo16(cmsContext ContextID, register _cmsTRANSFORM* i
                                 register cmsUInt32Number Stride)
 {
 
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
-    int Planar     = T_PLANAR(info -> InputFormat);
+    cmsUInt32Number nChan      = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap     = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra      = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number Planar     = T_PLANAR(info -> InputFormat);
     cmsFloat64Number v;
     cmsUInt16Number  vi;
-    int i, start = 0;
-   cmsFloat64Number maximum = IsInkSpace(info ->InputFormat) ? 655.35 : 65535.0;
+    cmsUInt32Number i, start = 0;
+    cmsFloat64Number maximum = IsInkSpace(info ->InputFormat) ? 655.35 : 65535.0;
 
 
     if (ExtraFirst)
@@ -939,7 +939,7 @@ cmsUInt8Number* UnrollDoubleTo16(cmsContext ContextID, register _cmsTRANSFORM* i
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         if (Planar)
             v = (cmsFloat32Number) ((cmsFloat64Number*) accum)[(i + start) * Stride];
@@ -977,17 +977,17 @@ cmsUInt8Number* UnrollFloatTo16(cmsContext ContextID, register _cmsTRANSFORM* in
                                 register cmsUInt32Number Stride)
 {
 
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
-    int Planar     = T_PLANAR(info -> InputFormat);
+    cmsUInt32Number nChan  = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap   = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra   = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number Planar     = T_PLANAR(info -> InputFormat);
     cmsFloat32Number v;
     cmsUInt16Number  vi;
-    int i, start = 0;
-   cmsFloat64Number maximum = IsInkSpace(info ->InputFormat) ? 655.35 : 65535.0;
+    cmsUInt32Number i, start = 0;
+    cmsFloat64Number maximum = IsInkSpace(info ->InputFormat) ? 655.35 : 65535.0;
 
 
     if (ExtraFirst)
@@ -995,7 +995,7 @@ cmsUInt8Number* UnrollFloatTo16(cmsContext ContextID, register _cmsTRANSFORM* in
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         if (Planar)
             v = (cmsFloat32Number) ((cmsFloat32Number*) accum)[(i + start) * Stride];
@@ -1054,15 +1054,15 @@ cmsUInt8Number* UnrollFloatsToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsUInt32Number Stride)
 {
 
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
-    int Planar     = T_PLANAR(info -> InputFormat);
+    cmsUInt32Number nChan  = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap   = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra   = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number Planar     = T_PLANAR(info -> InputFormat);
     cmsFloat32Number v;
-    int i, start = 0;
+    cmsUInt32Number i, start = 0;
     cmsFloat32Number maximum = IsInkSpace(info ->InputFormat) ? 100.0F : 1.0F;
 
 
@@ -1071,7 +1071,7 @@ cmsUInt8Number* UnrollFloatsToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         if (Planar)
             v = (cmsFloat32Number) ((cmsFloat32Number*) accum)[(i + start) * Stride];
@@ -1106,15 +1106,15 @@ cmsUInt8Number* UnrollDoublesToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsUInt32Number Stride)
 {
 
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
-    int Planar     = T_PLANAR(info -> InputFormat);
+    cmsUInt32Number nChan  = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap   = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra   = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number Planar     = T_PLANAR(info -> InputFormat);
     cmsFloat64Number v;
-    int i, start = 0;
+    cmsUInt32Number i, start = 0;
     cmsFloat64Number maximum = IsInkSpace(info ->InputFormat) ? 100.0 : 1.0;
 
 
@@ -1123,7 +1123,7 @@ cmsUInt8Number* UnrollDoublesToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         if (Planar)
             v = (cmsFloat64Number) ((cmsFloat64Number*) accum)[(i + start)  * Stride];
@@ -1277,15 +1277,15 @@ cmsUInt8Number* PackAnyBytes(cmsContext ContextID, register _cmsTRANSFORM* info,
                              register cmsUInt8Number* output,
                              register cmsUInt32Number Stride)
 {
-    int nChan      = T_CHANNELS(info -> OutputFormat);
-    int DoSwap     = T_DOSWAP(info ->OutputFormat);
-    int Reverse    = T_FLAVOR(info ->OutputFormat);
-    int Extra      = T_EXTRA(info -> OutputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> OutputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number nChan  = T_CHANNELS(info -> OutputFormat);
+    cmsUInt32Number DoSwap   = T_DOSWAP(info ->OutputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->OutputFormat);
+    cmsUInt32Number Extra   = T_EXTRA(info -> OutputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> OutputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
     cmsUInt8Number* swap1;
     cmsUInt8Number v = 0;
-    int i;
+    cmsUInt32Number i;
 
     swap1 = output;
 
@@ -1295,7 +1295,7 @@ cmsUInt8Number* PackAnyBytes(cmsContext ContextID, register _cmsTRANSFORM* info,
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         v = FROM_16_TO_8(wOut[index]);
 
@@ -1329,16 +1329,16 @@ cmsUInt8Number* PackAnyWords(cmsContext ContextID, register _cmsTRANSFORM* info,
                              register cmsUInt8Number* output,
                              register cmsUInt32Number Stride)
 {
-    int nChan      = T_CHANNELS(info -> OutputFormat);
-    int SwapEndian = T_ENDIAN16(info -> OutputFormat);
-    int DoSwap     = T_DOSWAP(info ->OutputFormat);
-    int Reverse    = T_FLAVOR(info ->OutputFormat);
-    int Extra      = T_EXTRA(info -> OutputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> OutputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number nChan  = T_CHANNELS(info -> OutputFormat);
+    cmsUInt32Number SwapEndian = T_ENDIAN16(info -> OutputFormat);
+    cmsUInt32Number DoSwap   = T_DOSWAP(info ->OutputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->OutputFormat);
+    cmsUInt32Number Extra   = T_EXTRA(info -> OutputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> OutputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
     cmsUInt16Number* swap1;
     cmsUInt16Number v = 0;
-    int i;
+    cmsUInt32Number i;
 
     swap1 = (cmsUInt16Number*) output;
 
@@ -1348,7 +1348,7 @@ cmsUInt8Number* PackAnyWords(cmsContext ContextID, register _cmsTRANSFORM* info,
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         v = wOut[index];
 
@@ -1386,11 +1386,11 @@ cmsUInt8Number* PackPlanarBytes(cmsContext ContextID, register _cmsTRANSFORM* in
                                 register cmsUInt8Number* output,
                                 register cmsUInt32Number Stride)
 {
-    int nChan     = T_CHANNELS(info -> OutputFormat);
-    int DoSwap    = T_DOSWAP(info ->OutputFormat);
-    int SwapFirst = T_SWAPFIRST(info ->OutputFormat);
-    int Reverse   = T_FLAVOR(info ->OutputFormat);
-    int i;
+    cmsUInt32Number nChan     = T_CHANNELS(info -> OutputFormat);
+    cmsUInt32Number DoSwap    = T_DOSWAP(info ->OutputFormat);
+    cmsUInt32Number SwapFirst = T_SWAPFIRST(info ->OutputFormat);
+    cmsUInt32Number Reverse   = T_FLAVOR(info ->OutputFormat);
+    cmsUInt32Number i;
     cmsUInt8Number* Init = output;
 
 
@@ -1401,7 +1401,7 @@ cmsUInt8Number* PackPlanarBytes(cmsContext ContextID, register _cmsTRANSFORM* in
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
         cmsUInt8Number v = FROM_16_TO_8(wOut[index]);
 
         *(cmsUInt8Number*)  output = (cmsUInt8Number) (Reverse ? REVERSE_FLAVOR_8(v) : v);
@@ -1420,11 +1420,11 @@ cmsUInt8Number* PackPlanarWords(cmsContext ContextID, register _cmsTRANSFORM* in
                                 register cmsUInt8Number* output,
                                 register cmsUInt32Number Stride)
 {
-    int nChan = T_CHANNELS(info -> OutputFormat);
-    int DoSwap = T_DOSWAP(info ->OutputFormat);
-    int Reverse= T_FLAVOR(info ->OutputFormat);
-    int SwapEndian = T_ENDIAN16(info -> OutputFormat);
-    int i;
+    cmsUInt32Number nChan      = T_CHANNELS(info -> OutputFormat);
+    cmsUInt32Number DoSwap     = T_DOSWAP(info ->OutputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->OutputFormat);
+    cmsUInt32Number SwapEndian = T_ENDIAN16(info -> OutputFormat);
+    cmsUInt32Number i;
     cmsUInt8Number* Init = output;
     cmsUInt16Number v;
 
@@ -1434,7 +1434,7 @@ cmsUInt8Number* PackPlanarWords(cmsContext ContextID, register _cmsTRANSFORM* in
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         v = wOut[index];
 
@@ -1794,9 +1794,9 @@ cmsUInt8Number* Pack3BytesOptimized(cmsContext ContextID, register _cmsTRANSFORM
                                     register cmsUInt8Number* output,
                                     register cmsUInt32Number Stride)
 {
-    *output++ = (wOut[0] & 0xFF);
-    *output++ = (wOut[1] & 0xFF);
-    *output++ = (wOut[2] & 0xFF);
+    *output++ = (wOut[0] & 0xFFU);
+    *output++ = (wOut[1] & 0xFFU);
+    *output++ = (wOut[2] & 0xFFU);
 
     return output;
 
@@ -1826,9 +1826,9 @@ cmsUInt8Number* Pack3BytesSwapOptimized(cmsContext ContextID, register _cmsTRANS
                                         register cmsUInt8Number* output,
                                         register cmsUInt32Number Stride)
 {
-    *output++ = (wOut[2] & 0xFF);
-    *output++ = (wOut[1] & 0xFF);
-    *output++ = (wOut[0] & 0xFF);
+    *output++ = (wOut[2] & 0xFFU);
+    *output++ = (wOut[1] & 0xFFU);
+    *output++ = (wOut[0] & 0xFFU);
 
     return output;
 
@@ -1917,9 +1917,9 @@ cmsUInt8Number* Pack3BytesAndSkip1Optimized(cmsContext ContextID, register _cmsT
                                             register cmsUInt8Number* output,
                                             register cmsUInt32Number Stride)
 {
-    *output++ = (wOut[0] & 0xFF);
-    *output++ = (wOut[1] & 0xFF);
-    *output++ = (wOut[2] & 0xFF);
+    *output++ = (wOut[0] & 0xFFU);
+    *output++ = (wOut[1] & 0xFFU);
+    *output++ = (wOut[2] & 0xFFU);
     output++;
 
     return output;
@@ -1953,9 +1953,9 @@ cmsUInt8Number* Pack3BytesAndSkip1SwapFirstOptimized(cmsContext ContextID, regis
                                                      register cmsUInt32Number Stride)
 {
     output++;
-    *output++ = (wOut[0] & 0xFF);
-    *output++ = (wOut[1] & 0xFF);
-    *output++ = (wOut[2] & 0xFF);
+    *output++ = (wOut[0] & 0xFFU);
+    *output++ = (wOut[1] & 0xFFU);
+    *output++ = (wOut[2] & 0xFFU);
 
     return output;
 
@@ -1987,9 +1987,9 @@ cmsUInt8Number* Pack3BytesAndSkip1SwapOptimized(cmsContext ContextID, register _
                                                 register cmsUInt32Number Stride)
 {
     output++;
-    *output++ = (wOut[2] & 0xFF);
-    *output++ = (wOut[1] & 0xFF);
-    *output++ = (wOut[0] & 0xFF);
+    *output++ = (wOut[2] & 0xFFU);
+    *output++ = (wOut[1] & 0xFFU);
+    *output++ = (wOut[0] & 0xFFU);
 
     return output;
 
@@ -2021,9 +2021,9 @@ cmsUInt8Number* Pack3BytesAndSkip1SwapSwapFirstOptimized(cmsContext ContextID, r
                                                          register cmsUInt8Number* output,
                                                          register cmsUInt32Number Stride)
 {
-    *output++ = (wOut[2] & 0xFF);
-    *output++ = (wOut[1] & 0xFF);
-    *output++ = (wOut[0] & 0xFF);
+    *output++ = (wOut[2] & 0xFFU);
+    *output++ = (wOut[1] & 0xFFU);
+    *output++ = (wOut[0] & 0xFFU);
     output++;
 
     return output;
@@ -2379,24 +2379,24 @@ cmsUInt8Number* PackDoubleFrom16(cmsContext ContextID, register _cmsTRANSFORM* i
                                 register cmsUInt8Number* output,
                                 register cmsUInt32Number Stride)
 {
-    int nChan      = T_CHANNELS(info -> OutputFormat);
-    int DoSwap     = T_DOSWAP(info ->OutputFormat);
-    int Reverse    = T_FLAVOR(info ->OutputFormat);
-    int Extra      = T_EXTRA(info -> OutputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> OutputFormat);
-    int Planar     = T_PLANAR(info -> OutputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number nChan      = T_CHANNELS(info -> OutputFormat);
+    cmsUInt32Number DoSwap     = T_DOSWAP(info ->OutputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->OutputFormat);
+    cmsUInt32Number Extra      = T_EXTRA(info -> OutputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> OutputFormat);
+    cmsUInt32Number Planar     = T_PLANAR(info -> OutputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
     cmsFloat64Number maximum = IsInkSpace(info ->OutputFormat) ? 655.35 : 65535.0;
     cmsFloat64Number v = 0;
     cmsFloat64Number* swap1 = (cmsFloat64Number*) output;
-    int i, start = 0;
+    cmsUInt32Number i, start = 0;
 
     if (ExtraFirst)
         start = Extra;
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         v = (cmsFloat64Number) wOut[index] / maximum;
 
@@ -2430,24 +2430,24 @@ cmsUInt8Number* PackFloatFrom16(cmsContext ContextID, register _cmsTRANSFORM* in
                                 register cmsUInt8Number* output,
                                 register cmsUInt32Number Stride)
 {
-       int nChan = T_CHANNELS(info->OutputFormat);
-       int DoSwap = T_DOSWAP(info->OutputFormat);
-       int Reverse = T_FLAVOR(info->OutputFormat);
-       int Extra = T_EXTRA(info->OutputFormat);
-       int SwapFirst = T_SWAPFIRST(info->OutputFormat);
-       int Planar = T_PLANAR(info->OutputFormat);
-       int ExtraFirst = DoSwap ^ SwapFirst;
+       cmsUInt32Number nChan      = T_CHANNELS(info->OutputFormat);
+       cmsUInt32Number DoSwap     = T_DOSWAP(info->OutputFormat);
+       cmsUInt32Number Reverse    = T_FLAVOR(info->OutputFormat);
+       cmsUInt32Number Extra      = T_EXTRA(info->OutputFormat);
+       cmsUInt32Number SwapFirst  = T_SWAPFIRST(info->OutputFormat);
+       cmsUInt32Number Planar     = T_PLANAR(info->OutputFormat);
+       cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
        cmsFloat64Number maximum = IsInkSpace(info->OutputFormat) ? 655.35 : 65535.0;
        cmsFloat64Number v = 0;
        cmsFloat32Number* swap1 = (cmsFloat32Number*)output;
-       int i, start = 0;
+       cmsUInt32Number i, start = 0;
 
        if (ExtraFirst)
               start = Extra;
 
        for (i = 0; i < nChan; i++) {
 
-              int index = DoSwap ? (nChan - i - 1) : i;
+              cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
               v = (cmsFloat64Number)wOut[index] / maximum;
 
@@ -2483,24 +2483,24 @@ cmsUInt8Number* PackFloatsFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsUInt8Number* output,
                                     cmsUInt32Number Stride)
 {
-       int nChan = T_CHANNELS(info->OutputFormat);
-       int DoSwap = T_DOSWAP(info->OutputFormat);
-       int Reverse = T_FLAVOR(info->OutputFormat);
-       int Extra = T_EXTRA(info->OutputFormat);
-       int SwapFirst = T_SWAPFIRST(info->OutputFormat);
-       int Planar = T_PLANAR(info->OutputFormat);
-       int ExtraFirst = DoSwap ^ SwapFirst;
+       cmsUInt32Number nChan = T_CHANNELS(info->OutputFormat);
+       cmsUInt32Number DoSwap = T_DOSWAP(info->OutputFormat);
+       cmsUInt32Number Reverse = T_FLAVOR(info->OutputFormat);
+       cmsUInt32Number Extra = T_EXTRA(info->OutputFormat);
+       cmsUInt32Number SwapFirst = T_SWAPFIRST(info->OutputFormat);
+       cmsUInt32Number Planar = T_PLANAR(info->OutputFormat);
+       cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
        cmsFloat64Number maximum = IsInkSpace(info->OutputFormat) ? 100.0 : 1.0;
        cmsFloat32Number* swap1 = (cmsFloat32Number*)output;
        cmsFloat64Number v = 0;
-       int i, start = 0;
+       cmsUInt32Number i, start = 0;
 
        if (ExtraFirst)
               start = Extra;
 
        for (i = 0; i < nChan; i++) {
 
-              int index = DoSwap ? (nChan - i - 1) : i;
+              cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
               v = wOut[index] * maximum;
 
@@ -2532,24 +2532,24 @@ cmsUInt8Number* PackDoublesFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsUInt8Number* output,
                                     cmsUInt32Number Stride)
 {
-       int nChan = T_CHANNELS(info->OutputFormat);
-       int DoSwap = T_DOSWAP(info->OutputFormat);
-       int Reverse = T_FLAVOR(info->OutputFormat);
-       int Extra = T_EXTRA(info->OutputFormat);
-       int SwapFirst = T_SWAPFIRST(info->OutputFormat);
-       int Planar = T_PLANAR(info->OutputFormat);
-       int ExtraFirst = DoSwap ^ SwapFirst;
+       cmsUInt32Number nChan      = T_CHANNELS(info->OutputFormat);
+       cmsUInt32Number DoSwap     = T_DOSWAP(info->OutputFormat);
+       cmsUInt32Number Reverse    = T_FLAVOR(info->OutputFormat);
+       cmsUInt32Number Extra      = T_EXTRA(info->OutputFormat);
+       cmsUInt32Number SwapFirst  = T_SWAPFIRST(info->OutputFormat);
+       cmsUInt32Number Planar     = T_PLANAR(info->OutputFormat);
+       cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
        cmsFloat64Number maximum = IsInkSpace(info->OutputFormat) ? 100.0 : 1.0;
        cmsFloat64Number v = 0;
        cmsFloat64Number* swap1 = (cmsFloat64Number*)output;
-       int i, start = 0;
+       cmsUInt32Number i, start = 0;
 
        if (ExtraFirst)
               start = Extra;
 
        for (i = 0; i < nChan; i++) {
 
-              int index = DoSwap ? (nChan - i - 1) : i;
+              cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
               v = wOut[index] * maximum;
 
@@ -2706,15 +2706,15 @@ cmsUInt8Number* UnrollHalfTo16(cmsContext ContextID, register _cmsTRANSFORM* inf
                                 register cmsUInt32Number Stride)
 {
 
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
-    int Planar     = T_PLANAR(info -> InputFormat);
+    cmsUInt32Number nChan      = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap     = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra      = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number Planar     = T_PLANAR(info -> InputFormat);
     cmsFloat32Number v;
-    int i, start = 0;
+    cmsUInt32Number i, start = 0;
     cmsFloat32Number maximum = IsInkSpace(info ->InputFormat) ? 655.35F : 65535.0F;
 
 
@@ -2723,7 +2723,7 @@ cmsUInt8Number* UnrollHalfTo16(cmsContext ContextID, register _cmsTRANSFORM* inf
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         if (Planar)
             v = _cmsHalf2Float ( ((cmsUInt16Number*) accum)[(i + start) * Stride] );
@@ -2758,15 +2758,15 @@ cmsUInt8Number* UnrollHalfToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsUInt32Number Stride)
 {
 
-    int nChan      = T_CHANNELS(info -> InputFormat);
-    int DoSwap     = T_DOSWAP(info ->InputFormat);
-    int Reverse    = T_FLAVOR(info ->InputFormat);
-    int SwapFirst  = T_SWAPFIRST(info -> InputFormat);
-    int Extra      = T_EXTRA(info -> InputFormat);
-    int ExtraFirst = DoSwap ^ SwapFirst;
-    int Planar     = T_PLANAR(info -> InputFormat);
+    cmsUInt32Number nChan      = T_CHANNELS(info -> InputFormat);
+    cmsUInt32Number DoSwap     = T_DOSWAP(info ->InputFormat);
+    cmsUInt32Number Reverse    = T_FLAVOR(info ->InputFormat);
+    cmsUInt32Number SwapFirst  = T_SWAPFIRST(info -> InputFormat);
+    cmsUInt32Number Extra      = T_EXTRA(info -> InputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
+    cmsUInt32Number Planar     = T_PLANAR(info -> InputFormat);
     cmsFloat32Number v;
-    int i, start = 0;
+    cmsUInt32Number i, start = 0;
     cmsFloat32Number maximum = IsInkSpace(info ->InputFormat) ? 100.0F : 1.0F;
 
 
@@ -2775,7 +2775,7 @@ cmsUInt8Number* UnrollHalfToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
 
     for (i=0; i < nChan; i++) {
 
-        int index = DoSwap ? (nChan - i - 1) : i;
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
         if (Planar)
             v =  _cmsHalf2Float ( ((cmsUInt16Number*) accum)[(i + start) * Stride] );
@@ -2808,24 +2808,24 @@ cmsUInt8Number* PackHalfFrom16(cmsContext ContextID, register _cmsTRANSFORM* inf
                                 register cmsUInt8Number* output,
                                 register cmsUInt32Number Stride)
 {
-       int nChan = T_CHANNELS(info->OutputFormat);
-       int DoSwap = T_DOSWAP(info->OutputFormat);
-       int Reverse = T_FLAVOR(info->OutputFormat);
-       int Extra = T_EXTRA(info->OutputFormat);
-       int SwapFirst = T_SWAPFIRST(info->OutputFormat);
-       int Planar = T_PLANAR(info->OutputFormat);
-       int ExtraFirst = DoSwap ^ SwapFirst;
+       cmsUInt32Number nChan      = T_CHANNELS(info->OutputFormat);
+       cmsUInt32Number DoSwap     = T_DOSWAP(info->OutputFormat);
+       cmsUInt32Number Reverse    = T_FLAVOR(info->OutputFormat);
+       cmsUInt32Number Extra      = T_EXTRA(info->OutputFormat);
+       cmsUInt32Number SwapFirst  = T_SWAPFIRST(info->OutputFormat);
+       cmsUInt32Number Planar     = T_PLANAR(info->OutputFormat);
+       cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
        cmsFloat32Number maximum = IsInkSpace(info->OutputFormat) ? 655.35F : 65535.0F;
        cmsFloat32Number v = 0;
        cmsUInt16Number* swap1 = (cmsUInt16Number*)output;
-       int i, start = 0;
+       cmsUInt32Number i, start = 0;
 
        if (ExtraFirst)
               start = Extra;
 
        for (i = 0; i < nChan; i++) {
 
-              int index = DoSwap ? (nChan - i - 1) : i;
+              cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
               v = (cmsFloat32Number)wOut[index] / maximum;
 
@@ -2859,24 +2859,24 @@ cmsUInt8Number* PackHalfFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsUInt8Number* output,
                                     cmsUInt32Number Stride)
 {
-       int nChan = T_CHANNELS(info->OutputFormat);
-       int DoSwap = T_DOSWAP(info->OutputFormat);
-       int Reverse = T_FLAVOR(info->OutputFormat);
-       int Extra = T_EXTRA(info->OutputFormat);
-       int SwapFirst = T_SWAPFIRST(info->OutputFormat);
-       int Planar = T_PLANAR(info->OutputFormat);
-       int ExtraFirst = DoSwap ^ SwapFirst;
+       cmsUInt32Number nChan      = T_CHANNELS(info->OutputFormat);
+       cmsUInt32Number DoSwap     = T_DOSWAP(info->OutputFormat);
+       cmsUInt32Number Reverse    = T_FLAVOR(info->OutputFormat);
+       cmsUInt32Number Extra      = T_EXTRA(info->OutputFormat);
+       cmsUInt32Number SwapFirst  = T_SWAPFIRST(info->OutputFormat);
+       cmsUInt32Number Planar     = T_PLANAR(info->OutputFormat);
+       cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
        cmsFloat32Number maximum = IsInkSpace(info->OutputFormat) ? 100.0F : 1.0F;
        cmsUInt16Number* swap1 = (cmsUInt16Number*)output;
        cmsFloat32Number v = 0;
-       int i, start = 0;
+       cmsUInt32Number i, start = 0;
 
        if (ExtraFirst)
               start = Extra;
 
        for (i = 0; i < nChan; i++) {
 
-              int index = DoSwap ? (nChan - i - 1) : i;
+           cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
 
               v = wOut[index] * maximum;
 
@@ -3321,7 +3321,7 @@ cmsBool  _cmsFormatterIsFloat(cmsUInt32Number Type)
 // Return whatever given formatter refers to 8 bits
 cmsBool  _cmsFormatterIs8bit(cmsUInt32Number Type)
 {
-    int Bytes = T_BYTES(Type);
+    cmsUInt32Number Bytes = T_BYTES(Type);
 
     return (Bytes == 1);
 }
@@ -3331,9 +3331,9 @@ cmsUInt32Number CMSEXPORT cmsFormatterForColorspaceOfProfile(cmsContext ContextI
 {
 
     cmsColorSpaceSignature ColorSpace      = cmsGetColorSpace(ContextID, hProfile);
-    cmsUInt32Number        ColorSpaceBits  = _cmsLCMScolorSpace(ContextID, ColorSpace);
+    cmsUInt32Number        ColorSpaceBits  = (cmsUInt32Number) _cmsLCMScolorSpace(ContextID, ColorSpace);
     cmsUInt32Number        nOutputChans    = cmsChannelsOf(ContextID, ColorSpace);
-    cmsUInt32Number        Float           = lIsFloat ? 1 : 0;
+    cmsUInt32Number        Float           = lIsFloat ? 1U : 0;
 
     // Create a fake formatter for result
     return FLOAT_SH(Float) | COLORSPACE_SH(ColorSpaceBits) | BYTES_SH(nBytes) | CHANNELS_SH(nOutputChans);
@@ -3343,12 +3343,12 @@ cmsUInt32Number CMSEXPORT cmsFormatterForColorspaceOfProfile(cmsContext ContextI
 cmsUInt32Number CMSEXPORT cmsFormatterForPCSOfProfile(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number nBytes, cmsBool lIsFloat)
 {
 
-    cmsColorSpaceSignature ColorSpace      = cmsGetPCS(ContextID, hProfile);
-    int                    ColorSpaceBits  = _cmsLCMScolorSpace(ContextID, ColorSpace);
-    cmsUInt32Number        nOutputChans    = cmsChannelsOf(ContextID, ColorSpace);
-    cmsUInt32Number        Float           = lIsFloat ? 1 : 0;
+    cmsColorSpaceSignature ColorSpace = cmsGetPCS(ContextID, hProfile);
+
+    cmsUInt32Number ColorSpaceBits = (cmsUInt32Number) _cmsLCMScolorSpace(ContextID, ColorSpace);
+    cmsUInt32Number nOutputChans = cmsChannelsOf(ContextID, ColorSpace);
+    cmsUInt32Number Float = lIsFloat ? 1U : 0;
 
     // Create a fake formatter for result
     return FLOAT_SH(Float) | COLORSPACE_SH(ColorSpaceBits) | BYTES_SH(nBytes) | CHANNELS_SH(nOutputChans);
 }
-

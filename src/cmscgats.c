@@ -255,7 +255,7 @@ static PROPERTY PredefinedProperties[] = {
 
         {"SAMPLE_BACKING",   WRITE_STRINGIFY},     // Identifies the backing material used behind the sample during
                                                    // measurement. Allowed values are “black”, “white”, or {"na".
-                                                  
+
         {"CHISQ_DOF",        WRITE_STRINGIFY},     // Degrees of freedom associated with the Chi squared statistic
                                                    // below properties are new in recent specs:
 
@@ -267,7 +267,7 @@ static PROPERTY PredefinedProperties[] = {
 
        {"FILTER",            WRITE_STRINGIFY},     // Identifies the use of physical filter(s) during measurement. Typically used to
                                                    // denote the use of filters such as none, D65, Red, Green or Blue.
-                                                  
+
        {"POLARIZATION",      WRITE_STRINGIFY},     // Identifies the use of a physical polarization filter during measurement. Allowed
                                                    // values are {"yes”, “white”, “none” or “na”.
 
@@ -285,13 +285,13 @@ static PROPERTY PredefinedProperties[] = {
        {"COMPUTATIONAL_PARAMETER", WRITE_PAIR},    // Parameter that is used in computing a value from measured data. Name is the name
                                                    // of the calculation, parameter is the name of the parameter used in the calculation
                                                    // and value is the value of the parameter.
-                                                   
+
        {"TARGET_TYPE",        WRITE_STRINGIFY},    // The type of target being measured, e.g. IT8.7/1, IT8.7/3, user defined, etc.
-                                                  
+
        {"COLORANT",           WRITE_STRINGIFY},    // Identifies the colorant(s) used in creating the target.
-                                                  
+
        {"TABLE_DESCRIPTOR",   WRITE_STRINGIFY},    // Describes the purpose or contents of a data table.
-                                                  
+
        {"TABLE_NAME",         WRITE_STRINGIFY}     // Provides a short name for a data table.
 };
 
@@ -2237,11 +2237,10 @@ void CookPointers(cmsContext ContextID, cmsIT8* it8)
 // that should be something like some printable characters plus a \n
 // returns 0 if this is not like a CGATS, or an integer otherwise. This integer is the number of words in first line?
 static
-int IsMyBlock(cmsContext ContextID, const cmsUInt8Number* Buffer, int n)
+int IsMyBlock(cmsContext ContextID, const cmsUInt8Number* Buffer, cmsUInt32Number n)
 {
     int words = 1, space = 0, quot = 0;
-    int i;
-    cmsUNUSED_PARAMETER(ContextID);
+    cmsUInt32Number i;
 
     if (n < 10) return 0;   // Too small
 
@@ -2731,7 +2730,7 @@ int CMSEXPORT cmsIT8SetTableByLabel(cmsContext ContextID, cmsHANDLE hIT8, const 
 {
     const char* cLabelFld;
     char Type[256], Label[256];
-    int nTable;
+    cmsUInt32Number nTable;
 
     _cmsAssert(hIT8 != NULL);
 
@@ -2744,7 +2743,7 @@ int CMSEXPORT cmsIT8SetTableByLabel(cmsContext ContextID, cmsHANDLE hIT8, const 
     cLabelFld = cmsIT8GetData(ContextID, hIT8, cSet, cField);
     if (!cLabelFld) return -1;
 
-    if (sscanf(cLabelFld, "%255s %d %255s", Label, &nTable, Type) != 3)
+    if (sscanf(cLabelFld, "%255s %u %255s", Label, &nTable, Type) != 3)
             return -1;
 
     if (ExpectedType != NULL && *ExpectedType == 0)
@@ -2789,4 +2788,3 @@ void CMSEXPORT cmsIT8DefineDblFormat(cmsContext ContextID, cmsHANDLE hIT8, const
 
     it8 ->DoubleFormatter[sizeof(it8 ->DoubleFormatter)-1] = 0;
 }
-
