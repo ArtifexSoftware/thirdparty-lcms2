@@ -656,7 +656,8 @@ typedef void* cmsHANDLE ;              // Generic handle
 typedef void* cmsHPROFILE;             // Opaque typedefs to hide internals
 typedef void* cmsHTRANSFORM;
 
-#define cmsMAXCHANNELS  16                // Maximum number of channels in ICC profiles
+#define cmsMAXCHANNELS  16             // Maximum number of channels in ICC profiles
+#define cmsMAXEXTRACHANNELS  (63+cmsMAXCHANNELS)        // Maximum number of channels + 'extra' channels supported in links
 
 // Format of pixel is defined by one cmsUInt32Number, using bit fields as follows
 //

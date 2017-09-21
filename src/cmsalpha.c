@@ -321,7 +321,7 @@ void ComputeIncrementsForChunky(cmsUInt32Number Format,
                                 cmsUInt32Number ComponentStartingOrder[],
                                 cmsUInt32Number ComponentPointerIncrements[])
 {
-       cmsUInt32Number channels[cmsMAXCHANNELS];
+       cmsUInt32Number channels[cmsMAXEXTRACHANNELS];
        cmsUInt32Number extra = T_EXTRA(Format);
        cmsUInt32Number nchannels = T_CHANNELS(Format);
        cmsUInt32Number total_chans = nchannels + extra;
@@ -330,7 +330,7 @@ void ComputeIncrementsForChunky(cmsUInt32Number Format,
        cmsUInt32Number pixelSize = channelSize * total_chans;
 
 	   // Sanity check
-	   if (total_chans <= 0 || total_chans >= cmsMAXCHANNELS)
+	   if (total_chans <= 0 || total_chans >= cmsMAXEXTRACHANNELS)
 		   return;
 
         memset(channels, 0, sizeof(channels));
@@ -379,7 +379,7 @@ void ComputeIncrementsForPlanar(cmsUInt32Number Format,
                                 cmsUInt32Number ComponentStartingOrder[],
                                 cmsUInt32Number ComponentPointerIncrements[])
 {
-       cmsUInt32Number channels[cmsMAXCHANNELS];
+       cmsUInt32Number channels[cmsMAXEXTRACHANNELS];
        cmsUInt32Number extra = T_EXTRA(Format);
        cmsUInt32Number nchannels = T_CHANNELS(Format);
        cmsUInt32Number total_chans = nchannels + extra;
@@ -387,7 +387,7 @@ void ComputeIncrementsForPlanar(cmsUInt32Number Format,
        cmsUInt32Number channelSize = trueBytesSize(Format);
 
        // Sanity check
-       if (total_chans <= 0 || total_chans >= cmsMAXCHANNELS)
+       if (total_chans <= 0 || total_chans >= cmsMAXEXTRACHANNELS)
            return;
 
        memset(channels, 0, sizeof(channels));
@@ -456,10 +456,10 @@ void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void*
 {
     cmsUInt32Number i, j, k;
     cmsUInt32Number nExtra;
-    cmsUInt32Number SourceStartingOrder[cmsMAXCHANNELS];
-    cmsUInt32Number SourceIncrements[cmsMAXCHANNELS];
-    cmsUInt32Number DestStartingOrder[cmsMAXCHANNELS];
-    cmsUInt32Number DestIncrements[cmsMAXCHANNELS];
+    cmsUInt32Number SourceStartingOrder[cmsMAXEXTRACHANNELS];
+    cmsUInt32Number SourceIncrements[cmsMAXEXTRACHANNELS];
+    cmsUInt32Number DestStartingOrder[cmsMAXEXTRACHANNELS];
+    cmsUInt32Number DestIncrements[cmsMAXEXTRACHANNELS];
 
     cmsFormatterAlphaFn copyValueFn;
 
@@ -517,11 +517,11 @@ void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void*
     }
     else { // General case with more than one extra channel
 
-        cmsUInt8Number* SourcePtr[cmsMAXCHANNELS];
-        cmsUInt8Number* DestPtr[cmsMAXCHANNELS];
+        cmsUInt8Number* SourcePtr[cmsMAXEXTRACHANNELS];
+        cmsUInt8Number* DestPtr[cmsMAXEXTRACHANNELS];
 
-        cmsUInt32Number SourceStrideIncrements[cmsMAXCHANNELS];
-        cmsUInt32Number DestStrideIncrements[cmsMAXCHANNELS];
+        cmsUInt32Number SourceStrideIncrements[cmsMAXEXTRACHANNELS];
+        cmsUInt32Number DestStrideIncrements[cmsMAXEXTRACHANNELS];
 
         memset(SourceStrideIncrements, 0, sizeof(SourceStrideIncrements));
         memset(DestStrideIncrements, 0, sizeof(DestStrideIncrements));

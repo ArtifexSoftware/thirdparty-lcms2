@@ -73,7 +73,7 @@ typedef struct {
 
 #define ANYSPACE        COLORSPACE_SH(31)
 #define ANYCHANNELS     CHANNELS_SH(15)
-#define ANYEXTRA        EXTRA_SH(7)
+#define ANYEXTRA        EXTRA_SH(63)
 #define ANYPLANAR       PLANAR_SH(1)
 #define ANYENDIAN       ENDIAN16_SH(1)
 #define ANYSWAP         DOSWAP_SH(1)
