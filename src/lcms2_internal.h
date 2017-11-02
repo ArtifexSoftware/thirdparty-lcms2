@@ -1090,6 +1090,7 @@ cmsBool   _cmsAdaptationMatrix(cmsContext ContextID, cmsMAT3* r, const cmsMAT3* 
 
 cmsBool   _cmsBuildRGB2XYZtransferMatrix(cmsContext ContextID, cmsMAT3* r, const cmsCIExyY* WhitePoint, const cmsCIExyYTRIPLE* Primaries);
 
+void _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat, cmsUInt32Number flags);
 
 #define _lcms_internal_H
 #endif
