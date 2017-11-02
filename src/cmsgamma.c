@@ -44,10 +44,11 @@
 // The list of supported parametric curves
 typedef struct _cmsParametricCurvesCollection_st {
 
-    int nFunctions;                                     // Number of supported functions in this chunk
-    int FunctionTypes[MAX_TYPES_IN_LCMS_PLUGIN];        // The identification types
-    int ParameterCount[MAX_TYPES_IN_LCMS_PLUGIN];       // Number of parameters for each function
-    cmsParametricCurveEvaluator    Evaluator;           // The evaluator
+    cmsUInt32Number nFunctions;                                     // Number of supported functions in this chunk
+    cmsInt32Number  FunctionTypes[MAX_TYPES_IN_LCMS_PLUGIN];        // The identification types
+    cmsUInt32Number ParameterCount[MAX_TYPES_IN_LCMS_PLUGIN];       // Number of parameters for each function
+
+    cmsParametricCurveEvaluator Evaluator;                          // The evaluator
 
     struct _cmsParametricCurvesCollection_st* Next; // Next in list
 
@@ -140,7 +141,7 @@ cmsBool _cmsRegisterParametricCurvesPlugin(cmsContext ContextID, cmsPluginBase* 
 
     // Copy the parameters
     fl ->Evaluator  = Plugin ->Evaluator;
-    fl ->nFunctions = (int) Plugin ->nFunctions;
+    fl ->nFunctions = Plugin ->nFunctions;
 
     // Make sure no mem overwrites
     if (fl ->nFunctions > MAX_TYPES_IN_LCMS_PLUGIN)
@@ -165,7 +166,7 @@ int IsInSet(int Type, _cmsParametricCurvesCollection* c)
 {
     int i;
 
-    for (i=0; i < c ->nFunctions; i++)
+    for (i=0; i < (int) c ->nFunctions; i++)
         if (abs(Type) == c ->FunctionTypes[i]) return i;
 
     return -1;
@@ -217,7 +218,7 @@ cmsToneCurve* AllocateToneCurveStruct(cmsContext ContextID, cmsUInt32Number nEnt
     cmsUInt32Number i;
 
     // We allow huge tables, which are then restricted for smoothing operations
-    if (nEntries > 65530 || nEntries == 0) {
+    if (nEntries > 65530) {
         cmsSignalError(ContextID, cmsERROR_RANGE, "Couldn't create tone curve of more than 65530 entries");
         return NULL;
     }
@@ -1150,61 +1151,107 @@ cmsBool smooth2(cmsContext ContextID, cmsFloat32Number w[], cmsFloat32Number y[]
 // Smooths a curve sampled at regular intervals.
 cmsBool  CMSEXPORT cmsSmoothToneCurve(cmsContext ContextID, cmsToneCurve* Tab, cmsFloat64Number lambda)
 {
-    cmsFloat32Number w[MAX_NODES_IN_CURVE], y[MAX_NODES_IN_CURVE], z[MAX_NODES_IN_CURVE];
+    cmsBool SuccessStatus = TRUE;
+    cmsFloat32Number *w, *y, *z;
     cmsUInt32Number i, nItems, Zeros, Poles;
 
-    if (Tab == NULL) return FALSE;
-
-    if (cmsIsToneCurveLinear(ContextID, Tab)) return TRUE; // Nothing to do
-
-    nItems = Tab -> nEntries;
-
-    if (nItems >= MAX_NODES_IN_CURVE) {
-        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: too many points.");
-        return FALSE;
-    }
-
-    memset(w, 0, nItems * sizeof(cmsFloat32Number));
-    memset(y, 0, nItems * sizeof(cmsFloat32Number));
-    memset(z, 0, nItems * sizeof(cmsFloat32Number));
-
-    for (i=0; i < nItems; i++)
+    if (Tab != NULL && Tab->InterpParams != NULL)
     {
-        y[i+1] = (cmsFloat32Number) Tab -> Table16[i];
-        w[i+1] = 1.0;
-    }
+        if (!cmsIsToneCurveLinear(ContextID, Tab)) // Only non-linear curves need smoothing
+        {
+            nItems = Tab->nEntries;
+            if (nItems < MAX_NODES_IN_CURVE)
+            {
+                // Allocate one more item than needed
+                w = (cmsFloat32Number *)_cmsCalloc(ContextID, nItems + 1, sizeof(cmsFloat32Number));
+                y = (cmsFloat32Number *)_cmsCalloc(ContextID, nItems + 1, sizeof(cmsFloat32Number));
+                z = (cmsFloat32Number *)_cmsCalloc(ContextID, nItems + 1, sizeof(cmsFloat32Number));
 
-    if (!smooth2(ContextID, w, y, z, (cmsFloat32Number) lambda, (int) nItems)) return FALSE;
+                if (w != NULL && y != NULL && z != NULL) // Ensure no memory allocation failure
+                {
+                    memset(w, 0, (nItems + 1) * sizeof(cmsFloat32Number));
+                    memset(y, 0, (nItems + 1) * sizeof(cmsFloat32Number));
+                    memset(z, 0, (nItems + 1) * sizeof(cmsFloat32Number));
 
-    // Do some reality - checking...
-    Zeros = Poles = 0;
-    for (i=nItems; i > 1; --i) {
+                    for (i = 0; i < nItems; i++)
+                    {
+                        y[i + 1] = (cmsFloat32Number)Tab->Table16[i];
+                        w[i + 1] = 1.0;
+                    }
 
-        if (z[i] == 0.) Zeros++;
-        if (z[i] >= 65535.) Poles++;
-        if (z[i] < z[i-1]) {
-            cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Non-Monotonic.");
-            return FALSE;
+                    if (smooth2(ContextID, w, y, z, (cmsFloat32Number)lambda, (int)nItems))
+                    {
+                        // Do some reality - checking...
+
+                        Zeros = Poles = 0;
+                        for (i = nItems; i > 1; --i)
+                        {
+                            if (z[i] == 0.) Zeros++;
+                            if (z[i] >= 65535.) Poles++;
+                            if (z[i] < z[i - 1])
+                            {
+                                cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Non-Monotonic.");
+                                SuccessStatus = FALSE;
+                                break;
+                            }
+                        }
+
+                        if (SuccessStatus && Zeros > (nItems / 3))
+                        {
+                            cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly zeros.");
+                            SuccessStatus = FALSE;
+                        }
+
+                        if (SuccessStatus && Poles > (nItems / 3))
+                        {
+                            cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly poles.");
+                            SuccessStatus = FALSE;
+                        }
+
+                        if (SuccessStatus) // Seems ok
+                        {
+                            for (i = 0; i < nItems; i++)
+                            {
+                                // Clamp to cmsUInt16Number
+                                Tab->Table16[i] = _cmsQuickSaturateWord(z[i + 1]);
+                            }
+                        }
+                    }
+                    else // Could not smooth
+                    {
+                        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Function smooth2 failed.");
+                        SuccessStatus = FALSE;
+                    }
+                }
+                else // One or more buffers could not be allocated
+                {
+                    cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Could not allocate memory.");
+                    SuccessStatus = FALSE;
+                }
+
+                if (z != NULL)
+                    _cmsFree(ContextID, z);
+
+                if (y != NULL)
+                    _cmsFree(ContextID, y);
+
+                if (w != NULL)
+                    _cmsFree(ContextID, w);
+            }
+            else // too many items in the table
+            {
+                cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Too many points.");
+                SuccessStatus = FALSE;
+            }
         }
     }
-
-    if (Zeros > (nItems / 3)) {
-        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly zeros.");
-        return FALSE;
-    }
-    if (Poles > (nItems / 3)) {
-        cmsSignalError(ContextID, cmsERROR_RANGE, "cmsSmoothToneCurve: Degenerated, mostly poles.");
-        return FALSE;
+    else // Tab parameter or Tab->InterpParams is NULL
+    {
+        // Can't signal an error here since the ContextID is not known at this point
+        SuccessStatus = FALSE;
     }
 
-    // Seems ok
-    for (i=0; i < nItems; i++) {
-
-        // Clamp to cmsUInt16Number
-        Tab -> Table16[i] = _cmsQuickSaturateWord(z[i+1]);
-    }
-
-    return TRUE;
+    return SuccessStatus;
 }
 
 // Is a table linear? Do not use parametric since we cannot guarantee some weird parameters resulting
