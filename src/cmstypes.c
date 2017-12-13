@@ -2440,7 +2440,7 @@ cmsStage* ReadCLUT(cmsContext ContextID, struct _cms_typehandler_struct* self, c
             return NULL;
         }
 
-        return CLUT;
+    return CLUT;
 }
 
 static
@@ -2725,9 +2725,9 @@ cmsBool WriteCLUT(cmsContext ContextID, struct _cms_typehandler_struct* self, cm
             return FALSE;
         }
 
-        if (!_cmsWriteAlignment(ContextID, io)) return FALSE;
+    if (!_cmsWriteAlignment(ContextID, io)) return FALSE;
 
-        return TRUE;
+    return TRUE;
 }
 
 

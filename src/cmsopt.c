@@ -521,10 +521,10 @@ cmsBool  PatchLUT(cmsContext ContextID, cmsStage* CLUT, cmsUInt16Number At[], cm
                 return FALSE;
             }
 
-            for (i = 0; i < (int) nChannelsOut; i++)
-                Grid->Tab.T[index + i] = Value[i];
+    for (i = 0; i < (int) nChannelsOut; i++)
+        Grid->Tab.T[index + i] = Value[i];
 
-            return TRUE;
+    return TRUE;
 }
 
 // Auxiliary, to see if two values are equal or very different
@@ -989,8 +989,8 @@ void PrelinEval8(cmsContext ContextID, register const cmsUInt16Number Input[],
                                 c1 = c2 = c3 = 0;
                             }
 
-                            Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
-                            Output[OutChan] = (cmsUInt16Number) (c0 + ((Rest + (Rest >> 16)) >> 16));
+        Rest = c1 * rx + c2 * ry + c3 * rz + 0x8001;
+        Output[OutChan] = (cmsUInt16Number) (c0 + ((Rest + (Rest >> 16)) >> 16));
 
     }
 }

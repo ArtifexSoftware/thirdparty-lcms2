@@ -985,7 +985,7 @@ int WriteInputMatrixShaper(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hP
             return 0;
         }
 
-        return rc;
+    return rc;
 }
 
 

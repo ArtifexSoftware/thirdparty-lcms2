@@ -943,9 +943,9 @@ void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                                 c1 = c2 = c3 = 0;
                             }
 
-                            Rest = c1 * rx + c2 * ry + c3 * rz;
+        Rest = c1 * rx + c2 * ry + c3 * rz;
 
-                            Tmp1[OutChan] = (cmsUInt16Number)(c0 + ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest)));
+        Tmp1[OutChan] = (cmsUInt16Number)(c0 + ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest)));
     }
 
 
@@ -1007,9 +1007,9 @@ void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                                 c1 = c2 = c3 = 0;
                             }
 
-                            Rest = c1 * rx + c2 * ry + c3 * rz;
+        Rest = c1 * rx + c2 * ry + c3 * rz;
 
-                            Tmp2[OutChan] = (cmsUInt16Number) (c0 + ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest)));
+        Tmp2[OutChan] = (cmsUInt16Number) (c0 + ROUND_FIXED_TO_INT(_cmsToFixedDomain(Rest)));
     }
 
 
