@@ -1956,3 +1956,8 @@ cmsBool _cmsOptimizePipeline(cmsContext ContextID,
     // Only simple optimizations succeeded
     return AnySuccess;
 }
+
+cmsBool _cmsLutIsIdentity(cmsPipeline *PtrLut)
+{
+    return !PtrLut || PtrLut->Eval16Fn == FastIdentity16;
+}
