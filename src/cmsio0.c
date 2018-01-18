@@ -239,7 +239,7 @@ cmsBool  MemoryClose(cmsContext ContextID, struct _cms_io_handler* iohandler)
 
 // Create a iohandler for memory block. AccessMode=='r' assumes the iohandler is going to read, and makes
 // a copy of the memory block for letting user to free the memory after invoking open profile. In write
-// mode ("w"), Buffere points to the begin of memory block to be written.
+// mode ("w"), Buffer points to the begin of memory block to be written.
 cmsIOHANDLER* CMSEXPORT cmsOpenIOhandlerFromMem(cmsContext ContextID, void *Buffer, cmsUInt32Number size, const char* AccessMode)
 {
     cmsIOHANDLER* iohandler = NULL;
@@ -629,7 +629,6 @@ cmsBool _cmsNewTag(cmsContext ContextID, _cmsICCPROFILE* Icc, cmsTagSignature si
     else  {
 
         // No, make a new one
-
         if (Icc -> TagCount >= MAX_TABLE_TAG) {
             cmsSignalError(ContextID, cmsERROR_RANGE, "Too many tags (%d)", MAX_TABLE_TAG);
             return FALSE;
@@ -649,8 +648,6 @@ cmsBool CMSEXPORT cmsIsTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
        _cmsICCPROFILE*  Icc = (_cmsICCPROFILE*) (void*) hProfile;
        return _cmsSearchTag(ContextID, Icc, sig, FALSE) >= 0;
 }
-
-
 
 // Enforces that the profile version is per. spec.
 // Operates on the big endian bytes from the profile.

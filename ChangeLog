@@ -27,6 +27,9 @@ Extend T_EXTRA etc to allow for 63 extra channels.
 Several fixes related with security, and therefore not detailed here.
 C++ compiles now without warnings
 Added OSX and clang in travis
+Added a travis-ci test matrix for many compilers and OS. Thanks to Thomas Weber (debian) for this great improvement.
+testbed can now work with dynamic versions of library 
+Fixed wrong planar formatters regarding linestride interpretation
 
 -----------------------
 2.8 Featured release
