@@ -44,8 +44,8 @@ So what problem was this intended to solve?
 Put simply, we ran into problems with using LCMS in a multi-threaded
 environment.
 
-A few years ago, Marti kindly made some changes within LCMS to
-enable us to safely use LCMS with Ghostscript when run with
+A few years ago, Marti kindly made some changes within LittleCMS
+to enable us to safely use LCMS with Ghostscript when run with
 multiple threads.
 
 Specifically, Ghostscript needed to use different allocators from
@@ -69,7 +69,7 @@ we now also had:
 
 Internally within LCMS, the cmsContext values were often stored
 within things like profiles and links. For Ghostscript this was
-absolutely fine, because we don't share profiles or links between
+absolutely fine, because we didn't share profiles or links between
 different threads.
 
 For MuPDF, however, this was a significant restriction. MuPDF is
@@ -78,7 +78,15 @@ Data objects are reference counted, and are designed to be able to
 be passed around the system as required. It would be almost impossible
 to enforce the idea that profiles and links can only be used within
 the original thread (cmsContext) within which they were created.
+Also new versions of Ghostscript will also share profiles and links
+among threads to enhance performance with multi-threaded rendering.
 
+Lastly, Ghostscript made use of cmsChangeBuffersFormat to switch the
+input or output data format (planar, bytes per component, etc.) to
+allow a link profile to be re-used without the computation needed to
+create a new link profile. Since the input and output format are
+stored within the link profile, one thread changing the format while
+another thread was using it for color transform would cause problems.
 
 So what changes have been made?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,15 +105,23 @@ longer serve any purpose).
 In addition, we've made 1 other change that breaks the ABI, but not
 the API.
 
-4) The organisation of the flags word used to describe the format of
+4) We have removed the cmsChangeBuffersFormat function (use of which
+could lead to a link profile being changed by one thread while it
+was in use by another) and replaced it with a thread safe alternative,
+cmsCloneTransformChangingFormats. This creates a new transform that
+shares the underlying tables of the original transform, but with
+new buffer format handlers. Since the underlying tables for the link
+are shared, the cost of cloning the profile is very low.
+
+5) The organisation of the flags word used to describe the format of
 input/output pixels has been altered to accommodate more 'extra'
 channels (now a maximum of 63 rather than 7).
 
 Finally:
 
-5) We have renamed lcms2.h to be lcms2art.h.
+6) We have renamed lcms2.h to be lcms2art.h.
 
-6) We have tweaked the LCMS_VERSION value (and some of the code
+7) We have tweaked the LCMS_VERSION value (and some of the code
 that reads it), to ensure that people don't link binary plugins
 expecting other versions against us without an error being given.
 

@@ -1785,12 +1785,10 @@ CMSAPI cmsFloat64Number CMSEXPORT cmsSetAdaptationStateTHR(cmsContext ContextID,
 CMSAPI cmsUInt32Number CMSEXPORT cmsGetTransformInputFormat(cmsContext ContextID, cmsHTRANSFORM hTransform);
 CMSAPI cmsUInt32Number CMSEXPORT cmsGetTransformOutputFormat(cmsContext ContextID, cmsHTRANSFORM hTransform);
 
-// For backwards compatibility
-CMSAPI cmsBool          CMSEXPORT cmsChangeBuffersFormat(cmsContext ContextID,
-                                                         cmsHTRANSFORM hTransform,
-                                                         cmsUInt32Number InputFormat,
-                                                         cmsUInt32Number OutputFormat);
-
+cmsHTRANSFORM cmsCloneTransformChangingFormats(cmsContext ContextID,
+                                               const cmsHTRANSFORM hTransform,
+                                               cmsUInt32Number InputFormat,
+                                               cmsUInt32Number OutputFormat);
 
 
 // PostScript ColorRenderingDictionary and ColorSpaceArray ----------------------------------------------------
