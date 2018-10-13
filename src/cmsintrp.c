@@ -180,10 +180,9 @@ void CMSEXPORT _cmsFreeInterpParams(cmsContext ContextID, cmsInterpParams* p)
 
 
 // Inline fixed point interpolation
-cmsINLINE CMS_NO_SANITIZE cmsUInt16Number LinearInterp(cmsContext ContextID, cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
+cmsINLINE CMS_NO_SANITIZE cmsUInt16Number LinearInterp(cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
 {
     cmsUInt32Number dif = (cmsUInt32Number) (h - l) * a + 0x8000;
-    cmsUNUSED_PARAMETER(ContextID);
     dif = (dif >> 16) + l;
     return (cmsUInt16Number) (dif);
 }
@@ -216,7 +215,7 @@ void LinLerp1D(cmsContext ContextID, register const cmsUInt16Number Value[],
         y0 = LutTable[cell0];
         y1 = LutTable[cell0 + 1];
 
-        Output[0] = LinearInterp(ContextID, rest, y0, y1);
+        Output[0] = LinearInterp(rest, y0, y1);
     }
 }
 
@@ -288,7 +287,7 @@ void Eval1Input(cmsContext ContextID, register const cmsUInt16Number Input[],
 
        for (OutChan=0; OutChan < p16->nOutputs; OutChan++) {
 
-           Output[OutChan] = LinearInterp(ContextID, rk, LutTable[K0+OutChan], LutTable[K1+OutChan]);
+           Output[OutChan] = LinearInterp(rk, LutTable[K0+OutChan], LutTable[K1+OutChan]);
        }
 }
 
@@ -1022,7 +1021,7 @@ void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
 
 
     for (i=0; i < p16 -> nOutputs; i++) {
-        Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
+        Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
     }
 }
 #undef DENS
@@ -1112,7 +1111,7 @@ void Eval5Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
 
        for (i=0; i < p16 -> nOutputs; i++) {
 
-              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
        }
 
 }
@@ -1199,7 +1198,7 @@ void Eval6Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
 
        for (i=0; i < p16 -> nOutputs; i++) {
 
-              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
        }
 
 }
@@ -1285,7 +1284,7 @@ void Eval7Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
        Eval6Inputs(ContextID, Input + 1, Tmp2, &p1);
 
        for (i=0; i < p16 -> nOutputs; i++) {
-              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
        }
 }
 
@@ -1369,7 +1368,7 @@ void Eval8Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
        Eval7Inputs(ContextID, Input + 1, Tmp2, &p1);
 
        for (i=0; i < p16 -> nOutputs; i++) {
-              Output[i] = LinearInterp(ContextID, rk, Tmp1[i], Tmp2[i]);
+              Output[i] = LinearInterp(rk, Tmp1[i], Tmp2[i]);
        }
 }
 
