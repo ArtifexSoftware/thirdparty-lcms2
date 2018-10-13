@@ -38,7 +38,7 @@
 #    endif
 #endif
 
-#include "lcms2art.h"
+#include "lcms2mt.h"
 
 #include <string.h>
 #include <stdarg.h>
