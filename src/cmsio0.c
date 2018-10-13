@@ -1575,7 +1575,7 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
 
     if (!IsTypeSupported(TagDescriptor, BaseType)) goto Error;
 
-    TagSize  -= 8;       // Alredy read by the type base logic
+    TagSize  -= 8;       // Already read by the type base logic
 
     // Get type handler
     TypeHandler = _cmsGetTagTypeHandler(ContextID, BaseType);
@@ -1609,6 +1609,7 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
         _cmsTagSignature2String(ContextID, String, sig);
         cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "'%s' Inconsistent number of items: expected %d, got %d",
             String, TagDescriptor ->ElemCount, ElemCount);
+        goto Error;
     }
 
 
@@ -1804,7 +1805,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         return Icc ->TagSizes[i];
     }
 
-    // The data has been already read, or written. But wait!, maybe the user choosed to save as
+    // The data has been already read, or written. But wait!, maybe the user chose to save as
     // raw data. In this case, return the raw data directly
     if (Icc ->TagSaveAsRaw[i]) {
 
@@ -1824,7 +1825,7 @@ cmsUInt32Number CMSEXPORT cmsReadRawTag(cmsContext ContextID, cmsHPROFILE hProfi
         return Icc ->TagSizes[i];
     }
 
-    // Already readed, or previously set by cmsWriteTag(). We need to serialize that
+    // Already read, or previously set by cmsWriteTag(). We need to serialize that
     // data to raw in order to maintain consistency.
 
     _cmsUnlockMutex(ContextID, Icc ->UsrMutex);

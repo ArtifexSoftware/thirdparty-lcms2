@@ -341,7 +341,7 @@ void NullFloatXFORM(cmsContext ContextID, _cmsTRANSFORM* p,
 
 // 16 bit precision -----------------------------------------------------------------------------------------------------------
 
-// Null transformation, only applies formatters. No caché
+// Null transformation, only applies formatters. No cache
 static
 void NullXFORM(cmsContext ContextID,
                _cmsTRANSFORM* p,
@@ -441,12 +441,12 @@ void TransformOnePixelWithGamutCheck(cmsContext ContextID, _cmsTRANSFORM* p,
         p ->Lut ->Eval16Fn(ContextID, wIn, wOut, p -> Lut->Data);
 }
 
-// Gamut check, No caché, 16 bits.
+// Gamut check, No cache, 16 bits.
 #define FUNCTION_NAME PrecalculatedXFORMGamutCheck
 #define GAMUTCHECK
 #include "extra_xform.h"
 
-// No gamut check, Caché, 16 bits,
+// No gamut check, Cache, 16 bits,
 #define FUNCTION_NAME CachedXFORM
 #define CACHED
 #include "extra_xform.h"
@@ -960,16 +960,16 @@ _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number
     }
     if (dwFlags & cmsFLAGS_NOCACHE) {
         if (dwFlags & cmsFLAGS_GAMUTCHECK)
-            p ->xform = PrecalculatedXFORMGamutCheck;  // Gamut check, no cach<E9>
+            p ->xform = PrecalculatedXFORMGamutCheck;  // Gamut check, no cache
         else if ((InputFormat & ~COLORSPACE_SH(31)) == (OutputFormat & ~COLORSPACE_SH(31)) &&
                  _cmsLutIsIdentity(p->Lut))
             p ->xform = PrecalculatedXFORMIdentity;
         else
-            p ->xform = PrecalculatedXFORM;  // No cach<E9>, no gamut check
+            p ->xform = PrecalculatedXFORM;  // No cache, no gamut check
 	return;
     }
     if (dwFlags & cmsFLAGS_GAMUTCHECK) {
-        p ->xform = CachedXFORMGamutCheck;    // Gamut check, cach<E9>
+        p ->xform = CachedXFORMGamutCheck;    // Gamut check, cache
 	return;
     }
     if ((InputFormat & ~COLORSPACE_SH(31)) == (OutputFormat & ~COLORSPACE_SH(31)) &&
@@ -978,7 +978,7 @@ _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number
         return;
     }
     if (T_EXTRA(InputFormat) != 0) {
-        p ->xform = CachedXFORM;  // No gamut check, cach<E9>
+        p ->xform = CachedXFORM;  // No gamut check, cache
         return;
     }
     if ((InputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3))) == 0 &&
@@ -1048,7 +1048,7 @@ _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number
         else if (inwords <= 4)
             p ->xform = CachedXFORM8;
         else
-            p ->xform = CachedXFORM;  // No gamut check, cach<E9>
+            p ->xform = CachedXFORM;  // No gamut check, cache
     }
 }
 
@@ -1131,7 +1131,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
             p ->xform = NullFloatXFORM;
         }
         else {
-            // Float transforms don't use caché, always are non-NULL
+            // Float transforms don't use cache, always are non-NULL
             p ->xform = FloatXFORM;
         }
 

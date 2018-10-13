@@ -876,7 +876,7 @@ int BlackPreservingSampler(cmsContext ContextID, register const cmsUInt16Number 
         return TRUE;
     }
 
-    // K differ, mesure and keep Lab measurement for further usage
+    // K differ, measure and keep Lab measurement for further usage
     // this is done in relative colorimetric intent
     cmsDoTransform(ContextID, bp->hProofOutput, Out, &ColorimetricLab, 1);
 

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2017 Marti Maria Saguer
+//  Copyright (c) 1998-2018 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -129,7 +129,7 @@ typedef struct _Table {
 
 // File stream being parsed
 typedef struct _FileContext {
-        char           FileName[cmsMAX_PATH];    // File name if being readed from file
+        char           FileName[cmsMAX_PATH];    // File name if being read from file
         FILE*          Stream;                   // File stream or NULL if holded in memory
     } FILECTX;
 
@@ -254,7 +254,7 @@ static PROPERTY PredefinedProperties[] = {
                                                    // needed.
 
         {"SAMPLE_BACKING",   WRITE_STRINGIFY},     // Identifies the backing material used behind the sample during
-                                                   // measurement. Allowed values are “black”, “white”, or {"na".
+                                                   // measurement. Allowed values are "black", "white", or {"na".
 
         {"CHISQ_DOF",        WRITE_STRINGIFY},     // Degrees of freedom associated with the Chi squared statistic
                                                    // below properties are new in recent specs:
@@ -269,7 +269,7 @@ static PROPERTY PredefinedProperties[] = {
                                                    // denote the use of filters such as none, D65, Red, Green or Blue.
 
        {"POLARIZATION",      WRITE_STRINGIFY},     // Identifies the use of a physical polarization filter during measurement. Allowed
-                                                   // values are {"yes”, “white”, “none” or “na”.
+                                                   // values are {"yes", "white", "none" or "na".
 
        {"WEIGHTING_FUNCTION", WRITE_PAIR},         // Indicates such functions as: the CIE standard observer functions used in the
                                                    // calculation of various data parameters (2 degree and 10 degree), CIE standard
@@ -1509,10 +1509,16 @@ void AllocateDataSet(cmsContext ContextID, cmsIT8* it8)
     t-> nSamples   = atoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_FIELDS"));
     t-> nPatches   = atoi(cmsIT8GetProperty(ContextID, it8, "NUMBER_OF_SETS"));
 
-    t-> Data = (char**)AllocChunk (ContextID, it8, ((cmsUInt32Number) t->nSamples + 1) * ((cmsUInt32Number) t->nPatches + 1) *sizeof (char*));
-    if (t->Data == NULL) {
+    if (t -> nSamples < 0 || t->nSamples > 0x7ffe || t->nPatches < 0 || t->nPatches > 0x7ffe)
+    {
+        SynError(ContextID, it8, "AllocateDataSet: too much data");
+    }
+    else {
+        t->Data = (char**)AllocChunk(ContextID, it8, ((cmsUInt32Number)t->nSamples + 1) * ((cmsUInt32Number)t->nPatches + 1) * sizeof(char*));
+        if (t->Data == NULL) {
 
-        SynError(ContextID, it8, "AllocateDataSet: Unable to allocate data array");
+            SynError(ContextID, it8, "AllocateDataSet: Unable to allocate data array");
+        }
     }
 
 }
@@ -2318,6 +2324,11 @@ cmsHANDLE  CMSEXPORT cmsIT8LoadFromMem(cmsContext ContextID, const void *Ptr, cm
 
     it8 = (cmsIT8*) hIT8;
     it8 ->MemoryBlock = (char*) _cmsMalloc(ContextID, len + 1);
+    if (it8->MemoryBlock == NULL)
+    {
+        cmsIT8Free(ContextID, hIT8);
+        return FALSE;
+    }
 
     strncpy(it8 ->MemoryBlock, (const char*) Ptr, len);
     it8 ->MemoryBlock[len] = 0;

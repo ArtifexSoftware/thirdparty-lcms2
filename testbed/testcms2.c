@@ -70,7 +70,7 @@ void Die(const char* Reason, ...)
 // maximum requested as a single block and maximum allocated at a given time. Results are printed at the end
 static cmsUInt32Number SingleHit, MaxAllocated=0, TotalMemory=0;
 
-// I'm hidding the size before the block. This is a well-known technique and probably the blocks coming from
+// I'm hiding the size before the block. This is a well-known technique and probably the blocks coming from
 // malloc are built in a way similar to that, but I do on my own to be portable.
 typedef struct {
     cmsUInt32Number KeepSize;
@@ -448,7 +448,7 @@ cmsHPROFILE Create_CMYK_DeviceLink(void)
 
 
 // Create a fake CMYK profile, without any other requeriment that being coarse CMYK.
-// DONT USE THIS PROFILE FOR ANYTHING, IT IS USELESS BUT FOR TESTING PURPOSES.
+// DON'T USE THIS PROFILE FOR ANYTHING, IT IS USELESS BUT FOR TESTING PURPOSES.
 typedef struct {
 
     cmsHTRANSFORM hLab2sRGB;
@@ -759,7 +759,7 @@ cmsInt32Number CheckBaseTypes(void)
 
 // Are we little or big endian?  From Harbison&Steele.
 static
-cmsInt32Number CheckEndianess(void)
+cmsInt32Number CheckEndianness(void)
 {
     cmsInt32Number BigEndian, IsOk;
     union {
@@ -8889,7 +8889,7 @@ int main(int argc, char* argv[])
     PrintSupportedIntents();
 
     Check("Base types", CheckBaseTypes);
-    Check("endianess", CheckEndianess);
+    Check("endianness", CheckEndianness);
     Check("quick floor", CheckQuickFloor);
     Check("quick floor word", CheckQuickFloorWord);
     Check("Fixed point 15.16 representation", CheckFixedPoint15_16);
@@ -9075,7 +9075,7 @@ int main(int argc, char* argv[])
     Check("RGB->Lab->RGB with alpha on FLT", ChecksRGB2LabFLT);
     Check("Parametric curve on Rec709", CheckParametricRec709);
     Check("Floating Point sampled curve with non-zero start", CheckFloatSamples);
-    Check("Floating Point segmented curve with short sampled segement", CheckFloatSegments);
+    Check("Floating Point segmented curve with short sampled segment", CheckFloatSegments);
     Check("Read RAW portions", CheckReadRAW);
     Check("Check MetaTag", CheckMeta);
     Check("Null transform on floats", CheckFloatNULLxform);

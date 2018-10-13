@@ -180,7 +180,7 @@ void CMSEXPORT _cmsFreeInterpParams(cmsContext ContextID, cmsInterpParams* p)
 
 
 // Inline fixed point interpolation
-cmsINLINE cmsUInt16Number LinearInterp(cmsContext ContextID, cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
+cmsINLINE CMS_NO_SANITIZE cmsUInt16Number LinearInterp(cmsContext ContextID, cmsS15Fixed16Number a, cmsS15Fixed16Number l, cmsS15Fixed16Number h)
 {
     cmsUInt32Number dif = (cmsUInt32Number) (h - l) * a + 0x8000;
     cmsUNUSED_PARAMETER(ContextID);
@@ -204,20 +204,20 @@ void LinLerp1D(cmsContext ContextID, register const cmsUInt16Number Value[],
     if (Value[0] == 0xffff) {
 
         Output[0] = LutTable[p -> Domain[0]];
-        return;
     }
+    else
+    {
+        val3 = p->Domain[0] * Value[0];
+        val3 = _cmsToFixedDomain(val3);    // To fixed 15.16
 
-    val3 = p -> Domain[0] * Value[0];
-    val3 = _cmsToFixedDomain(val3);    // To fixed 15.16
+        cell0 = FIXED_TO_INT(val3);             // Cell is 16 MSB bits
+        rest = FIXED_REST_TO_INT(val3);        // Rest is 16 LSB bits
 
-    cell0 = FIXED_TO_INT(val3);             // Cell is 16 MSB bits
-    rest  = FIXED_REST_TO_INT(val3);        // Rest is 16 LSB bits
+        y0 = LutTable[cell0];
+        y1 = LutTable[cell0 + 1];
 
-    y0 = LutTable[cell0];
-    y1 = LutTable[cell0+1];
-
-
-    Output[0] = LinearInterp(ContextID, rest, y0, y1);
+        Output[0] = LinearInterp(ContextID, rest, y0, y1);
+    }
 }
 
 // To prevent out of bounds indexing
@@ -243,27 +243,28 @@ void LinLerp1Dfloat(cmsContext ContextID, const cmsFloat32Number Value[],
        // if last value...
        if (val2 == 1.0) {
            Output[0] = LutTable[p -> Domain[0]];
-           return;
        }
+       else
+       {
+           val2 *= p->Domain[0];
 
-       val2 *= p -> Domain[0];
+           cell0 = (int)floor(val2);
+           cell1 = (int)ceil(val2);
 
-       cell0 = (int) floor(val2);
-       cell1 = (int) ceil(val2);
+           // Rest is 16 LSB bits
+           rest = val2 - cell0;
 
-       // Rest is 16 LSB bits
-       rest = val2 - cell0;
+           y0 = LutTable[cell0];
+           y1 = LutTable[cell1];
 
-       y0 = LutTable[cell0] ;
-       y1 = LutTable[cell1] ;
-
-       Output[0] = y0 + (y1 - y0) * rest;
+           Output[0] = y0 + (y1 - y0) * rest;
+       }
 }
 
 
 
 // Eval gray LUT having only one input channel
-static
+static CMS_NO_SANITIZE
 void Eval1Input(cmsContext ContextID, register const cmsUInt16Number Input[],
                 register cmsUInt16Number Output[],
                 register const cmsInterpParams* p16)
@@ -308,30 +309,36 @@ void Eval1InputFloat(cmsContext ContextID, const cmsFloat32Number Value[],
 
     val2 = fclamp(Value[0]);
 
-        // if last value...
-       if (val2 == 1.0) {
-           Output[0] = LutTable[p -> Domain[0]];
-           return;
-       }
+    // if last value...
+    if (val2 == 1.0) {
 
-       val2 *= p -> Domain[0];
+        y0 = LutTable[p->Domain[0]];
 
-       cell0 = (int) floor(val2);
-       cell1 = (int) ceil(val2);
+        for (OutChan = 0; OutChan < p->nOutputs; OutChan++) {
+            Output[OutChan] = y0;
+        }
+    }
+    else
+    {
+        val2 *= p->Domain[0];
 
-       // Rest is 16 LSB bits
-       rest = val2 - cell0;
+        cell0 = (int)floor(val2);
+        cell1 = (int)ceil(val2);
 
-       cell0 *= p -> opta[0];
-       cell1 *= p -> opta[0];
+        // Rest is 16 LSB bits
+        rest = val2 - cell0;
 
-       for (OutChan=0; OutChan < p->nOutputs; OutChan++) {
+        cell0 *= p->opta[0];
+        cell1 *= p->opta[0];
 
-            y0 = LutTable[cell0 + OutChan] ;
-            y1 = LutTable[cell1 + OutChan] ;
+        for (OutChan = 0; OutChan < p->nOutputs; OutChan++) {
+
+            y0 = LutTable[cell0 + OutChan];
+            y1 = LutTable[cell1 + OutChan];
 
             Output[OutChan] = y0 + (y1 - y0) * rest;
-       }
+        }
+    }
 }
 
 // Bilinear interpolation (16 bits) - cmsFloat32Number version
@@ -389,7 +396,7 @@ void BilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 // Bilinear interpolation (16 bits) - optimized version
-static
+static CMS_NO_SANITIZE
 void BilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
                       register cmsUInt16Number Output[],
                       register const cmsInterpParams* p)
@@ -522,7 +529,7 @@ void TrilinearInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 // Trilinear interpolation (16 bits) - optimized version
-static
+static CMS_NO_SANITIZE
 void TrilinearInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
                        register cmsUInt16Number Output[],
                        register const cmsInterpParams* p)
@@ -704,7 +711,7 @@ void TetrahedralInterpFloat(cmsContext ContextID, const cmsFloat32Number Input[]
 
 
 
-static
+static CMS_NO_SANITIZE
 void TetrahedralInterp16(cmsContext ContextID, register const cmsUInt16Number Input[],
                          register cmsUInt16Number Output[],
                          register const cmsInterpParams* p)
@@ -839,7 +846,7 @@ void TetrahedralInterp16(cmsContext ContextID, register const cmsUInt16Number In
 
 
 #define DENS(i,j,k) (LutTable[(i)+(j)+(k)+OutChan])
-static
+static CMS_NO_SANITIZE
 void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                      register cmsUInt16Number Output[],
                      register const cmsInterpParams* p16)
@@ -1068,10 +1075,9 @@ void Eval4InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 
-static
+static CMS_NO_SANITIZE
 void Eval5Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
-
                  register const cmsInterpParams* p16)
 {
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;
@@ -1157,7 +1163,7 @@ void Eval5InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 
 
-static
+static CMS_NO_SANITIZE
 void Eval6Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const cmsInterpParams* p16)
@@ -1243,7 +1249,7 @@ void Eval6InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 }
 
 
-static
+static CMS_NO_SANITIZE
 void Eval7Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const cmsInterpParams* p16)
@@ -1329,7 +1335,7 @@ void Eval7InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
        }
 }
 
-static
+static CMS_NO_SANITIZE
 void Eval8Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
                  register cmsUInt16Number Output[],
                  register const cmsInterpParams* p16)
