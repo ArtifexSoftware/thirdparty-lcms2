@@ -8584,7 +8584,6 @@ void SpeedTest16bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
 
     diff = clock() - atime;
     free(In);
->>>>>>> master
 
     PrintPerformance(Mb, sizeof(cmsUInt16Number), diff);
     cmsDeleteTransform(hlcmsxform);
