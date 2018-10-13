@@ -34,13 +34,12 @@
 //      Little-Endian to Big-Endian
 
 // Adjust a word value after being read/ before being written from/to an ICC profile
-cmsUInt16Number CMSEXPORT  _cmsAdjustEndianess16(cmsContext ContextID, cmsUInt16Number Word)
+cmsUInt16Number CMSEXPORT  _cmsAdjustEndianess16(cmsUInt16Number Word)
 {
 #ifndef CMS_USE_BIG_ENDIAN
 
     cmsUInt8Number* pByte = (cmsUInt8Number*) &Word;
     cmsUInt8Number tmp;
-    cmsUNUSED_PARAMETER(ContextID);
 
     tmp = pByte[0];
     pByte[0] = pByte[1];
@@ -56,13 +55,12 @@ cmsUInt16Number CMSEXPORT  _cmsAdjustEndianess16(cmsContext ContextID, cmsUInt16
 // 1 2 3 4
 // 4 3 2 1
 
-cmsUInt32Number CMSEXPORT  _cmsAdjustEndianess32(cmsContext ContextID, cmsUInt32Number DWord)
+cmsUInt32Number CMSEXPORT  _cmsAdjustEndianess32(cmsUInt32Number DWord)
 {
 #ifndef CMS_USE_BIG_ENDIAN
     cmsUInt8Number* pByte = (cmsUInt8Number*) &DWord;
     cmsUInt8Number temp1;
     cmsUInt8Number temp2;
-    cmsUNUSED_PARAMETER(ContextID);
 
     temp1 = *pByte++;
     temp2 = *pByte++;
@@ -77,14 +75,13 @@ cmsUInt32Number CMSEXPORT  _cmsAdjustEndianess32(cmsContext ContextID, cmsUInt32
 // 1 2 3 4 5 6 7 8
 // 8 7 6 5 4 3 2 1
 
-void CMSEXPORT  _cmsAdjustEndianess64(cmsContext ContextID, cmsUInt64Number* Result, cmsUInt64Number* QWord)
+void CMSEXPORT  _cmsAdjustEndianess64(cmsUInt64Number* Result, cmsUInt64Number* QWord)
 {
 
 #ifndef CMS_USE_BIG_ENDIAN
 
     cmsUInt8Number* pIn  = (cmsUInt8Number*) QWord;
     cmsUInt8Number* pOut = (cmsUInt8Number*) Result;
-    cmsUNUSED_PARAMETER(ContextID);
 
     _cmsAssert(Result != NULL);
 
@@ -132,7 +129,7 @@ cmsBool CMSEXPORT  _cmsReadUInt16Number(cmsContext ContextID, cmsIOHANDLER* io, 
     if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt16Number), 1) != 1)
             return FALSE;
 
-    if (n != NULL) *n = _cmsAdjustEndianess16(ContextID, tmp);
+    if (n != NULL) *n = _cmsAdjustEndianess16(tmp);
     return TRUE;
 }
 
@@ -164,7 +161,7 @@ cmsBool CMSEXPORT  _cmsReadUInt32Number(cmsContext ContextID, cmsIOHANDLER* io, 
     if (io -> Read(ContextID, io, &tmp, sizeof(cmsUInt32Number), 1) != 1)
             return FALSE;
 
-    if (n != NULL) *n = _cmsAdjustEndianess32(ContextID, tmp);
+    if (n != NULL) *n = _cmsAdjustEndianess32(tmp);
     return TRUE;
 }
 
@@ -179,7 +176,7 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsContext ContextID, cmsIOHANDLER* io,
 
     if (n != NULL) {
 
-        tmp = _cmsAdjustEndianess32(ContextID, tmp);
+        tmp = _cmsAdjustEndianess32(tmp);
         *n = *(cmsFloat32Number*)(void*)&tmp;
 
         // Safeguard which covers against absurd values
@@ -213,7 +210,7 @@ cmsBool CMSEXPORT   _cmsReadUInt64Number(cmsContext ContextID, cmsIOHANDLER* io,
 
     if (n != NULL) {
 
-        _cmsAdjustEndianess64(ContextID, n, &tmp);
+        _cmsAdjustEndianess64(n, &tmp);
     }
 
     return TRUE;
@@ -230,7 +227,7 @@ cmsBool CMSEXPORT  _cmsRead15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* i
             return FALSE;
 
     if (n != NULL) {
-        *n = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, tmp));
+        *n = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(tmp));
     }
 
     return TRUE;
@@ -247,9 +244,9 @@ cmsBool CMSEXPORT  _cmsReadXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, cms
 
     if (XYZ != NULL) {
 
-        XYZ->X = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) xyz.X));
-        XYZ->Y = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) xyz.Y));
-        XYZ->Z = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) xyz.Z));
+        XYZ->X = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.X));
+        XYZ->Y = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.Y));
+        XYZ->Z = _cms15Fixed16toDouble(ContextID, (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) xyz.Z));
     }
     return TRUE;
 }
@@ -270,7 +267,7 @@ cmsBool CMSEXPORT  _cmsWriteUInt16Number(cmsContext ContextID, cmsIOHANDLER* io,
 
     _cmsAssert(io != NULL);
 
-    tmp = _cmsAdjustEndianess16(ContextID, n);
+    tmp = _cmsAdjustEndianess16(n);
     if (io -> Write(ContextID, io, sizeof(cmsUInt16Number), &tmp) != 1)
             return FALSE;
 
@@ -297,7 +294,7 @@ cmsBool CMSEXPORT  _cmsWriteUInt32Number(cmsContext ContextID, cmsIOHANDLER* io,
 
     _cmsAssert(io != NULL);
 
-    tmp = _cmsAdjustEndianess32(ContextID, n);
+    tmp = _cmsAdjustEndianess32(n);
     if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
@@ -312,7 +309,7 @@ cmsBool CMSEXPORT  _cmsWriteFloat32Number(cmsContext ContextID, cmsIOHANDLER* io
     _cmsAssert(io != NULL);
 
     tmp = *(cmsUInt32Number*) (void*) &n;
-    tmp = _cmsAdjustEndianess32(ContextID, tmp);
+    tmp = _cmsAdjustEndianess32(tmp);
     if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
@@ -325,7 +322,7 @@ cmsBool CMSEXPORT  _cmsWriteUInt64Number(cmsContext ContextID, cmsIOHANDLER* io,
 
     _cmsAssert(io != NULL);
 
-    _cmsAdjustEndianess64(ContextID, &tmp, n);
+    _cmsAdjustEndianess64(&tmp, n);
     if (io -> Write(ContextID, io, sizeof(cmsUInt64Number), &tmp) != 1)
             return FALSE;
 
@@ -338,7 +335,7 @@ cmsBool CMSEXPORT  _cmsWrite15Fixed16Number(cmsContext ContextID, cmsIOHANDLER* 
 
     _cmsAssert(io != NULL);
 
-    tmp = _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, n));
+    tmp = _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, n));
     if (io -> Write(ContextID, io, sizeof(cmsUInt32Number), &tmp) != 1)
             return FALSE;
 
@@ -352,9 +349,9 @@ cmsBool CMSEXPORT  _cmsWriteXYZNumber(cmsContext ContextID, cmsIOHANDLER* io, co
     _cmsAssert(io != NULL);
     _cmsAssert(XYZ != NULL);
 
-    xyz.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->X));
-    xyz.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Y));
-    xyz.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Z));
+    xyz.X = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->X));
+    xyz.Y = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Y));
+    xyz.Z = (cmsS15Fixed16Number) _cmsAdjustEndianess32((cmsUInt32Number) _cmsDoubleTo15Fixed16(ContextID, XYZ->Z));
 
     return io -> Write(ContextID, io,  sizeof(cmsEncodedXYZNumber), &xyz);
 }
@@ -411,12 +408,12 @@ void CMSEXPORT _cmsDecodeDateTimeNumber(cmsContext ContextID, const cmsDateTimeN
     _cmsAssert(Dest != NULL);
     _cmsAssert(Source != NULL);
 
-    Dest->tm_sec   = _cmsAdjustEndianess16(ContextID, Source->seconds);
-    Dest->tm_min   = _cmsAdjustEndianess16(ContextID, Source->minutes);
-    Dest->tm_hour  = _cmsAdjustEndianess16(ContextID, Source->hours);
-    Dest->tm_mday  = _cmsAdjustEndianess16(ContextID, Source->day);
-    Dest->tm_mon   = _cmsAdjustEndianess16(ContextID, Source->month) - 1;
-    Dest->tm_year  = _cmsAdjustEndianess16(ContextID, Source->year) - 1900;
+    Dest->tm_sec   = _cmsAdjustEndianess16(Source->seconds);
+    Dest->tm_min   = _cmsAdjustEndianess16(Source->minutes);
+    Dest->tm_hour  = _cmsAdjustEndianess16(Source->hours);
+    Dest->tm_mday  = _cmsAdjustEndianess16(Source->day);
+    Dest->tm_mon   = _cmsAdjustEndianess16(Source->month) - 1;
+    Dest->tm_year  = _cmsAdjustEndianess16(Source->year) - 1900;
     Dest->tm_wday  = -1;
     Dest->tm_yday  = -1;
     Dest->tm_isdst = 0;
@@ -427,12 +424,12 @@ void CMSEXPORT _cmsEncodeDateTimeNumber(cmsContext ContextID, cmsDateTimeNumber 
     _cmsAssert(Dest != NULL);
     _cmsAssert(Source != NULL);
 
-    Dest->seconds = _cmsAdjustEndianess16(ContextID, (cmsUInt16Number) Source->tm_sec);
-    Dest->minutes = _cmsAdjustEndianess16(ContextID, (cmsUInt16Number) Source->tm_min);
-    Dest->hours   = _cmsAdjustEndianess16(ContextID, (cmsUInt16Number) Source->tm_hour);
-    Dest->day     = _cmsAdjustEndianess16(ContextID, (cmsUInt16Number) Source->tm_mday);
-    Dest->month   = _cmsAdjustEndianess16(ContextID, (cmsUInt16Number) (Source->tm_mon + 1));
-    Dest->year    = _cmsAdjustEndianess16(ContextID, (cmsUInt16Number) (Source->tm_year + 1900));
+    Dest->seconds = _cmsAdjustEndianess16((cmsUInt16Number) Source->tm_sec);
+    Dest->minutes = _cmsAdjustEndianess16((cmsUInt16Number) Source->tm_min);
+    Dest->hours   = _cmsAdjustEndianess16((cmsUInt16Number) Source->tm_hour);
+    Dest->day     = _cmsAdjustEndianess16((cmsUInt16Number) Source->tm_mday);
+    Dest->month   = _cmsAdjustEndianess16((cmsUInt16Number) (Source->tm_mon + 1));
+    Dest->year    = _cmsAdjustEndianess16((cmsUInt16Number) (Source->tm_year + 1900));
 }
 
 // Read base and return type base
@@ -445,7 +442,7 @@ cmsTagTypeSignature CMSEXPORT _cmsReadTypeBase(cmsContext ContextID, cmsIOHANDLE
     if (io -> Read(ContextID, io, &Base, sizeof(_cmsTagBase), 1) != 1)
         return (cmsTagTypeSignature) 0;
 
-    return (cmsTagTypeSignature) _cmsAdjustEndianess32(ContextID, Base.sig);
+    return (cmsTagTypeSignature) _cmsAdjustEndianess32(Base.sig);
 }
 
 // Setup base marker
@@ -455,7 +452,7 @@ cmsBool  CMSEXPORT _cmsWriteTypeBase(cmsContext ContextID, cmsIOHANDLER* io, cms
 
     _cmsAssert(io != NULL);
 
-    Base.sig = (cmsTagTypeSignature) _cmsAdjustEndianess32(ContextID, sig);
+    Base.sig = (cmsTagTypeSignature) _cmsAdjustEndianess32(sig);
     memset(&Base.reserved, 0, sizeof(Base.reserved));
     return io -> Write(ContextID, io, sizeof(_cmsTagBase), &Base);
 }

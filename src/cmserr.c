@@ -530,7 +530,7 @@ void _cmsTagSignature2String(cmsContext ContextID, char String[5], cmsTagSignatu
     cmsUInt32Number be;
 
     // Convert to big endian
-    be = _cmsAdjustEndianess32(ContextID, (cmsUInt32Number) sig);
+    be = _cmsAdjustEndianess32((cmsUInt32Number) sig);
 
     // Move chars
     memmove(String, &be, 4);
