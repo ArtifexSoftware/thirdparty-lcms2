@@ -51,7 +51,6 @@ typedef struct {
     cmsUInt32Number buf[4];
     cmsUInt32Number bits[2];
     cmsUInt8Number in[64];
-    cmsContext ContextID;
 
 } _cmsMD5;
 
@@ -157,8 +156,6 @@ cmsHANDLE  MD5alloc(cmsContext ContextID)
     _cmsMD5* ctx = (_cmsMD5*) _cmsMallocZero(ContextID, sizeof(_cmsMD5));
     if (ctx == NULL) return NULL;
 
-    ctx ->ContextID = ContextID;
-
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
     ctx->buf[2] = 0x98badcfe;
@@ -216,7 +213,7 @@ void MD5add(cmsHANDLE Handle, cmsUInt8Number* buf, cmsUInt32Number len)
 
 // Destroy the object and return the checksum
 static
-void MD5finish(cmsProfileID* ProfileID,  cmsHANDLE Handle)
+void MD5finish(cmsContext ContextID, cmsProfileID* ProfileID,  cmsHANDLE Handle)
 {
     _cmsMD5* ctx = (_cmsMD5*) Handle;
     cmsUInt32Number count;
@@ -249,7 +246,7 @@ void MD5finish(cmsProfileID* ProfileID,  cmsHANDLE Handle)
     byteReverse((cmsUInt8Number *) ctx->buf, 4);
     memmove(ProfileID ->ID8, ctx->buf, 16);
 
-    _cmsFree(ctx ->ContextID, ctx);
+    _cmsFree(ContextID, ctx);
 }
 
 
@@ -300,7 +297,7 @@ cmsBool CMSEXPORT cmsMD5computeID(cmsContext ContextID, cmsHPROFILE hProfile)
     memmove(Icc, &Keep, sizeof(_cmsICCPROFILE));
 
     // And store the ID
-    MD5finish(&Icc ->ProfileID,  MD5);
+    MD5finish(ContextID, &Icc ->ProfileID,  MD5);
     return TRUE;
 
 Error:
