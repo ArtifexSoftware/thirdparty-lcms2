@@ -328,11 +328,10 @@ void WriteByte(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt8Number b)
 
 // Removes offending Carriage returns
 static
-char* RemoveCR(cmsContext ContextID, const char* txt)
+char* RemoveCR(const char* txt)
 {
     static char Buffer[2048];
     char* pt;
-    cmsUNUSED_PARAMETER(ContextID);
 
     strncpy(Buffer, txt, 2047);
     Buffer[2047] = 0;
@@ -364,8 +363,8 @@ void EmitHeader(cmsContext ContextID, cmsIOHANDLER* m, const char* Title, cmsHPR
     _cmsIOPrintf(ContextID, m, "%%!PS-Adobe-3.0\n");
     _cmsIOPrintf(ContextID, m, "%%\n");
     _cmsIOPrintf(ContextID, m, "%% %s\n", Title);
-    _cmsIOPrintf(ContextID, m, "%% Source: %s\n", RemoveCR(ContextID, DescASCII));
-    _cmsIOPrintf(ContextID, m, "%%         %s\n", RemoveCR(ContextID, CopyrightASCII));
+    _cmsIOPrintf(ContextID, m, "%% Source: %s\n", RemoveCR(DescASCII));
+    _cmsIOPrintf(ContextID, m, "%%         %s\n", RemoveCR(CopyrightASCII));
     _cmsIOPrintf(ContextID, m, "%% Created: %s", ctime(&timer)); // ctime appends a \n!!!
     _cmsIOPrintf(ContextID, m, "%%\n");
     _cmsIOPrintf(ContextID, m, "%%%%BeginResource\n");
@@ -535,9 +534,8 @@ void Emit1Gamma(cmsContext ContextID, cmsIOHANDLER* m, cmsToneCurve* Table)
 // Compare gamma table
 
 static
-cmsBool GammaTableEquals(cmsContext ContextID, cmsUInt16Number* g1, cmsUInt16Number* g2, cmsUInt32Number nEntries)
+cmsBool GammaTableEquals(cmsUInt16Number* g1, cmsUInt16Number* g2, cmsUInt32Number nEntries)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     return memcmp(g1, g2, nEntries* sizeof(cmsUInt16Number)) == 0;
 }
 
@@ -553,7 +551,7 @@ void EmitNGamma(cmsContext ContextID, cmsIOHANDLER* m, cmsUInt32Number n, cmsTon
     {
         if (g[i] == NULL) return; // Error
 
-        if (i > 0 && GammaTableEquals(ContextID, g[i-1]->Table16, g[i]->Table16, g[i]->nEntries)) {
+        if (i > 0 && GammaTableEquals(g[i-1]->Table16, g[i]->Table16, g[i]->nEntries)) {
 
             _cmsIOPrintf(ContextID, m, "dup ");
         }
@@ -936,10 +934,9 @@ int WriteInputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, c
 }
 
 static
-cmsFloat64Number* GetPtrToMatrix(cmsContext ContextID, const cmsStage* mpe)
+cmsFloat64Number* GetPtrToMatrix(const cmsStage* mpe)
 {
     _cmsStageMatrixData* Data = (_cmsStageMatrixData*) mpe ->Data;
-    cmsUNUSED_PARAMETER(ContextID);
 
     return Data -> Double;
 }
@@ -969,7 +966,7 @@ int WriteInputMatrixShaper(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hP
             cmsMAT3 Mat;
             int i, j;
 
-            memmove(&Mat, GetPtrToMatrix(ContextID, Matrix), sizeof(Mat));
+            memmove(&Mat, GetPtrToMatrix(Matrix), sizeof(Mat));
 
             for (i = 0; i < 3; i++)
                 for (j = 0; j < 3; j++)
@@ -1386,11 +1383,10 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
 
 // Builds a ASCII string containing colorant list in 0..1.0 range
 static
-void BuildColorantList(cmsContext ContextID, char *Colorant, cmsUInt32Number nColorant, cmsUInt16Number Out[])
+void BuildColorantList(char *Colorant, cmsUInt32Number nColorant, cmsUInt16Number Out[])
 {
     char Buff[32];
     cmsUInt32Number j;
-    cmsUNUSED_PARAMETER(ContextID);
 
     Colorant[0] = 0;
     if (nColorant > cmsMAXCHANNELS)
@@ -1451,7 +1447,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
                 continue;
 
         cmsDoTransform(ContextID, xform, In, Out, 1);
-        BuildColorantList(ContextID, Colorant, nColorant, Out);
+        BuildColorantList(Colorant, nColorant, Out);
         _cmsIOPrintf(ContextID, m, "  (%s) [ %s ]\n", ColorName, Colorant);
     }
 
@@ -1513,8 +1509,6 @@ cmsUInt32Number  GenerateCRD(cmsContext ContextID,
 
     // Finally, return used byte count
     return dwBytesUsed;
-
-    cmsUNUSED_PARAMETER(ContextID);
 }
 
 

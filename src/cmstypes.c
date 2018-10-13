@@ -1761,10 +1761,9 @@ cmsBool Write8bitTables(cmsContext ContextID, cmsIOHANDLER* io, cmsUInt32Number 
 
 // Check overflow
 static
-cmsUInt32Number uipow(cmsContext ContextID, cmsUInt32Number n, cmsUInt32Number a, cmsUInt32Number b)
+cmsUInt32Number uipow(cmsUInt32Number n, cmsUInt32Number a, cmsUInt32Number b)
 {
     cmsUInt32Number rv = 1, rc;
-    cmsUNUSED_PARAMETER(ContextID);
 
     if (a == 0) return 0;
     if (n == 0) return 0;
@@ -1841,7 +1840,7 @@ void *Type_LUT8_Read(cmsContext ContextID, struct _cms_typehandler_struct* self,
     if (!Read8bitTables(ContextID, io,  NewLUT, InputChannels)) goto Error;
 
     // Get 3D CLUT. Check the overflow....
-    nTabSize = uipow(ContextID, OutputChannels, CLUTpoints, InputChannels);
+    nTabSize = uipow(OutputChannels, CLUTpoints, InputChannels);
     if (nTabSize == (cmsUInt32Number) -1) goto Error;
     if (nTabSize > 0) {
 
@@ -1974,7 +1973,7 @@ cmsBool  Type_LUT8_Write(cmsContext ContextID, struct _cms_typehandler_struct* s
     // The prelinearization table
     if (!Write8bitTables(ContextID, io, NewLUT ->InputChannels, PreMPE)) return FALSE;
 
-    nTabSize = uipow(ContextID, NewLUT->OutputChannels, clutPoints, NewLUT ->InputChannels);
+    nTabSize = uipow(NewLUT->OutputChannels, clutPoints, NewLUT ->InputChannels);
     if (nTabSize == (cmsUInt32Number) -1) return FALSE;
     if (nTabSize > 0) {
 
@@ -2085,8 +2084,6 @@ cmsBool Write16bitTables(cmsContext ContextID, cmsIOHANDLER* io, _cmsStageToneCu
         }
     }
     return TRUE;
-
-    cmsUNUSED_PARAMETER(ContextID);
 }
 
 static
@@ -2145,7 +2142,7 @@ void *Type_LUT16_Read(cmsContext ContextID, struct _cms_typehandler_struct* self
     if (!Read16bitTables(ContextID, io,  NewLUT, InputChannels, InputEntries)) goto Error;
 
     // Get 3D CLUT
-    nTabSize = uipow(ContextID, OutputChannels, CLUTpoints, InputChannels);
+    nTabSize = uipow(OutputChannels, CLUTpoints, InputChannels);
     if (nTabSize == (cmsUInt32Number) -1) goto Error;
     if (nTabSize > 0) {
 
@@ -2291,7 +2288,7 @@ cmsBool  Type_LUT16_Write(cmsContext ContextID, struct _cms_typehandler_struct* 
         }
     }
 
-    nTabSize = uipow(ContextID, OutputChannels, clutPoints, InputChannels);
+    nTabSize = uipow(OutputChannels, clutPoints, InputChannels);
     if (nTabSize == (cmsUInt32Number) -1) return FALSE;
     if (nTabSize > 0) {
         // The 3D CLUT.
@@ -5102,10 +5099,9 @@ cmsBool ReadOneWChar(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICelem* e, cm
 }
 
 static
-cmsUInt32Number mywcslen(cmsContext ContextID, const wchar_t *s)
+cmsUInt32Number mywcslen(const wchar_t *s)
 {
     const wchar_t *p;
-    cmsUNUSED_PARAMETER(ContextID);
 
     p = s;
     while (*p)
@@ -5128,7 +5124,7 @@ cmsBool WriteOneWChar(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICelem* e, c
         return TRUE;
     }
 
-    n = mywcslen(ContextID, wcstr);
+    n = mywcslen(wcstr);
     if (!_cmsWriteWCharArray(ContextID, io,  n, wcstr)) return FALSE;
 
     e ->Sizes[i] = io ->Tell(ContextID, io) - Before;

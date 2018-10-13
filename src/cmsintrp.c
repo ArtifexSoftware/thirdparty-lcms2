@@ -37,7 +37,7 @@
 #endif
 
 // Interpolation routines by default
-static cmsInterpFunction DefaultInterpolatorsFactory(cmsContext ContextID, cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags);
+static cmsInterpFunction DefaultInterpolatorsFactory(cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags);
 
 // This is the default factory
 _cmsInterpPluginChunkType _cmsInterpPluginChunk = { NULL };
@@ -95,7 +95,7 @@ cmsBool _cmsSetInterpolationRoutine(cmsContext ContextID, cmsInterpParams* p)
     // If unsupported by the plug-in, go for the LittleCMS default.
     // If happens only if an extern plug-in is being used
     if (p ->Interpolation.Lerp16 == NULL)
-        p ->Interpolation = DefaultInterpolatorsFactory(ContextID, p ->nInputs, p ->nOutputs, p ->dwFlags);
+        p ->Interpolation = DefaultInterpolatorsFactory(p ->nInputs, p ->nOutputs, p ->dwFlags);
 
     // Check for valid interpolator (we just check one member of the union)
     if (p ->Interpolation.Lerp16 == NULL) {
@@ -1420,13 +1420,12 @@ void Eval8InputsFloat(cmsContext ContextID, const cmsFloat32Number Input[],
 
 // The default factory
 static
-cmsInterpFunction DefaultInterpolatorsFactory(cmsContext ContextID, cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags)
+cmsInterpFunction DefaultInterpolatorsFactory(cmsUInt32Number nInputChannels, cmsUInt32Number nOutputChannels, cmsUInt32Number dwFlags)
 {
 
     cmsInterpFunction Interpolation;
     cmsBool  IsFloat     = (dwFlags & CMS_LERP_FLAGS_FLOAT);
     cmsBool  IsTrilinear = (dwFlags & CMS_LERP_FLAGS_TRILINEAR);
-    cmsUNUSED_PARAMETER(ContextID);
 
     memset(&Interpolation, 0, sizeof(Interpolation));
 

@@ -503,10 +503,8 @@ cmsBool AddConversion(cmsContext ContextID, cmsPipeline* Result, cmsColorSpaceSi
 
 // Is a given space compatible with another?
 static
-cmsBool ColorSpaceIsCompatible(cmsContext ContextID, cmsColorSpaceSignature a, cmsColorSpaceSignature b)
+cmsBool ColorSpaceIsCompatible(cmsColorSpaceSignature a, cmsColorSpaceSignature b)
 {
-    cmsUNUSED_PARAMETER(ContextID);
-
     // If they are same, they are compatible.
     if (a == b) return TRUE;
 
@@ -581,7 +579,7 @@ cmsPipeline* DefaultICCintents(cmsContext       ContextID,
             ColorSpaceOut   = cmsGetColorSpace(ContextID, hProfile);
         }
 
-        if (!ColorSpaceIsCompatible(ContextID, ColorSpaceIn, CurrentColorSpace)) {
+        if (!ColorSpaceIsCompatible(ColorSpaceIn, CurrentColorSpace)) {
 
             cmsSignalError(ContextID, cmsERROR_COLORSPACE_CHECK, "ColorSpace mismatch");
             goto Error;

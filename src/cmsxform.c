@@ -1272,9 +1272,8 @@ cmsBool  IsProperColorSpace(cmsContext ContextID, cmsColorSpaceSignature Check, 
 // with the media white (media black?) x 100. Add a sanity check
 
 static
-void NormalizeXYZ(cmsContext ContextID, cmsCIEXYZ* Dest)
+void NormalizeXYZ(cmsCIEXYZ* Dest)
 {
-    cmsUNUSED_PARAMETER(ContextID);
     while (Dest -> X > 2. &&
            Dest -> Y > 2. &&
            Dest -> Z > 2.) {
@@ -1286,7 +1285,7 @@ void NormalizeXYZ(cmsContext ContextID, cmsCIEXYZ* Dest)
 }
 
 static
-void SetWhitePoint(cmsContext ContextID, cmsCIEXYZ* wtPt, const cmsCIEXYZ* src)
+void SetWhitePoint(cmsCIEXYZ* wtPt, const cmsCIEXYZ* src)
 {
     if (src == NULL) {
         wtPt ->X = cmsD50X;
@@ -1298,7 +1297,7 @@ void SetWhitePoint(cmsContext ContextID, cmsCIEXYZ* wtPt, const cmsCIEXYZ* src)
         wtPt ->Y = src->Y;
         wtPt ->Z = src->Z;
 
-        NormalizeXYZ(ContextID, wtPt);
+        NormalizeXYZ(wtPt);
     }
 
 }
@@ -1381,8 +1380,8 @@ cmsHTRANSFORM CMSEXPORT cmsCreateExtendedTransform(cmsContext ContextID,
     xform->core->RenderingIntent = Intents[nProfiles-1];
 
     // Take white points
-    SetWhitePoint(ContextID, &xform->core->EntryWhitePoint, (cmsCIEXYZ*) cmsReadTag(ContextID, hProfiles[0], cmsSigMediaWhitePointTag));
-    SetWhitePoint(ContextID, &xform->core->ExitWhitePoint,  (cmsCIEXYZ*) cmsReadTag(ContextID, hProfiles[nProfiles-1], cmsSigMediaWhitePointTag));
+    SetWhitePoint(&xform->core->EntryWhitePoint, (cmsCIEXYZ*) cmsReadTag(ContextID, hProfiles[0], cmsSigMediaWhitePointTag));
+    SetWhitePoint(&xform->core->ExitWhitePoint,  (cmsCIEXYZ*) cmsReadTag(ContextID, hProfiles[nProfiles-1], cmsSigMediaWhitePointTag));
 
 
     // Create a gamut check LUT if requested
