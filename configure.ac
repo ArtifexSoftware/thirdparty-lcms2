@@ -7,7 +7,7 @@ AC_PREREQ(2.60)
 #
 # Set the package name and version
 #
-AC_INIT(lcms2art,2.9)
+AC_INIT(lcms2mt,2.9)
 
 # Specify directory where m4 macros may be found.
 AC_CONFIG_MACRO_DIR([m4])
@@ -370,7 +370,7 @@ LIBS=''
 # Perform substitutions
 #
 AC_CONFIG_FILES([Makefile])
-AC_CONFIG_FILES([lcms2art.pc])
+AC_CONFIG_FILES([lcms2mt.pc])
 AC_CONFIG_FILES([include/Makefile])
 AC_CONFIG_FILES([src/Makefile])
 AC_CONFIG_FILES([utils/tificc/Makefile])

@@ -27,8 +27,8 @@
 #ifndef _lcms_internal_H
 
 // Include plug-in foundation
-#ifndef _lcms2art_plugin_H
-#   include "lcms2art_plugin.h"
+#ifndef _lcms2mt_plugin_H
+#   include "lcms2mt_plugin.h"
 #endif
 
 // ctype is part of C99 as per 7.1.2

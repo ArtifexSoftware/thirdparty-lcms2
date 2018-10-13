@@ -119,7 +119,7 @@ channels (now a maximum of 63 rather than 7).
 
 Finally:
 
-6) We have renamed lcms2.h to be lcms2art.h.
+6) We have renamed lcms2.h to be lcms2mt.h.
 
 7) We have tweaked the LCMS_VERSION value (and some of the code
 that reads it), to ensure that people don't link binary plugins

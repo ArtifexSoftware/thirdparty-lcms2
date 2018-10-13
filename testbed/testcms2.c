@@ -778,7 +778,7 @@ cmsInt32Number CheckEndianness(void)
 
     if (!IsOk) {
         Die("\nOOOPPSS! You have CMS_USE_BIG_ENDIAN toggle misconfigured!\n\n"
-            "Please, edit lcms2art.h and %s the CMS_USE_BIG_ENDIAN toggle.\n", BigEndian? "uncomment" : "comment");
+            "Please, edit lcms2mt.h and %s the CMS_USE_BIG_ENDIAN toggle.\n", BigEndian? "uncomment" : "comment");
         return 0;
     }
 
@@ -795,7 +795,7 @@ cmsInt32Number CheckQuickFloor(void)
         (_cmsQuickFloor(-32767.1) != -32768)) {
 
             Die("\nOOOPPSS! _cmsQuickFloor() does not work as expected in your machine!\n\n"
-                "Please, edit lcms2art.h and uncomment the CMS_DONT_USE_FAST_FLOOR toggle.\n");
+                "Please, edit lcms2mt.h and uncomment the CMS_DONT_USE_FAST_FLOOR toggle.\n");
             return 0;
 
     }
@@ -814,7 +814,7 @@ cmsInt32Number CheckQuickFloorWord(void)
         if (_cmsQuickFloorWord((cmsFloat64Number) i + 0.1234) != i) {
 
             Die("\nOOOPPSS! _cmsQuickFloorWord() does not work as expected in your machine!\n\n"
-                "Please, edit lcms2art.h and uncomment the CMS_DONT_USE_FAST_FLOOR toggle.\n");
+                "Please, edit lcms2mt.h and uncomment the CMS_DONT_USE_FAST_FLOOR toggle.\n");
             return 0;
         }
     }
