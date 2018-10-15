@@ -2239,7 +2239,7 @@ void CookPointers(cmsContext ContextID, cmsIT8* it8)
 // that should be something like some printable characters plus a \n
 // returns 0 if this is not like a CGATS, or an integer otherwise. This integer is the number of words in first line?
 static
-int IsMyBlock(cmsContext ContextID, const cmsUInt8Number* Buffer, cmsUInt32Number n)
+int IsMyBlock(const cmsUInt8Number* Buffer, cmsUInt32Number n)
 {
     int words = 1, space = 0, quot = 0;
     cmsUInt32Number i;
@@ -2278,7 +2278,7 @@ int IsMyBlock(cmsContext ContextID, const cmsUInt8Number* Buffer, cmsUInt32Numbe
 
 
 static
-cmsBool IsMyFile(cmsContext ContextID, const char* FileName)
+cmsBool IsMyFile(const char* FileName)
 {
    FILE *fp;
    cmsUInt32Number Size;
@@ -2297,7 +2297,7 @@ cmsBool IsMyFile(cmsContext ContextID, const char* FileName)
 
    Ptr[Size] = '\0';
 
-   return IsMyBlock(ContextID, Ptr, Size);
+   return IsMyBlock(Ptr, Size);
 }
 
 // ---------------------------------------------------------- Exported routines
@@ -2312,7 +2312,7 @@ cmsHANDLE  CMSEXPORT cmsIT8LoadFromMem(cmsContext ContextID, const void *Ptr, cm
     _cmsAssert(Ptr != NULL);
     _cmsAssert(len != 0);
 
-    type = IsMyBlock(ContextID, (const cmsUInt8Number*)Ptr, len);
+    type = IsMyBlock((const cmsUInt8Number*)Ptr, len);
     if (type == 0) return NULL;
 
     hIT8 = cmsIT8Alloc(ContextID);
@@ -2359,7 +2359,7 @@ cmsHANDLE  CMSEXPORT cmsIT8LoadFromFile(cmsContext ContextID, const char* cFileN
 
      _cmsAssert(cFileName != NULL);
 
-     type = IsMyFile(ContextID, cFileName);
+     type = IsMyFile(cFileName);
      if (type == 0) return NULL;
 
      hIT8 = cmsIT8Alloc(ContextID);

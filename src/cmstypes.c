@@ -2459,7 +2459,7 @@ cmsToneCurve* ReadEmbeddedCurve(cmsContext ContextID, struct _cms_typehandler_st
                 {
                     char String[5];
 
-                    _cmsTagSignature2String(ContextID, String, (cmsTagSignature) BaseType);
+                    _cmsTagSignature2String(String, (cmsTagSignature) BaseType);
                     cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unknown curve type '%s'", String);
                 }
                 return NULL;
@@ -2666,7 +2666,7 @@ cmsBool WriteSetOfCurves(cmsContext ContextID, struct _cms_typehandler_struct* s
                 {
                     char String[5];
 
-                    _cmsTagSignature2String(ContextID, String, (cmsTagSignature) Type);
+                    _cmsTagSignature2String(String, (cmsTagSignature) Type);
                     cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unknown curve type '%s'", String);
                 }
                 return FALSE;
@@ -4073,7 +4073,7 @@ cmsToneCurve* ReadSegmentedCurve(cmsContext ContextID, struct _cms_typehandler_s
                 {
                 char String[5];
 
-                _cmsTagSignature2String(ContextID, String, (cmsTagSignature) ElementSig);
+                _cmsTagSignature2String(String, (cmsTagSignature) ElementSig);
                 cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unknown curve element type '%s' found.", String);
                 }
                 goto Error;
@@ -4497,7 +4497,7 @@ cmsBool ReadMPEElem(cmsContext ContextID, struct _cms_typehandler_struct* self,
 
         char String[5];
 
-        _cmsTagSignature2String(ContextID, String, (cmsTagSignature) ElementSig);
+        _cmsTagSignature2String(String, (cmsTagSignature) ElementSig);
 
         // An unknown element was found.
         cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unknown MPE type '%s' found.", String);
@@ -4616,7 +4616,7 @@ cmsBool Type_MPE_Write(cmsContext ContextID, struct _cms_typehandler_struct* sel
 
                 char String[5];
 
-                _cmsTagSignature2String(ContextID, String, (cmsTagSignature) ElementSig);
+                _cmsTagSignature2String(String, (cmsTagSignature) ElementSig);
 
                  // An unknown element was found.
                  cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Found unknown MPE type '%s'", String);

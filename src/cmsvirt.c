@@ -96,7 +96,7 @@ Error:
 
 // This function creates a profile based on White point, primaries and
 // transfer functions.
-cmsHPROFILE CMSEXPORT cmsCreateRGBProfileTHR(cmsContext ContextID,
+cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(cmsContext ContextID,
                                           const cmsCIExyY* WhitePoint,
                                           const cmsCIExyYTRIPLE* Primaries,
                                           cmsToneCurve* const TransferFunction[3])
@@ -212,17 +212,10 @@ Error:
     return NULL;
 }
 
-cmsHPROFILE CMSEXPORT cmsCreateRGBProfile(const cmsCIExyY* WhitePoint,
-                                          const cmsCIExyYTRIPLE* Primaries,
-                                          cmsToneCurve* const TransferFunction[3])
-{
-    return cmsCreateRGBProfileTHR(NULL, WhitePoint, Primaries, TransferFunction);
-}
-
 
 
 // This function creates a profile based on White point and transfer function.
-cmsHPROFILE CMSEXPORT cmsCreateGrayProfileTHR(cmsContext ContextID,
+cmsHPROFILE CMSEXPORT cmsCreateGrayProfile(cmsContext ContextID,
                                            const cmsCIExyY* WhitePoint,
                                            const cmsToneCurve* TransferFunction)
 {
@@ -275,15 +268,10 @@ Error:
 
 
 
-cmsHPROFILE CMSEXPORT cmsCreateGrayProfile(const cmsCIExyY* WhitePoint,
-                                                    const cmsToneCurve* TransferFunction)
-{
-    return cmsCreateGrayProfileTHR(NULL, WhitePoint, TransferFunction);
-}
 
 // This is a devicelink operating in the target colorspace with as many transfer functions as components
 
-cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLinkTHR(cmsContext ContextID,
+cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLink(cmsContext ContextID,
                                                           cmsColorSpaceSignature ColorSpace,
                                                           cmsToneCurve* const TransferFunctions[])
 {
@@ -335,12 +323,6 @@ Error:
     return NULL;
 }
 
-cmsHPROFILE CMSEXPORT cmsCreateLinearizationDeviceLink(cmsColorSpaceSignature ColorSpace,
-                                                                 cmsToneCurve* const TransferFunctions[])
-{
-    return cmsCreateLinearizationDeviceLinkTHR(NULL, ColorSpace, TransferFunctions);
-}
-
 // Ink-limiting algorithm
 //
 //  Sum = C + M + Y + K
@@ -389,7 +371,7 @@ int InkLimitingSampler(cmsContext ContextID, register const cmsUInt16Number In[]
 
 // This is a devicelink operating in CMYK for ink-limiting
 
-cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLinkTHR(cmsContext ContextID,
+cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsContext ContextID,
                                                      cmsColorSpaceSignature ColorSpace,
                                                      cmsFloat64Number Limit)
 {
@@ -463,19 +445,14 @@ Error:
     return NULL;
 }
 
-cmsHPROFILE CMSEXPORT cmsCreateInkLimitingDeviceLink(cmsColorSpaceSignature ColorSpace, cmsFloat64Number Limit)
-{
-    return cmsCreateInkLimitingDeviceLinkTHR(NULL, ColorSpace, Limit);
-}
-
 
 // Creates a fake Lab identity.
-cmsHPROFILE CMSEXPORT cmsCreateLab2ProfileTHR(cmsContext ContextID, const cmsCIExyY* WhitePoint)
+cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint)
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
 
-    hProfile = cmsCreateRGBProfileTHR(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 2.1);
@@ -510,19 +487,14 @@ Error:
 }
 
 
-cmsHPROFILE CMSEXPORT cmsCreateLab2Profile(const cmsCIExyY* WhitePoint)
-{
-    return cmsCreateLab2ProfileTHR(NULL, WhitePoint);
-}
-
 
 // Creates a fake Lab V4 identity.
-cmsHPROFILE CMSEXPORT cmsCreateLab4ProfileTHR(cmsContext ContextID, const cmsCIExyY* WhitePoint)
+cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint)
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
 
-    hProfile = cmsCreateRGBProfileTHR(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
+    hProfile = cmsCreateRGBProfile(ContextID, WhitePoint == NULL ? cmsD50_xyY(ContextID) : WhitePoint, NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 4.3);
@@ -556,19 +528,14 @@ Error:
     return NULL;
 }
 
-cmsHPROFILE CMSEXPORT cmsCreateLab4Profile(const cmsCIExyY* WhitePoint)
-{
-    return cmsCreateLab4ProfileTHR(NULL, WhitePoint);
-}
-
 
 // Creates a fake XYZ identity
-cmsHPROFILE CMSEXPORT cmsCreateXYZProfileTHR(cmsContext ContextID)
+cmsHPROFILE CMSEXPORT cmsCreateXYZProfile(cmsContext ContextID)
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
 
-    hProfile = cmsCreateRGBProfileTHR(ContextID, cmsD50_xyY(ContextID), NULL, NULL);
+    hProfile = cmsCreateRGBProfile(ContextID, cmsD50_xyY(ContextID), NULL, NULL);
     if (hProfile == NULL) return NULL;
 
     cmsSetProfileVersion(ContextID, hProfile, 4.3);
@@ -603,11 +570,6 @@ Error:
 }
 
 
-cmsHPROFILE CMSEXPORT cmsCreateXYZProfile(void)
-{
-    return cmsCreateXYZProfileTHR(NULL);
-}
-
 
 //sRGB Curves are defined by:
 //
@@ -639,7 +601,7 @@ cmsToneCurve* Build_sRGBGamma(cmsContext ContextID)
 }
 
 // Create the ICC virtual profile for sRGB space
-cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfileTHR(cmsContext ContextID)
+cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfile(cmsContext ContextID)
 {
        cmsCIExyY       D65 = { 0.3127, 0.3290, 1.0 };
        cmsCIExyYTRIPLE Rec709Primaries = {
@@ -654,7 +616,7 @@ cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfileTHR(cmsContext ContextID)
        Gamma22[0] = Gamma22[1] = Gamma22[2] = Build_sRGBGamma(ContextID);
        if (Gamma22[0] == NULL) return NULL;
 
-       hsRGB = cmsCreateRGBProfileTHR(ContextID, &D65, &Rec709Primaries, Gamma22);
+       hsRGB = cmsCreateRGBProfile(ContextID, &D65, &Rec709Primaries, Gamma22);
        cmsFreeToneCurve(ContextID, Gamma22[0]);
        if (hsRGB == NULL) return NULL;
 
@@ -664,11 +626,6 @@ cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfileTHR(cmsContext ContextID)
        }
 
        return hsRGB;
-}
-
-cmsHPROFILE CMSEXPORT cmsCreate_sRGBProfile(void)
-{
-    return cmsCreate_sRGBProfileTHR(NULL);
 }
 
 
@@ -724,14 +681,14 @@ int bchswSampler(cmsContext ContextID, register const cmsUInt16Number In[], regi
 // Creates an abstract profile operating in Lab space for Brightness,
 // contrast, Saturation and white point displacement
 
-cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfileTHR(cmsContext ContextID,
-                                                       cmsUInt32Number nLUTPoints,
-                                                       cmsFloat64Number Bright,
-                                                       cmsFloat64Number Contrast,
-                                                       cmsFloat64Number Hue,
-                                                       cmsFloat64Number Saturation,
-                                                       cmsUInt32Number TempSrc,
-                                                       cmsUInt32Number TempDest)
+cmsHPROFILE CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
+                                                    cmsUInt32Number nLUTPoints,
+                                                    cmsFloat64Number Bright,
+                                                    cmsFloat64Number Contrast,
+                                                    cmsFloat64Number Hue,
+                                                    cmsFloat64Number Saturation,
+                                                    cmsUInt32Number TempSrc,
+                                                    cmsUInt32Number TempDest)
 {
     cmsHPROFILE hICC;
     cmsPipeline* Pipeline;
@@ -810,21 +767,10 @@ Error:
 }
 
 
-CMSAPI cmsHPROFILE   CMSEXPORT cmsCreateBCHSWabstractProfile(cmsUInt32Number nLUTPoints,
-                                                             cmsFloat64Number Bright,
-                                                             cmsFloat64Number Contrast,
-                                                             cmsFloat64Number Hue,
-                                                             cmsFloat64Number Saturation,
-                                                             cmsUInt32Number TempSrc,
-                                                             cmsUInt32Number TempDest)
-{
-    return cmsCreateBCHSWabstractProfileTHR(NULL, nLUTPoints, Bright, Contrast, Hue, Saturation, TempSrc, TempDest);
-}
-
 
 // Creates a fake NULL profile. This profile return 1 channel as always 0.
 // Is useful only for gamut checking tricks
-cmsHPROFILE CMSEXPORT cmsCreateNULLProfileTHR(cmsContext ContextID)
+cmsHPROFILE CMSEXPORT cmsCreateNULLProfile(cmsContext ContextID)
 {
     cmsHPROFILE hProfile;
     cmsPipeline* LUT = NULL;
@@ -880,11 +826,6 @@ Error:
         cmsCloseProfile(ContextID, hProfile);
 
     return NULL;
-}
-
-cmsHPROFILE CMSEXPORT cmsCreateNULLProfile(void)
-{
-    return cmsCreateNULLProfileTHR(NULL);
 }
 
 

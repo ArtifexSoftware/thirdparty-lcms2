@@ -1047,7 +1047,7 @@ void Help(int level)
      fprintf(stderr, "%ci<profile> - Input profile (defaults to sRGB)\n", SW);
      fprintf(stderr, "%co<profile> - Output profile (defaults to sRGB)\n", SW);
 
-     PrintRenderingIntents();
+     PrintRenderingIntents(NULL);
 
 
      fprintf(stderr, "%cb - Black point compensation\n", SW);
@@ -1238,7 +1238,7 @@ void HandleSwitches(int argc, char *argv[])
 
 int main(int argc, char* argv[])
 {
-    InitUtils("jpgicc");
+    InitUtils(NULL, "jpgicc");
 
     HandleSwitches(argc, argv);
 

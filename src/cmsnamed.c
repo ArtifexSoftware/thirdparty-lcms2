@@ -180,7 +180,7 @@ cmsBool AddMLUBlock(cmsContext ContextID, cmsMLU* mlu, cmsUInt32Number size, con
 // compilers don't properly align beginning of strings
 
 static
-cmsUInt16Number strTo16(cmsContext ContextID, const char str[3])
+cmsUInt16Number strTo16(const char str[3])
 {
     const cmsUInt8Number* ptr8 = (const cmsUInt8Number*)str;
     cmsUInt16Number n = (cmsUInt16Number)(((cmsUInt16Number)ptr8[0] << 8) | ptr8[1]);
@@ -189,7 +189,7 @@ cmsUInt16Number strTo16(cmsContext ContextID, const char str[3])
 }
 
 static
-void strFrom16(cmsContext ContextID, char str[3], cmsUInt16Number n)
+void strFrom16(char str[3], cmsUInt16Number n)
 {
     str[0] = (char)(n >> 8);
     str[1] = (char)n;
@@ -203,8 +203,8 @@ cmsBool CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* mlu, const char L
     cmsUInt32Number i, len = (cmsUInt32Number) strlen(ASCIIString);
     wchar_t* WStr;
     cmsBool  rc;
-    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
-    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
+    cmsUInt16Number Lang  = strTo16(LanguageCode);
+    cmsUInt16Number Cntry = strTo16(CountryCode);
 
     if (mlu == NULL) return FALSE;
 
@@ -237,8 +237,8 @@ cmsUInt32Number mywcslen(const wchar_t *s)
 // Add a wide entry. Do not add any \0 terminator (ICC1v43_2010-12.pdf page 61)
 cmsBool  CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu, const char Language[3], const char Country[3], const wchar_t* WideString)
 {
-    cmsUInt16Number Lang  = strTo16(ContextID, Language);
-    cmsUInt16Number Cntry = strTo16(ContextID, Country);
+    cmsUInt16Number Lang  = strTo16(Language);
+    cmsUInt16Number Cntry = strTo16(Country);
     cmsUInt32Number len;
 
     if (mlu == NULL) return FALSE;
@@ -367,8 +367,9 @@ cmsUInt32Number CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu
     cmsUInt32Number  StrLen = 0;
     cmsUInt32Number ASCIIlen, i;
 
-    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
-    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
+    cmsUInt16Number Lang  = strTo16(LanguageCode);
+    cmsUInt16Number Cntry = strTo16(CountryCode);
+    cmsUNUSED_PARAMETER(ContextID);
 
     // Sanitize
     if (mlu == NULL) return 0;
@@ -411,8 +412,9 @@ cmsUInt32Number CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
     const wchar_t *Wide;
     cmsUInt32Number  StrLen = 0;
 
-    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
-    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
+    cmsUInt16Number Lang  = strTo16(LanguageCode);
+    cmsUInt16Number Cntry = strTo16(CountryCode);
+    cmsUNUSED_PARAMETER(ContextID);
 
     // Sanitize
     if (mlu == NULL) return 0;
@@ -444,9 +446,10 @@ CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU
 {
     const wchar_t *Wide;
 
-    cmsUInt16Number Lang  = strTo16(ContextID, LanguageCode);
-    cmsUInt16Number Cntry = strTo16(ContextID, CountryCode);
+    cmsUInt16Number Lang  = strTo16(LanguageCode);
+    cmsUInt16Number Cntry = strTo16(CountryCode);
     cmsUInt16Number ObtLang, ObtCode;
+    cmsUNUSED_PARAMETER(ContextID);
 
     // Sanitize
     if (mlu == NULL) return FALSE;
@@ -455,8 +458,8 @@ CMSAPI cmsBool CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU
     if (Wide == NULL) return FALSE;
 
     // Get used language and code
-    strFrom16(ContextID, ObtainedLanguage, ObtLang);
-    strFrom16(ContextID, ObtainedCountry, ObtCode);
+    strFrom16(ObtainedLanguage, ObtLang);
+    strFrom16(ObtainedCountry, ObtCode);
 
     return TRUE;
 }
@@ -479,6 +482,7 @@ cmsBool CMSEXPORT cmsMLUtranslationsCodes(cmsContext ContextID,
                                           char CountryCode[3])
 {
     _cmsMLUentry *entry;
+    cmsUNUSED_PARAMETER(ContextID);
 
     if (mlu == NULL) return FALSE;
 
@@ -486,8 +490,8 @@ cmsBool CMSEXPORT cmsMLUtranslationsCodes(cmsContext ContextID,
 
     entry = &mlu->Entries[idx];
 
-    strFrom16(ContextID, LanguageCode, entry->Language);
-    strFrom16(ContextID, CountryCode, entry->Country);
+    strFrom16(LanguageCode, entry->Language);
+    strFrom16(CountryCode, entry->Country);
 
     return TRUE;
 }

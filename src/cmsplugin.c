@@ -404,6 +404,7 @@ cmsS15Fixed16Number CMSEXPORT _cmsDoubleTo15Fixed16(cmsContext ContextID, cmsFlo
 
 void CMSEXPORT _cmsDecodeDateTimeNumber(cmsContext ContextID, const cmsDateTimeNumber *Source, struct tm *Dest)
 {
+    cmsUNUSED_PARAMETER(ContextID);
 
     _cmsAssert(Dest != NULL);
     _cmsAssert(Source != NULL);
@@ -421,6 +422,8 @@ void CMSEXPORT _cmsDecodeDateTimeNumber(cmsContext ContextID, const cmsDateTimeN
 
 void CMSEXPORT _cmsEncodeDateTimeNumber(cmsContext ContextID, cmsDateTimeNumber *Dest, const struct tm *Source)
 {
+    cmsUNUSED_PARAMETER(ContextID);
+
     _cmsAssert(Dest != NULL);
     _cmsAssert(Source != NULL);
 
@@ -545,12 +548,7 @@ void* _cmsPluginMalloc(cmsContext ContextID, cmsUInt32Number size)
 
 
 // Main plug-in dispatcher
-cmsBool CMSEXPORT cmsPlugin(void* Plug_in)
-{
-    return cmsPluginTHR(NULL, Plug_in);
-}
-
-cmsBool CMSEXPORT cmsPluginTHR(cmsContext id, void* Plug_in)
+cmsBool CMSEXPORT cmsPlugin(cmsContext id, void* Plug_in)
 {
     cmsPluginBase* Plugin;
 
@@ -630,14 +628,6 @@ cmsBool CMSEXPORT cmsPluginTHR(cmsContext id, void* Plug_in)
 
     // Keep a reference to the plug-in
     return TRUE;
-}
-
-
-// Revert all plug-ins to default
-void CMSEXPORT cmsUnregisterPlugins(cmsContext ContextID)
-{
-    cmsUNUSED_PARAMETER(ContextID);
-    cmsUnregisterPluginsTHR(NULL);
 }
 
 
@@ -730,10 +720,10 @@ void* _cmsContextGetClientChunk(cmsContext ContextID, _cmsMemoryClient mc)
 
 // This function returns the given context its default pristine state,
 // as no plug-ins were declared. There is no way to unregister a single
-// plug-in, as a single call to cmsPluginTHR() function may register
+// plug-in, as a single call to cmsPlugin() function may register
 // many different plug-ins simultaneously, then there is no way to
 // identify which plug-in to unregister.
-void CMSEXPORT cmsUnregisterPluginsTHR(cmsContext ContextID)
+void CMSEXPORT cmsUnregisterPlugins(cmsContext ContextID)
 {
     _cmsRegisterMemHandlerPlugin(ContextID, NULL);
     _cmsRegisterInterpPlugin(ContextID, NULL);
@@ -853,7 +843,7 @@ cmsContext CMSEXPORT cmsCreateContext(void* Plugin, void* UserData)
     _cmsAllocMutexPluginChunk(ctx, NULL);
 
     // Setup the plug-ins
-    if (!cmsPluginTHR(ctx, Plugin)) {
+    if (!cmsPlugin(ctx, Plugin)) {
 
         cmsDeleteContext(ctx);
         return NULL;
@@ -962,7 +952,7 @@ void CMSEXPORT cmsDeleteContext(cmsContext ContextID)
         fakeContext.chunks[MemPlugin]   = &fakeContext.DefaultMemoryManager;
 
         // Get rid of plugins
-        cmsUnregisterPluginsTHR(ContextID);
+        cmsUnregisterPlugins(ContextID);
 
         // Since all memory is allocated in the private pool, all what we need to do is destroy the pool
         if (ctx -> MemPool != NULL)

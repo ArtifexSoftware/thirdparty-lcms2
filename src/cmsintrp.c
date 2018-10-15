@@ -198,6 +198,7 @@ void LinLerp1D(cmsContext ContextID, register const cmsUInt16Number Value[],
     int cell0, rest;
     int val3;
     const cmsUInt16Number* LutTable = (cmsUInt16Number*) p ->Table;
+    cmsUNUSED_PARAMETER(ContextID);
 
     // if last value...
     if (Value[0] == 0xffff) {
@@ -273,6 +274,7 @@ void Eval1Input(cmsContext ContextID, register const cmsUInt16Number Input[],
        int v;
        cmsUInt32Number OutChan;
        const cmsUInt16Number* LutTable = (cmsUInt16Number*) p16 -> Table;
+       cmsUNUSED_PARAMETER(ContextID);
 
        v = Input[0] * p16 -> Domain[0];
        fk = _cmsToFixedDomain(v);
@@ -862,6 +864,7 @@ void Eval4Inputs(cmsContext ContextID, register const cmsUInt16Number Input[],
     cmsS15Fixed16Number    c0, c1, c2, c3, Rest;
     cmsUInt32Number        OutChan;
     cmsUInt16Number        Tmp1[MAX_STAGE_CHANNELS], Tmp2[MAX_STAGE_CHANNELS];
+    cmsUNUSED_PARAMETER(ContextID);
 
 
     fk  = _cmsToFixedDomain((int) Input[0] * p16 -> Domain[0]);

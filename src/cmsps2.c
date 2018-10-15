@@ -831,8 +831,8 @@ static
 cmsToneCurve* ExtractGray2Y(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Intent)
 {
     cmsToneCurve* Out = cmsBuildTabulatedToneCurve16(ContextID, 256, NULL);
-    cmsHPROFILE hXYZ  = cmsCreateXYZProfile();
-    cmsHTRANSFORM xform = cmsCreateTransformTHR(ContextID, hProfile, TYPE_GRAY_8, hXYZ, TYPE_XYZ_DBL, Intent, cmsFLAGS_NOOPTIMIZE);
+    cmsHPROFILE hXYZ  = cmsCreateXYZProfile(ContextID);
+    cmsHTRANSFORM xform = cmsCreateTransform(ContextID, hProfile, TYPE_GRAY_8, hXYZ, TYPE_XYZ_DBL, Intent, cmsFLAGS_NOOPTIMIZE);
     int i;
 
     if (Out != NULL && xform != NULL) {
@@ -878,12 +878,12 @@ int WriteInputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, c
     cmsDetectBlackPoint(ContextID, &BlackPointAdaptedToD50, hProfile, Intent, 0);
 
     // Adjust output to Lab4
-    hLab = cmsCreateLab4ProfileTHR(ContextID, NULL);
+    hLab = cmsCreateLab4Profile(ContextID, NULL);
 
     Profiles[0] = hProfile;
     Profiles[1] = hLab;
 
-    xform = cmsCreateMultiprofileTransform(Profiles, 2,  InputFormat, TYPE_Lab_DBL, Intent, 0);
+    xform = cmsCreateMultiprofileTransform(ContextID, Profiles, 2,  InputFormat, TYPE_Lab_DBL, Intent, 0);
     cmsCloseProfile(ContextID, hLab);
 
     if (xform == NULL) {
@@ -999,8 +999,8 @@ int WriteNamedColorCSA(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     char ColorName[cmsMAX_PATH];
     cmsNAMEDCOLORLIST* NamedColorList;
 
-    hLab  = cmsCreateLab4ProfileTHR(ContextID, NULL);
-    xform = cmsCreateTransform(hNamedColor, TYPE_NAMED_COLOR_INDEX, hLab, TYPE_Lab_DBL, Intent, 0);
+    hLab  = cmsCreateLab4Profile(ContextID, NULL);
+    xform = cmsCreateTransform(ContextID, hNamedColor, TYPE_NAMED_COLOR_INDEX, hLab, TYPE_Lab_DBL, Intent, 0);
     if (xform == NULL) return 0;
 
     NamedColorList = cmsGetNamedColorList(xform);
@@ -1291,7 +1291,7 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
     cmsColorSpaceSignature ColorSpace;
 
 
-    hLab = cmsCreateLab4ProfileTHR(ContextID, NULL);
+    hLab = cmsCreateLab4Profile(ContextID, NULL);
     if (hLab == NULL) return 0;
 
     OutputFormat = cmsFormatterForColorspaceOfProfile(ContextID, hProfile, 2, FALSE);
@@ -1310,7 +1310,7 @@ int WriteOutputLUT(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hProfile, 
     Profiles[0] = hLab;
     Profiles[1] = hProfile;
 
-    xform = cmsCreateMultiprofileTransformTHR(ContextID,
+    xform = cmsCreateMultiprofileTransform(ContextID,
                                               Profiles, 2, TYPE_Lab_DBL,
                                               OutputFormat, RelativeEncodingIntent, 0);
     cmsCloseProfile(ContextID, hLab);
@@ -1422,7 +1422,7 @@ int WriteNamedColorCRD(cmsContext ContextID, cmsIOHANDLER* m, cmsHPROFILE hNamed
     nColorant    = T_CHANNELS(OutputFormat);
 
 
-    xform = cmsCreateTransform(hNamedColor, TYPE_NAMED_COLOR_INDEX, NULL, OutputFormat, Intent, dwFlags);
+    xform = cmsCreateTransform(ContextID, hNamedColor, TYPE_NAMED_COLOR_INDEX, NULL, OutputFormat, Intent, dwFlags);
     if (xform == NULL) return 0;
 
 

@@ -254,9 +254,9 @@ void FatalErrorQuit(cmsContext ContextID, cmsUInt32Number ErrorCode, const char 
 }
 
 
-void ResetFatalError(void)
+void ResetFatalError(cmsContext ContextID)
 {
-    cmsSetLogErrorHandler(FatalErrorQuit);
+    cmsSetLogErrorHandler(ContextID, FatalErrorQuit);
 }
 
 
@@ -375,7 +375,7 @@ cmsHPROFILE Create_AboveRGB(void)
     Curve[0] = Curve[1] = Curve[2] = cmsBuildGamma(DbgThread(), 2.19921875);
 
     cmsWhitePointFromTemp(DbgThread(), &D65, 6504);
-    hProfile = cmsCreateRGBProfileTHR(DbgThread(), &D65, &Primaries, Curve);
+    hProfile = cmsCreateRGBProfile(DbgThread(), &D65, &Primaries, Curve);
     cmsFreeToneCurve(DbgThread(), Curve[0]);
 
     return hProfile;
@@ -389,7 +389,7 @@ cmsHPROFILE Create_Gray22(void)
     cmsToneCurve* Curve = cmsBuildGamma(DbgThread(), 2.2);
     if (Curve == NULL) return NULL;
 
-    hProfile = cmsCreateGrayProfileTHR(DbgThread(), cmsD50_xyY(DbgThread()), Curve);
+    hProfile = cmsCreateGrayProfile(DbgThread(), cmsD50_xyY(DbgThread()), Curve);
     cmsFreeToneCurve(DbgThread(), Curve);
 
     return hProfile;
@@ -403,7 +403,7 @@ cmsHPROFILE Create_Gray30(void)
     cmsToneCurve* Curve = cmsBuildGamma(DbgThread(), 3.0);
     if (Curve == NULL) return NULL;
 
-    hProfile = cmsCreateGrayProfileTHR(DbgThread(), cmsD50_xyY(DbgThread()), Curve);
+    hProfile = cmsCreateGrayProfile(DbgThread(), cmsD50_xyY(DbgThread()), Curve);
     cmsFreeToneCurve(DbgThread(), Curve);
 
     return hProfile;
@@ -417,7 +417,7 @@ cmsHPROFILE Create_GrayLab(void)
     cmsToneCurve* Curve = cmsBuildGamma(DbgThread(), 1.0);
     if (Curve == NULL) return NULL;
 
-    hProfile = cmsCreateGrayProfileTHR(DbgThread(), cmsD50_xyY(DbgThread()), Curve);
+    hProfile = cmsCreateGrayProfile(DbgThread(), cmsD50_xyY(DbgThread()), Curve);
     cmsFreeToneCurve(DbgThread(), Curve);
 
     cmsSetPCS(DbgThread(), hProfile, cmsSigLabData);
@@ -438,7 +438,7 @@ cmsHPROFILE Create_CMYK_DeviceLink(void)
     Tab[2] = Curve;
     Tab[3] = Curve;
 
-    hProfile = cmsCreateLinearizationDeviceLinkTHR(DbgThread(), cmsSigCmykData, Tab);
+    hProfile = cmsCreateLinearizationDeviceLink(DbgThread(), cmsSigCmykData, Tab);
     if (hProfile == NULL) return NULL;
 
     cmsFreeToneCurve(DbgThread(), Curve);
@@ -542,21 +542,21 @@ cmsHPROFILE CreateFakeCMYK(cmsFloat64Number InkLimit, cmsBool lUseAboveRGB)
     cmsHPROFILE hLab, hsRGB, hLimit;
     cmsUInt32Number cmykfrm;
 
+    ContextID = DbgThread();
 
     if (lUseAboveRGB)
         hsRGB = Create_AboveRGB();
     else
-       hsRGB  = cmsCreate_sRGBProfile();
+       hsRGB  = cmsCreate_sRGBProfile(ContextID);
 
-    hLab   = cmsCreateLab4Profile(NULL);
-    hLimit = cmsCreateInkLimitingDeviceLink(cmsSigCmykData, InkLimit);
+    hLab   = cmsCreateLab4Profile(ContextID, NULL);
+    hLimit = cmsCreateInkLimitingDeviceLink(ContextID, cmsSigCmykData, InkLimit);
 
     cmykfrm = FLOAT_SH(1) | BYTES_SH(0)|CHANNELS_SH(4);
-    p.hLab2sRGB = cmsCreateTransform(hLab,  TYPE_Lab_16,  hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-    p.sRGB2Lab  = cmsCreateTransform(hsRGB, TYPE_RGB_DBL, hLab,  TYPE_Lab_16,  INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
-    p.hIlimit   = cmsCreateTransform(hLimit, cmykfrm, NULL, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    p.hLab2sRGB = cmsCreateTransform(ContextID, hLab,  TYPE_Lab_16,  hsRGB, TYPE_RGB_DBL, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    p.sRGB2Lab  = cmsCreateTransform(ContextID, hsRGB, TYPE_RGB_DBL, hLab,  TYPE_Lab_16,  INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
+    p.hIlimit   = cmsCreateTransform(ContextID, hLimit, cmykfrm, NULL, TYPE_CMYK_16, INTENT_PERCEPTUAL, cmsFLAGS_NOOPTIMIZE|cmsFLAGS_NOCACHE);
 
-    ContextID = DbgThread();
     cmsCloseProfile(ContextID, hLab); cmsCloseProfile(ContextID, hsRGB); cmsCloseProfile(ContextID, hLimit);
 
     hICC = cmsCreateProfilePlaceholder(ContextID);
@@ -618,7 +618,7 @@ cmsInt32Number OneVirtual(cmsHPROFILE h, const char* SubTestTxt, const char* Fil
     if (!cmsSaveProfileToFile(DbgThread(), h, FileName)) return 0;
     cmsCloseProfile(DbgThread(), h);
 
-    h = cmsOpenProfileFromFile( FileName, "r");
+    h = cmsOpenProfileFromFile(DbgThread(), FileName, "r");
     if (h == NULL) return 0;
 
     cmsCloseProfile(DbgThread(), h);
@@ -634,7 +634,7 @@ cmsInt32Number CreateTestProfiles(void)
 {
     cmsHPROFILE h;
 
-    h = cmsCreate_sRGBProfileTHR(DbgThread());
+    h = cmsCreate_sRGBProfile(DbgThread());
     if (!OneVirtual(h, "sRGB profile", "sRGBlcms2.icc")) return 0;
 
     // ----
@@ -663,33 +663,33 @@ cmsInt32Number CreateTestProfiles(void)
     if (!OneVirtual(h, "Linearization profile", "linlcms2.icc")) return 0;
 
     // -------
-    h = cmsCreateInkLimitingDeviceLinkTHR(DbgThread(), cmsSigCmykData, 150);
+    h = cmsCreateInkLimitingDeviceLink(DbgThread(), cmsSigCmykData, 150);
     if (h == NULL) return 0;
     if (!OneVirtual(h, "Ink-limiting profile", "limitlcms2.icc")) return 0;
 
     // ------
 
-    h = cmsCreateLab2ProfileTHR(DbgThread(), NULL);
+    h = cmsCreateLab2Profile(DbgThread(), NULL);
     if (!OneVirtual(h, "Lab 2 identity profile", "labv2lcms2.icc")) return 0;
 
     // ----
 
-    h = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    h = cmsCreateLab4Profile(DbgThread(), NULL);
     if (!OneVirtual(h, "Lab 4 identity profile", "labv4lcms2.icc")) return 0;
 
     // ----
 
-    h = cmsCreateXYZProfileTHR(DbgThread());
+    h = cmsCreateXYZProfile(DbgThread());
     if (!OneVirtual(h, "XYZ identity profile", "xyzlcms2.icc")) return 0;
 
     // ----
 
-    h = cmsCreateNULLProfileTHR(DbgThread());
+    h = cmsCreateNULLProfile(DbgThread());
     if (!OneVirtual(h, "NULL profile", "nullcms2.icc")) return 0;
 
     // ---
 
-    h = cmsCreateBCHSWabstractProfileTHR(DbgThread(), 17, 0, 0, 0, 0, 5000, 6000);
+    h = cmsCreateBCHSWabstractProfile(DbgThread(), 17, 0, 0, 0, 0, 5000, 6000);
     if (!OneVirtual(h, "BCHS profile", "bchslcms2.icc")) return 0;
 
     // ---
@@ -699,7 +699,7 @@ cmsInt32Number CreateTestProfiles(void)
 
     // ---
 
-    h = cmsCreateBCHSWabstractProfileTHR(DbgThread(), 17, 0, 1.2, 0, 3, 5000, 5000);
+    h = cmsCreateBCHSWabstractProfile(DbgThread(), 17, 0, 1.2, 0, 3, 5000, 5000);
     if (!OneVirtual(h, "Brightness", "brightness.icc")) return 0;
     return 1;
 }
@@ -1593,7 +1593,7 @@ cmsInt32Number CheckReverseInterpolation3x3(void)
     return (max <= FLOAT_PRECISSION);
 
 Error:
-    cmsPipelineFree(Lut);
+    cmsPipelineFree(DbgThread(), Lut);
     return 0;
 }
 
@@ -1695,7 +1695,7 @@ cmsInt32Number CheckReverseInterpolation4x3(void)
     return (max <= FLOAT_PRECISSION);
 
 Error:
-    cmsPipelineFree(Lut);
+    cmsPipelineFree(DbgThread(), Lut);
     return 0;
 }
 
@@ -3633,7 +3633,7 @@ cmsInt32Number CheckMLU(void)
 
     // Check profile IO
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "mlucheck.icc", "w");
+    h = cmsOpenProfileFromFile(DbgThread(), "mlucheck.icc", "w");
 
     cmsSetProfileVersion(DbgThread(), h, 4.3);
 
@@ -3642,7 +3642,7 @@ cmsInt32Number CheckMLU(void)
     cmsMLUfree(DbgThread(), mlu2);
 
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "mlucheck.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "mlucheck.icc", "r");
 
     mlu3 = (cmsMLU *) cmsReadTag(DbgThread(), h, cmsSigProfileDescriptionTag);
     if (mlu3 == NULL) { Fail("Profile didn't get the MLU\n"); rc = 0; goto Error; }
@@ -3720,14 +3720,14 @@ cmsInt32Number CheckNamedColorList(void)
         if (strcmp(Name, CheckName) != 0) {rc = 0; Fail("Invalid Name"); goto Error; };
     }
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "namedcol.icc", "w");
+    h = cmsOpenProfileFromFile(DbgThread(), "namedcol.icc", "w");
     if (h == NULL) return 0;
     if (!cmsWriteTag(DbgThread(), h, cmsSigNamedColor2Tag, nc)) return 0;
     cmsCloseProfile(DbgThread(), h);
     cmsFreeNamedColorList(DbgThread(), nc);
     nc = NULL;
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "namedcol.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "namedcol.icc", "r");
     nc2 = (cmsNAMEDCOLORLIST *) cmsReadTag(DbgThread(), h, cmsSigNamedColor2Tag);
 
     if (cmsNamedColorCount(DbgThread(), nc2) != 4096) { rc = 0; Fail("Invalid count"); goto Error; }
@@ -4208,11 +4208,12 @@ cmsInt32Number CheckOneRGB_double(cmsHTRANSFORM xform, cmsFloat64Number R, cmsFl
 static
 cmsInt32Number CheckChangeBufferFormat(void)
 {
-    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile(DbgThread());
     cmsHTRANSFORM xform;
+    cmsHTRANSFORM xform2;
 
 
-    xform = cmsCreateTransform(hsRGB, TYPE_RGB_16, hsRGB, TYPE_RGB_16, INTENT_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(DbgThread(), hsRGB, TYPE_RGB_16, hsRGB, TYPE_RGB_16, INTENT_PERCEPTUAL, 0);
     cmsCloseProfile(DbgThread(), hsRGB);
     if (xform == NULL) return 0;
 
@@ -4221,17 +4222,20 @@ cmsInt32Number CheckChangeBufferFormat(void)
     if (!CheckOneRGB(xform, 120, 0, 0, 120, 0, 0)) return 0;
     if (!CheckOneRGB(xform, 0, 222, 255, 0, 222, 255)) return 0;
 
+    xform2 = cmsCloneTransformChangingFormats(DbgThread(), xform, TYPE_BGR_16, TYPE_RGB_16);
+    if (!xform2) return 0;
 
-    if (!cmsChangeBuffersFormat(DbgThread(), xform, TYPE_BGR_16, TYPE_RGB_16)) return 0;
+    if (!CheckOneRGB(xform2, 0, 0, 123, 123, 0, 0)) return 0;
+    if (!CheckOneRGB(xform2, 154, 234, 0, 0, 234, 154)) return 0;
 
-    if (!CheckOneRGB(xform, 0, 0, 123, 123, 0, 0)) return 0;
-    if (!CheckOneRGB(xform, 154, 234, 0, 0, 234, 154)) return 0;
+    cmsDeleteTransform(DbgThread(),xform2);
+    xform2 = cmsCloneTransformChangingFormats(DbgThread(), xform, TYPE_RGB_DBL, TYPE_RGB_DBL);
+    if (!xform2) return 0;
 
-    if (!cmsChangeBuffersFormat(DbgThread(), xform, TYPE_RGB_DBL, TYPE_RGB_DBL)) return 0;
+    if (!CheckOneRGB_double(xform2, 0.20, 0, 0, 0.20, 0, 0)) return 0;
+    if (!CheckOneRGB_double(xform2, 0, 0.9, 1, 0, 0.9, 1)) return 0;
 
-    if (!CheckOneRGB_double(xform, 0.20, 0, 0, 0.20, 0, 0)) return 0;
-    if (!CheckOneRGB_double(xform, 0, 0.9, 1, 0, 0.9, 1)) return 0;
-
+    cmsDeleteTransform(DbgThread(),xform2);
     cmsDeleteTransform(DbgThread(),xform);
 
 return 1;
@@ -5391,7 +5395,7 @@ cmsInt32Number CheckProfileCreation(void)
         if (Pass == 1) {
             cmsSaveProfileToFile(DbgThread(), h, "alltags.icc");
             cmsCloseProfile(DbgThread(), h);
-            h = cmsOpenProfileFromFileTHR(DbgThread(), "alltags.icc", "r");
+            h = cmsOpenProfileFromFile(DbgThread(), "alltags.icc", "r");
         }
 
     }
@@ -5410,7 +5414,7 @@ cmsInt32Number CheckProfileCreation(void)
     return 1;
 
 Error:
-    cmsCloseProfile(h);
+    cmsCloseProfile(DbgThread(), h);
     remove("alltags.icc");
     return 0;
 }
@@ -5439,7 +5443,7 @@ cmsInt32Number CheckVersionHeaderWriting(void)
       cmsSaveProfileToFile(DbgThread(), h, "versions.icc");
       cmsCloseProfile(DbgThread(), h);
 
-      h = cmsOpenProfileFromFileTHR(DbgThread(), "versions.icc", "r");
+      h = cmsOpenProfileFromFile(DbgThread(), "versions.icc", "r");
 
       // Only the first 3 digits are significant
       if (fabs(cmsGetProfileVersion(DbgThread(), h) - test_versions[index]) > 0.005) {
@@ -5463,7 +5467,7 @@ cmsInt32Number CheckMultilocalizedProfile(void)
     cmsMLU *Pt;
     char Buffer[256];
 
-    hProfile = cmsOpenProfileFromFile( "crayons.icc", "r");
+    hProfile = cmsOpenProfileFromFile(DbgThread(), "crayons.icc", "r");
 
     Pt = (cmsMLU *) cmsReadTag(DbgThread(), hProfile, cmsSigProfileDescriptionTag);
     cmsMLUgetASCII(DbgThread(), Pt, "en", "GB", Buffer, 256);
@@ -5497,56 +5501,56 @@ cmsInt32Number CheckBadProfiles(void)
 {
     cmsHPROFILE h;
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "IDoNotExist.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "IDoNotExist.icc", "r");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "IAmIllFormed*.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "IAmIllFormed*.icc", "r");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
     // No profile name given
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "", "r");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "..", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "..", "r");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "IHaveBadAccessMode.icc", "@");
+    h = cmsOpenProfileFromFile(DbgThread(), "IHaveBadAccessMode.icc", "@");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "bad.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "bad.icc", "r");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-     h = cmsOpenProfileFromFileTHR(DbgThread(), "toosmall.icc", "r");
+     h = cmsOpenProfileFromFile(DbgThread(), "toosmall.icc", "r");
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-    h = cmsOpenProfileFromMemTHR(DbgThread(), NULL, 3);
+    h = cmsOpenProfileFromMem(DbgThread(), NULL, 3);
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
     }
 
-    h = cmsOpenProfileFromMemTHR(DbgThread(), "123", 3);
+    h = cmsOpenProfileFromMem(DbgThread(), "123", 3);
     if (h != NULL) {
         cmsCloseProfile(DbgThread(), h);
         return 0;
@@ -5563,9 +5567,9 @@ cmsInt32Number CheckErrReportingOnBadProfiles(void)
 {
     cmsInt32Number rc;
 
-    cmsSetLogErrorHandler(ErrorReportingFunction);
+    cmsSetLogErrorHandler(DbgThread(), ErrorReportingFunction);
     rc = CheckBadProfiles();
-    cmsSetLogErrorHandler(FatalErrorQuit);
+    cmsSetLogErrorHandler(DbgThread(), FatalErrorQuit);
 
     // Reset the error state
     TrappedError = FALSE;
@@ -5576,10 +5580,10 @@ cmsInt32Number CheckErrReportingOnBadProfiles(void)
 static
 cmsInt32Number CheckBadTransforms(void)
 {
-    cmsHPROFILE h1 = cmsCreate_sRGBProfile();
+    cmsHPROFILE h1 = cmsCreate_sRGBProfile(DbgThread());
     cmsHTRANSFORM x1;
 
-    x1 = cmsCreateTransform(NULL, 0, NULL, 0, 0, 0);
+    x1 = cmsCreateTransform(DbgThread(), NULL, 0, NULL, 0, 0, 0);
     if (x1 != NULL) {
         cmsDeleteTransform(DbgThread(), x1);
         return 0;
@@ -5587,26 +5591,26 @@ cmsInt32Number CheckBadTransforms(void)
 
 
 
-    x1 = cmsCreateTransform(h1, TYPE_RGB_8, h1, TYPE_RGB_8, 12345, 0);
+    x1 = cmsCreateTransform(DbgThread(), h1, TYPE_RGB_8, h1, TYPE_RGB_8, 12345, 0);
     if (x1 != NULL) {
         cmsDeleteTransform(DbgThread(), x1);
         return 0;
     }
 
-    x1 = cmsCreateTransform(h1, TYPE_CMYK_8, h1, TYPE_RGB_8, 0, 0);
+    x1 = cmsCreateTransform(DbgThread(), h1, TYPE_CMYK_8, h1, TYPE_RGB_8, 0, 0);
     if (x1 != NULL) {
         cmsDeleteTransform(DbgThread(), x1);
         return 0;
     }
 
-    x1 = cmsCreateTransform(h1, TYPE_RGB_8, h1, TYPE_CMYK_8, 1, 0);
+    x1 = cmsCreateTransform(DbgThread(), h1, TYPE_RGB_8, h1, TYPE_CMYK_8, 1, 0);
     if (x1 != NULL) {
         cmsDeleteTransform(DbgThread(), x1);
         return 0;
     }
 
     // sRGB does its output as XYZ!
-    x1 = cmsCreateTransform(h1, TYPE_RGB_8, NULL, TYPE_Lab_8, 1, 0);
+    x1 = cmsCreateTransform(DbgThread(), h1, TYPE_RGB_8, NULL, TYPE_Lab_8, 1, 0);
     if (x1 != NULL) {
         cmsDeleteTransform(DbgThread(), x1);
         return 0;
@@ -5617,10 +5621,10 @@ cmsInt32Number CheckBadTransforms(void)
 
     {
 
-    cmsHPROFILE hp1 = cmsOpenProfileFromFile( "test1.icc", "r");
-    cmsHPROFILE hp2 = cmsCreate_sRGBProfile();
+    cmsHPROFILE hp1 = cmsOpenProfileFromFile(DbgThread(),  "test1.icc", "r");
+    cmsHPROFILE hp2 = cmsCreate_sRGBProfile(DbgThread());
 
-    x1 = cmsCreateTransform(hp1, TYPE_BGR_8, hp2, TYPE_BGR_8, INTENT_PERCEPTUAL, 0);
+    x1 = cmsCreateTransform(DbgThread(), hp1, TYPE_BGR_8, hp2, TYPE_BGR_8, INTENT_PERCEPTUAL, 0);
 
     cmsCloseProfile(DbgThread(), hp1); cmsCloseProfile(DbgThread(), hp2);
     if (x1 != NULL) {
@@ -5638,9 +5642,9 @@ cmsInt32Number CheckErrReportingOnBadTransforms(void)
 {
     cmsInt32Number rc;
 
-    cmsSetLogErrorHandler(ErrorReportingFunction);
+    cmsSetLogErrorHandler(DbgThread(), ErrorReportingFunction);
     rc = CheckBadTransforms();
-    cmsSetLogErrorHandler(FatalErrorQuit);
+    cmsSetLogErrorHandler(DbgThread(), FatalErrorQuit);
 
     // Reset the error state
     TrappedError = FALSE;
@@ -5854,31 +5858,31 @@ cmsInt32Number CheckCurvesOnlyTransforms(void)
     c2 = cmsBuildGamma(DbgThread(), 1/2.2);
     c3 = cmsBuildGamma(DbgThread(), 4.84);
 
-    h1 = cmsCreateLinearizationDeviceLinkTHR(DbgThread(), cmsSigGrayData, &c1);
-    h2 = cmsCreateLinearizationDeviceLinkTHR(DbgThread(), cmsSigGrayData, &c2);
-    h3 = cmsCreateLinearizationDeviceLinkTHR(DbgThread(), cmsSigGrayData, &c3);
+    h1 = cmsCreateLinearizationDeviceLink(DbgThread(), cmsSigGrayData, &c1);
+    h2 = cmsCreateLinearizationDeviceLink(DbgThread(), cmsSigGrayData, &c2);
+    h3 = cmsCreateLinearizationDeviceLink(DbgThread(), cmsSigGrayData, &c3);
 
     SubTest("Gray float optimizeable transform");
-    xform1 = cmsCreateTransform(h1, TYPE_GRAY_FLT, h2, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(DbgThread(), h1, TYPE_GRAY_FLT, h2, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
     rc &= CheckFloatlinearXFORM(xform1, 1);
     cmsDeleteTransform(DbgThread(), xform1);
     if (rc == 0) goto Error;
 
     SubTest("Gray 8 optimizeable transform");
-    xform1 = cmsCreateTransform(h1, TYPE_GRAY_8, h2, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(DbgThread(), h1, TYPE_GRAY_8, h2, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
     rc &= Check8linearXFORM(xform1, 1);
     cmsDeleteTransform(DbgThread(), xform1);
     if (rc == 0) goto Error;
 
     SubTest("Gray 16 optimizeable transform");
-    xform1 = cmsCreateTransform(h1, TYPE_GRAY_16, h2, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(DbgThread(), h1, TYPE_GRAY_16, h2, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
     rc &= Check16linearXFORM(xform1, 1);
     cmsDeleteTransform(DbgThread(), xform1);
     if (rc == 0) goto Error;
 
     SubTest("Gray float non-optimizeable transform");
-    xform1 = cmsCreateTransform(h1, TYPE_GRAY_FLT, h1, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
-    xform2 = cmsCreateTransform(h3, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(DbgThread(), h1, TYPE_GRAY_FLT, h1, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
+    xform2 = cmsCreateTransform(DbgThread(), h3, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, 0);
 
     rc &= CompareFloatXFORM(xform1, xform2, 1);
     cmsDeleteTransform(DbgThread(), xform1);
@@ -5886,8 +5890,8 @@ cmsInt32Number CheckCurvesOnlyTransforms(void)
     if (rc == 0) goto Error;
 
     SubTest("Gray 8 non-optimizeable transform");
-    xform1 = cmsCreateTransform(h1, TYPE_GRAY_8, h1, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
-    xform2 = cmsCreateTransform(h3, TYPE_GRAY_8, NULL, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(DbgThread(), h1, TYPE_GRAY_8, h1, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
+    xform2 = cmsCreateTransform(DbgThread(), h3, TYPE_GRAY_8, NULL, TYPE_GRAY_8, INTENT_PERCEPTUAL, 0);
 
     rc &= Compare8bitXFORM(xform1, xform2, 1);
     cmsDeleteTransform(DbgThread(), xform1);
@@ -5896,8 +5900,8 @@ cmsInt32Number CheckCurvesOnlyTransforms(void)
 
 
     SubTest("Gray 16 non-optimizeable transform");
-    xform1 = cmsCreateTransform(h1, TYPE_GRAY_16, h1, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
-    xform2 = cmsCreateTransform(h3, TYPE_GRAY_16, NULL, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
+    xform1 = cmsCreateTransform(DbgThread(), h1, TYPE_GRAY_16, h1, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
+    xform2 = cmsCreateTransform(DbgThread(), h3, TYPE_GRAY_16, NULL, TYPE_GRAY_16, INTENT_PERCEPTUAL, 0);
 
     rc &= Compare16bitXFORM(xform1, xform2, 1);
     cmsDeleteTransform(DbgThread(), xform1);
@@ -5972,7 +5976,7 @@ cmsInt32Number OneTrivialLab(cmsHPROFILE hLab1, cmsHPROFILE hLab2, const char* t
     cmsInt32Number rc;
 
     SubTest(txt);
-    xform = cmsCreateTransformTHR(DbgThread(), hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hLab1); cmsCloseProfile(DbgThread(), hLab2);
 
     rc = CheckSeveralLab(xform);
@@ -5984,10 +5988,10 @@ cmsInt32Number OneTrivialLab(cmsHPROFILE hLab1, cmsHPROFILE hLab2, const char* t
 static
 cmsInt32Number CheckFloatLabTransforms(void)
 {
-    return OneTrivialLab(cmsCreateLab4ProfileTHR(DbgThread(), NULL), cmsCreateLab4ProfileTHR(DbgThread(), NULL),  "Lab4/Lab4") &&
-           OneTrivialLab(cmsCreateLab2ProfileTHR(DbgThread(), NULL), cmsCreateLab2ProfileTHR(DbgThread(), NULL),  "Lab2/Lab2") &&
-           OneTrivialLab(cmsCreateLab4ProfileTHR(DbgThread(), NULL), cmsCreateLab2ProfileTHR(DbgThread(), NULL),  "Lab4/Lab2") &&
-           OneTrivialLab(cmsCreateLab2ProfileTHR(DbgThread(), NULL), cmsCreateLab4ProfileTHR(DbgThread(), NULL),  "Lab2/Lab4");
+    return OneTrivialLab(cmsCreateLab4Profile(DbgThread(), NULL), cmsCreateLab4Profile(DbgThread(), NULL),  "Lab4/Lab4") &&
+           OneTrivialLab(cmsCreateLab2Profile(DbgThread(), NULL), cmsCreateLab2Profile(DbgThread(), NULL),  "Lab2/Lab2") &&
+           OneTrivialLab(cmsCreateLab4Profile(DbgThread(), NULL), cmsCreateLab2Profile(DbgThread(), NULL),  "Lab4/Lab2") &&
+           OneTrivialLab(cmsCreateLab2Profile(DbgThread(), NULL), cmsCreateLab4Profile(DbgThread(), NULL),  "Lab2/Lab4");
 }
 
 
@@ -5998,11 +6002,11 @@ cmsInt32Number CheckEncodedLabTransforms(void)
     cmsUInt16Number In[3];
     cmsCIELab Lab;
     cmsCIELab White = { 100, 0, 0 };
-    cmsHPROFILE hLab1 = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
-    cmsHPROFILE hLab2 = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    cmsHPROFILE hLab1 = cmsCreateLab4Profile(DbgThread(), NULL);
+    cmsHPROFILE hLab2 = cmsCreateLab4Profile(DbgThread(), NULL);
 
 
-    xform = cmsCreateTransformTHR(DbgThread(), hLab1, TYPE_Lab_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab1, TYPE_Lab_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hLab1); cmsCloseProfile(DbgThread(), hLab2);
 
     In[0] = 0xFFFF;
@@ -6014,10 +6018,10 @@ cmsInt32Number CheckEncodedLabTransforms(void)
     if (cmsDeltaE(DbgThread(), &Lab, &White) > 0.0001) return 0;
     cmsDeleteTransform(DbgThread(), xform);
 
-    hLab1 = cmsCreateLab2ProfileTHR(DbgThread(), NULL);
-    hLab2 = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hLab1 = cmsCreateLab2Profile(DbgThread(), NULL);
+    hLab2 = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransformTHR(DbgThread(), hLab1, TYPE_LabV2_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab1, TYPE_LabV2_16, hLab2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hLab1); cmsCloseProfile(DbgThread(), hLab2);
 
 
@@ -6031,10 +6035,10 @@ cmsInt32Number CheckEncodedLabTransforms(void)
 
     cmsDeleteTransform(DbgThread(), xform);
 
-    hLab2 = cmsCreateLab2ProfileTHR(DbgThread(), NULL);
-    hLab1 = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hLab2 = cmsCreateLab2Profile(DbgThread(), NULL);
+    hLab1 = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransformTHR(DbgThread(), hLab1, TYPE_Lab_DBL, hLab2, TYPE_LabV2_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab1, TYPE_Lab_DBL, hLab2, TYPE_LabV2_16, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hLab1); cmsCloseProfile(DbgThread(), hLab2);
 
     Lab.L = 100;
@@ -6048,10 +6052,10 @@ cmsInt32Number CheckEncodedLabTransforms(void)
 
     cmsDeleteTransform(DbgThread(), xform);
 
-    hLab1 = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
-    hLab2 = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hLab1 = cmsCreateLab4Profile(DbgThread(), NULL);
+    hLab2 = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransformTHR(DbgThread(), hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab1, TYPE_Lab_DBL, hLab2, TYPE_Lab_16, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hLab1); cmsCloseProfile(DbgThread(), hLab2);
 
     Lab.L = 100;
@@ -6076,8 +6080,8 @@ cmsInt32Number CheckStoredIdentities(void)
     cmsHTRANSFORM xform;
     cmsInt32Number rc = 1;
 
-    hLab  = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
-    xform = cmsCreateTransformTHR(DbgThread(), hLab, TYPE_Lab_8, hLab, TYPE_Lab_8, 0, 0);
+    hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
+    xform = cmsCreateTransform(DbgThread(), hLab, TYPE_Lab_8, hLab, TYPE_Lab_8, 0, 0);
 
     hLink = cmsTransform2DeviceLink(NULL, xform, 3.4, 0);
     cmsSaveProfileToFile(DbgThread(), hLink, "abstractv2.icc");
@@ -6090,9 +6094,9 @@ cmsInt32Number CheckStoredIdentities(void)
     cmsDeleteTransform(DbgThread(), xform);
     cmsCloseProfile(DbgThread(), hLab);
 
-    h4 = cmsOpenProfileFromFileTHR(DbgThread(), "abstractv4.icc", "r");
+    h4 = cmsOpenProfileFromFile(DbgThread(), "abstractv4.icc", "r");
 
-    xform = cmsCreateTransformTHR(DbgThread(), h4, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), h4, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
 
     SubTest("V4");
     rc &= CheckSeveralLab(xform);
@@ -6103,9 +6107,9 @@ cmsInt32Number CheckStoredIdentities(void)
 
 
     SubTest("V2");
-    h2 = cmsOpenProfileFromFileTHR(DbgThread(), "abstractv2.icc", "r");
+    h2 = cmsOpenProfileFromFile(DbgThread(), "abstractv2.icc", "r");
 
-    xform = cmsCreateTransformTHR(DbgThread(), h2, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), h2, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     rc &= CheckSeveralLab(xform);
     cmsDeleteTransform(DbgThread(), xform);
     cmsCloseProfile(DbgThread(), h2);
@@ -6113,20 +6117,20 @@ cmsInt32Number CheckStoredIdentities(void)
 
 
     SubTest("V2 -> V4");
-    h2 = cmsOpenProfileFromFileTHR(DbgThread(), "abstractv2.icc", "r");
-    h4 = cmsOpenProfileFromFileTHR(DbgThread(), "abstractv4.icc", "r");
+    h2 = cmsOpenProfileFromFile(DbgThread(), "abstractv2.icc", "r");
+    h4 = cmsOpenProfileFromFile(DbgThread(), "abstractv4.icc", "r");
 
-    xform = cmsCreateTransformTHR(DbgThread(), h4, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), h4, TYPE_Lab_DBL, h2, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     rc &= CheckSeveralLab(xform);
     cmsDeleteTransform(DbgThread(), xform);
     cmsCloseProfile(DbgThread(), h2);
     cmsCloseProfile(DbgThread(), h4);
 
     SubTest("V4 -> V2");
-    h2 = cmsOpenProfileFromFileTHR(DbgThread(), "abstractv2.icc", "r");
-    h4 = cmsOpenProfileFromFileTHR(DbgThread(), "abstractv4.icc", "r");
+    h2 = cmsOpenProfileFromFile(DbgThread(), "abstractv2.icc", "r");
+    h4 = cmsOpenProfileFromFile(DbgThread(), "abstractv4.icc", "r");
 
-    xform = cmsCreateTransformTHR(DbgThread(), h2, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), h2, TYPE_Lab_DBL, h4, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     rc &= CheckSeveralLab(xform);
     cmsDeleteTransform(DbgThread(), xform);
     cmsCloseProfile(DbgThread(), h2);
@@ -6150,13 +6154,13 @@ cmsInt32Number CheckMatrixShaperXFORMFloat(void)
     cmsInt32Number rc1, rc2;
 
     hAbove = Create_AboveRGB();
-    xform = cmsCreateTransformTHR(DbgThread(), hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hAbove);
     rc1 = CheckFloatlinearXFORM(xform, 3);
     cmsDeleteTransform(DbgThread(), xform);
 
-    hSRGB = cmsCreate_sRGBProfileTHR(DbgThread());
-    xform = cmsCreateTransformTHR(DbgThread(), hSRGB, TYPE_RGB_FLT, hSRGB, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    hSRGB = cmsCreate_sRGBProfile(DbgThread());
+    xform = cmsCreateTransform(DbgThread(), hSRGB, TYPE_RGB_FLT, hSRGB, TYPE_RGB_FLT,  INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hSRGB);
     rc2 = CheckFloatlinearXFORM(xform, 3);
     cmsDeleteTransform(DbgThread(), xform);
@@ -6174,14 +6178,14 @@ cmsInt32Number CheckMatrixShaperXFORM16(void)
     cmsInt32Number rc1, rc2;
 
     hAbove = Create_AboveRGB();
-    xform = cmsCreateTransformTHR(DbgThread(), hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hAbove);
 
     rc1 = Check16linearXFORM(xform, 3);
     cmsDeleteTransform(DbgThread(), xform);
 
-    hSRGB = cmsCreate_sRGBProfileTHR(DbgThread());
-    xform = cmsCreateTransformTHR(DbgThread(), hSRGB, TYPE_RGB_16, hSRGB, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    hSRGB = cmsCreate_sRGBProfile(DbgThread());
+    xform = cmsCreateTransform(DbgThread(), hSRGB, TYPE_RGB_16, hSRGB, TYPE_RGB_16,  INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hSRGB);
     rc2 = Check16linearXFORM(xform, 3);
     cmsDeleteTransform(DbgThread(), xform);
@@ -6200,13 +6204,13 @@ cmsInt32Number CheckMatrixShaperXFORM8(void)
     cmsInt32Number rc1, rc2;
 
     hAbove = Create_AboveRGB();
-    xform = cmsCreateTransformTHR(DbgThread(), hAbove, TYPE_RGB_8, hAbove, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hAbove, TYPE_RGB_8, hAbove, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hAbove);
     rc1 = Check8linearXFORM(xform, 3);
     cmsDeleteTransform(DbgThread(), xform);
 
-    hSRGB = cmsCreate_sRGBProfileTHR(DbgThread());
-    xform = cmsCreateTransformTHR(DbgThread(), hSRGB, TYPE_RGB_8, hSRGB, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
+    hSRGB = cmsCreate_sRGBProfile(DbgThread());
+    xform = cmsCreateTransform(DbgThread(), hSRGB, TYPE_RGB_8, hSRGB, TYPE_RGB_8,  INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hSRGB);
     rc2 = Check8linearXFORM(xform, 3);
     cmsDeleteTransform(DbgThread(), xform);
@@ -6252,14 +6256,14 @@ cmsInt32Number Chack_sRGB_Float(void)
     cmsInt32Number rc;
 
 
-    hsRGB = cmsCreate_sRGBProfileTHR(DbgThread());
-    hXYZ  = cmsCreateXYZProfileTHR(DbgThread());
-    hLab  = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hsRGB = cmsCreate_sRGBProfile(DbgThread());
+    hXYZ  = cmsCreateXYZProfile(DbgThread());
+    hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform1 =  cmsCreateTransformTHR(DbgThread(), hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_DBL,
+    xform1 =  cmsCreateTransform(DbgThread(), hsRGB, TYPE_RGB_FLT, hXYZ, TYPE_XYZ_DBL,
                                 INTENT_RELATIVE_COLORIMETRIC, 0);
 
-    xform2 =  cmsCreateTransformTHR(DbgThread(), hsRGB, TYPE_RGB_FLT, hLab, TYPE_Lab_DBL,
+    xform2 =  cmsCreateTransform(DbgThread(), hsRGB, TYPE_RGB_FLT, hLab, TYPE_Lab_DBL,
                                 INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hsRGB);
     cmsCloseProfile(DbgThread(), hXYZ);
@@ -6299,10 +6303,10 @@ cmsBool GetProfileRGBPrimaries(cmsHPROFILE hProfile,
     {0., 1., 0.},
     {0., 0., 1.}};
 
-    hXYZ = cmsCreateXYZProfile();
+    hXYZ = cmsCreateXYZProfile(DbgThread());
     if (hXYZ == NULL) return FALSE;
 
-    hTransform = cmsCreateTransform(hProfile, TYPE_RGB_DBL, hXYZ, TYPE_XYZ_DBL,
+    hTransform = cmsCreateTransform(DbgThread(), hProfile, TYPE_RGB_DBL, hXYZ, TYPE_XYZ_DBL,
         intent, cmsFLAGS_NOCACHE | cmsFLAGS_NOOPTIMIZE);
     cmsCloseProfile(DbgThread(), hXYZ);
     if (hTransform == NULL) return FALSE;
@@ -6321,8 +6325,8 @@ int CheckRGBPrimaries(void)
     cmsCIExyYTRIPLE tripxyY;
     cmsBool result;
 
-    cmsSetAdaptationState(0);
-    hsRGB = cmsCreate_sRGBProfileTHR(DbgThread());
+    cmsSetAdaptationState(DbgThread(), 0);
+    hsRGB = cmsCreate_sRGBProfile(DbgThread());
     if (!hsRGB) return 0;
 
     result = GetProfileRGBPrimaries(hsRGB, &tripXYZ,
@@ -6359,8 +6363,8 @@ int CheckRGBPrimaries(void)
 static
 cmsInt32Number CheckCMYK(cmsInt32Number Intent, const char *Profile1, const char* Profile2)
 {
-    cmsHPROFILE hSWOP  = cmsOpenProfileFromFileTHR(DbgThread(), Profile1, "r");
-    cmsHPROFILE hFOGRA = cmsOpenProfileFromFileTHR(DbgThread(), Profile2, "r");
+    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(DbgThread(), Profile1, "r");
+    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(DbgThread(), Profile2, "r");
     cmsHTRANSFORM xform, swop_lab, fogra_lab;
     cmsFloat32Number CMYK1[4], CMYK2[4];
     cmsCIELab Lab1, Lab2;
@@ -6368,12 +6372,12 @@ cmsInt32Number CheckCMYK(cmsInt32Number Intent, const char *Profile1, const char
     cmsFloat64Number DeltaL, Max;
     cmsInt32Number i;
 
-    hLab = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hLab = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransformTHR(DbgThread(), hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, Intent, 0);
+    xform = cmsCreateTransform(DbgThread(), hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, Intent, 0);
 
-    swop_lab = cmsCreateTransformTHR(DbgThread(), hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
-    fogra_lab = cmsCreateTransformTHR(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
+    swop_lab = cmsCreateTransform(DbgThread(), hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
+    fogra_lab = cmsCreateTransform(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, Intent, 0);
 
     Max = 0;
     for (i=0; i <= 100; i++) {
@@ -6396,7 +6400,7 @@ cmsInt32Number CheckCMYK(cmsInt32Number Intent, const char *Profile1, const char
     cmsDeleteTransform(DbgThread(), xform);
 
 
-    xform = cmsCreateTransformTHR(DbgThread(),  hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, Intent, 0);
+    xform = cmsCreateTransform(DbgThread(),  hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, Intent, 0);
 
     for (i=0; i <= 100; i++) {
         CMYK1[0] = 10;
@@ -6451,8 +6455,8 @@ cmsInt32Number CheckCMYKRelCol(void)
 static
 cmsInt32Number CheckKOnlyBlackPreserving(void)
 {
-    cmsHPROFILE hSWOP  = cmsOpenProfileFromFileTHR(DbgThread(), "test1.icc", "r");
-    cmsHPROFILE hFOGRA = cmsOpenProfileFromFileTHR(DbgThread(), "test2.icc", "r");
+    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r");
+    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(DbgThread(), "test2.icc", "r");
     cmsHTRANSFORM xform, swop_lab, fogra_lab;
     cmsFloat32Number CMYK1[4], CMYK2[4];
     cmsCIELab Lab1, Lab2;
@@ -6460,12 +6464,12 @@ cmsInt32Number CheckKOnlyBlackPreserving(void)
     cmsFloat64Number DeltaL, Max;
     cmsInt32Number i;
 
-    hLab = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hLab = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransformTHR(DbgThread(), hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(DbgThread(), hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
 
-    swop_lab = cmsCreateTransformTHR(DbgThread(), hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
-    fogra_lab = cmsCreateTransformTHR(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    swop_lab = cmsCreateTransform(DbgThread(), hSWOP,   TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    fogra_lab = cmsCreateTransform(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
 
     Max = 0;
 
@@ -6497,7 +6501,7 @@ cmsInt32Number CheckKOnlyBlackPreserving(void)
 
 
     // Same, but FOGRA to SWOP
-    xform = cmsCreateTransformTHR(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_ONLY_PERCEPTUAL, 0);
 
     for (i=0; i <= 100; i++) {
         CMYK1[0] = 0;
@@ -6529,8 +6533,8 @@ cmsInt32Number CheckKOnlyBlackPreserving(void)
 static
 cmsInt32Number CheckKPlaneBlackPreserving(void)
 {
-    cmsHPROFILE hSWOP  = cmsOpenProfileFromFileTHR(DbgThread(), "test1.icc", "r");
-    cmsHPROFILE hFOGRA = cmsOpenProfileFromFileTHR(DbgThread(), "test2.icc", "r");
+    cmsHPROFILE hSWOP  = cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r");
+    cmsHPROFILE hFOGRA = cmsOpenProfileFromFile(DbgThread(), "test2.icc", "r");
     cmsHTRANSFORM xform, swop_lab, fogra_lab;
     cmsFloat32Number CMYK1[4], CMYK2[4];
     cmsCIELab Lab1, Lab2;
@@ -6538,12 +6542,12 @@ cmsInt32Number CheckKPlaneBlackPreserving(void)
     cmsFloat64Number DeltaE, Max;
     cmsInt32Number i;
 
-    hLab = cmsCreateLab4ProfileTHR(DbgThread(), NULL);
+    hLab = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransformTHR(DbgThread(), hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(DbgThread(), hSWOP, TYPE_CMYK_FLT, hFOGRA, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, 0);
 
-    swop_lab = cmsCreateTransformTHR(DbgThread(), hSWOP,  TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
-    fogra_lab = cmsCreateTransformTHR(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    swop_lab = cmsCreateTransform(DbgThread(), hSWOP,  TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
+    fogra_lab = cmsCreateTransform(DbgThread(), hFOGRA, TYPE_CMYK_FLT, hLab, TYPE_Lab_DBL, INTENT_PERCEPTUAL, 0);
 
     Max = 0;
 
@@ -6565,7 +6569,7 @@ cmsInt32Number CheckKPlaneBlackPreserving(void)
 
     cmsDeleteTransform(DbgThread(), xform);
 
-    xform = cmsCreateTransformTHR(DbgThread(),  hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_PLANE_PERCEPTUAL, 0);
+    xform = cmsCreateTransform(DbgThread(),  hFOGRA, TYPE_CMYK_FLT, hSWOP, TYPE_CMYK_FLT, INTENT_PRESERVE_K_PLANE_PERCEPTUAL, 0);
 
     for (i=0; i <= 100; i++) {
         CMYK1[0] = 30;
@@ -6609,7 +6613,7 @@ cmsInt32Number CheckProofingXFORMFloat(void)
     cmsInt32Number rc;
 
     hAbove = Create_AboveRGB();
-    xform =  cmsCreateProofingTransformTHR(DbgThread(), hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
+    xform =  cmsCreateProofingTransform(DbgThread(), hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_SOFTPROOFING);
     cmsCloseProfile(DbgThread(), hAbove);
     rc = CheckFloatlinearXFORM(xform, 3);
@@ -6625,7 +6629,7 @@ cmsInt32Number CheckProofingXFORM16(void)
     cmsInt32Number rc;
 
     hAbove = Create_AboveRGB();
-    xform =  cmsCreateProofingTransformTHR(DbgThread(), hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hAbove,
+    xform =  cmsCreateProofingTransform(DbgThread(), hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hAbove,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_SOFTPROOFING|cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hAbove);
     rc = Check16linearXFORM(xform, 3);
@@ -6643,10 +6647,10 @@ cmsInt32Number CheckGamutCheck(void)
         cmsUInt16Number Alarm[16] = { 0xDEAD, 0xBABE, 0xFACE };
 
         // Set alarm codes to fancy values so we could check the out of gamut condition
-        cmsSetAlarmCodes(Alarm);
+        cmsSetAlarmCodes(DbgThread(), Alarm);
 
         // Create the profiles
-        hSRGB  = cmsCreate_sRGBProfileTHR(DbgThread());
+        hSRGB  = cmsCreate_sRGBProfile(DbgThread());
         hAbove = Create_AboveRGB();
 
         if (hSRGB == NULL || hAbove == NULL) return 0;  // Failed
@@ -6654,7 +6658,7 @@ cmsInt32Number CheckGamutCheck(void)
         SubTest("Gamut check on floating point");
 
         // Create a gamut checker in the same space. No value should be out of gamut
-        xform = cmsCreateProofingTransformTHR(DbgThread(), hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
+        xform = cmsCreateProofingTransform(DbgThread(), hAbove, TYPE_RGB_FLT, hAbove, TYPE_RGB_FLT, hAbove,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_GAMUTCHECK);
 
 
@@ -6670,7 +6674,7 @@ cmsInt32Number CheckGamutCheck(void)
 
         SubTest("Gamut check on 16 bits");
 
-        xform = cmsCreateProofingTransformTHR(DbgThread(), hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hSRGB,
+        xform = cmsCreateProofingTransform(DbgThread(), hAbove, TYPE_RGB_16, hAbove, TYPE_RGB_16, hSRGB,
                                 INTENT_RELATIVE_COLORIMETRIC, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_GAMUTCHECK);
 
         cmsCloseProfile(DbgThread(), hSRGB);
@@ -6694,27 +6698,27 @@ cmsInt32Number CheckBlackPoint(void)
     cmsCIEXYZ Black;
     cmsCIELab Lab;
 
-    hProfile  = cmsOpenProfileFromFileTHR(DbgThread(), "test5.icc", "r");
+    hProfile  = cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r");
     cmsDetectDestinationBlackPoint(DbgThread(), &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hProfile);
 
 
-    hProfile = cmsOpenProfileFromFileTHR(DbgThread(), "test1.icc", "r");
-    cmsDetectDestinationBlackPoint(DbgThread(), &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
-    cmsXYZ2Lab(DbgThread(), NULL, &Lab, &Black);
-    cmsCloseProfile(DbgThread(), hProfile);
-
-    hProfile = cmsOpenProfileFromFileTHR(DbgThread(), "lcms2cmyk.icc", "r");
+    hProfile = cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r");
     cmsDetectDestinationBlackPoint(DbgThread(), &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsXYZ2Lab(DbgThread(), NULL, &Lab, &Black);
     cmsCloseProfile(DbgThread(), hProfile);
 
-    hProfile = cmsOpenProfileFromFileTHR(DbgThread(), "test2.icc", "r");
+    hProfile = cmsOpenProfileFromFile(DbgThread(), "lcms2cmyk.icc", "r");
     cmsDetectDestinationBlackPoint(DbgThread(), &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsXYZ2Lab(DbgThread(), NULL, &Lab, &Black);
     cmsCloseProfile(DbgThread(), hProfile);
 
-    hProfile = cmsOpenProfileFromFileTHR(DbgThread(), "test1.icc", "r");
+    hProfile = cmsOpenProfileFromFile(DbgThread(), "test2.icc", "r");
+    cmsDetectDestinationBlackPoint(DbgThread(), &Black, hProfile, INTENT_RELATIVE_COLORIMETRIC, 0);
+    cmsXYZ2Lab(DbgThread(), NULL, &Lab, &Black);
+    cmsCloseProfile(DbgThread(), hProfile);
+
+    hProfile = cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r");
     cmsDetectDestinationBlackPoint(DbgThread(), &Black, hProfile, INTENT_PERCEPTUAL, 0);
     cmsXYZ2Lab(DbgThread(), NULL, &Lab, &Black);
     cmsCloseProfile(DbgThread(), hProfile);
@@ -6733,7 +6737,7 @@ cmsInt32Number CheckOneTAC(cmsFloat64Number InkLimit)
     cmsSaveProfileToFile(DbgThread(), h, "lcmstac.icc");
     cmsCloseProfile(DbgThread(), h);
 
-    h = cmsOpenProfileFromFile( "lcmstac.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "lcmstac.icc", "r");
     d = cmsDetectTAC(DbgThread(), h);
     cmsCloseProfile(DbgThread(), h);
 
@@ -6909,9 +6913,9 @@ void GenerateCSA(const char* cInProf, const char* FileName)
 
 
     if (cInProf == NULL)
-        hProfile = cmsCreateLab4Profile(NULL);
+        hProfile = cmsCreateLab4Profile(DbgThread(), NULL);
     else
-        hProfile = cmsOpenProfileFromFile( cInProf, "r");
+        hProfile = cmsOpenProfileFromFile(DbgThread(), cInProf, "r");
 
     n = cmsGetPostScriptCSA(DbgThread(), hProfile, 0, 0, NULL, 0);
     if (n == 0) return;
@@ -6944,9 +6948,9 @@ void GenerateCRD(const char* cOutProf, const char* FileName)
 
 
     if (cOutProf == NULL)
-        hProfile = cmsCreateLab4Profile(NULL);
+        hProfile = cmsCreateLab4Profile(DbgThread(), NULL);
     else
-        hProfile = cmsOpenProfileFromFile( cOutProf, "r");
+        hProfile = cmsOpenProfileFromFile(DbgThread(), cOutProf, "r");
 
     n = cmsGetPostScriptCRD(DbgThread(), hProfile, 0, dwFlags, NULL, 0);
     if (n == 0) return;
@@ -7005,12 +7009,12 @@ static
 cmsInt32Number CheckInputGray(void)
 {
     cmsHPROFILE hGray = Create_Gray22();
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
     cmsHTRANSFORM xform;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform(hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hGray); cmsCloseProfile(DbgThread(), hLab);
 
     if (!CheckGray(xform, 0, 0)) return 0;
@@ -7026,12 +7030,12 @@ static
 cmsInt32Number CheckLabInputGray(void)
 {
     cmsHPROFILE hGray = Create_GrayLab();
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
     cmsHTRANSFORM xform;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform(hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hGray, TYPE_GRAY_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hGray); cmsCloseProfile(DbgThread(), hLab);
 
     if (!CheckGray(xform, 0, 0)) return 0;
@@ -7063,12 +7067,12 @@ static
 cmsInt32Number CheckOutputGray(void)
 {
     cmsHPROFILE hGray = Create_Gray22();
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
     cmsHTRANSFORM xform;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform( hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hGray); cmsCloseProfile(DbgThread(), hLab);
 
     if (!CheckOutGray(xform, 0, 0)) return 0;
@@ -7087,13 +7091,13 @@ static
 cmsInt32Number CheckLabOutputGray(void)
 {
     cmsHPROFILE hGray = Create_GrayLab();
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
     cmsHTRANSFORM xform;
     cmsInt32Number i;
 
     if (hGray == NULL || hLab == NULL) return 0;
 
-    xform = cmsCreateTransform( hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), hLab, TYPE_Lab_DBL, hGray, TYPE_GRAY_8, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), hGray); cmsCloseProfile(DbgThread(), hLab);
 
     if (!CheckOutGray(xform, 0, 0)) return 0;
@@ -7121,7 +7125,7 @@ cmsInt32Number CheckV4gamma(void)
     cmsUInt16Number Lin[] = {0, 0xffff};
     cmsToneCurve*g = cmsBuildTabulatedToneCurve16(DbgThread(), 2, Lin);
 
-    h = cmsOpenProfileFromFileTHR(DbgThread(), "v4gamma.icc", "w");
+    h = cmsOpenProfileFromFile(DbgThread(), "v4gamma.icc", "w");
     if (h == NULL) return 0;
 
 
@@ -7188,10 +7192,10 @@ cmsInt32Number CheckGBD(void)
     // Now for sRGB
     SubTest("checking sRGB gamut");
     h = cmsGBDAlloc(DbgThread());
-    hsRGB = cmsCreate_sRGBProfile();
-    hLab  = cmsCreateLab4Profile(NULL);
+    hsRGB = cmsCreate_sRGBProfile(DbgThread());
+    hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    xform = cmsCreateTransform(hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
+    xform = cmsCreateTransform(DbgThread(), hsRGB, TYPE_RGB_8, hLab, TYPE_Lab_DBL, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hsRGB); cmsCloseProfile(DbgThread(), hLab);
 
 
@@ -7280,7 +7284,7 @@ static
 int CheckMD5(void)
 {
     _cmsICCPROFILE* h;
-    cmsHPROFILE pProfile = cmsOpenProfileFromFile( "sRGBlcms2.icc", "r");
+    cmsHPROFILE pProfile = cmsOpenProfileFromFile(DbgThread(), "sRGBlcms2.icc", "r");
     cmsProfileID ProfileID1, ProfileID2, ProfileID3, ProfileID4;
 
     h =(_cmsICCPROFILE*) pProfile;
@@ -7290,7 +7294,7 @@ int CheckMD5(void)
     cmsCloseProfile(DbgThread(), pProfile);
 
 
-    pProfile = cmsOpenProfileFromFile( "sRGBlcms2.icc", "r");
+    pProfile = cmsOpenProfileFromFile(DbgThread(), "sRGBlcms2.icc", "r");
 
     h =(_cmsICCPROFILE*) pProfile;
     if (cmsMD5computeID(DbgThread(), pProfile)) cmsGetHeaderProfileID(DbgThread(), pProfile, ProfileID3.ID8);
@@ -7312,7 +7316,7 @@ int CheckLinking(void)
     cmsStage *stageBegin, *stageEnd;
 
     // Create a CLUT based profile
-     h = cmsCreateInkLimitingDeviceLinkTHR(DbgThread(), cmsSigCmykData, 150);
+     h = cmsCreateInkLimitingDeviceLink(DbgThread(), cmsSigCmykData, 150);
 
      // link a second tag
      cmsLinkTag(DbgThread(), h, cmsSigAToB1Tag, cmsSigAToB0Tag);
@@ -7322,7 +7326,7 @@ int CheckLinking(void)
     cmsCloseProfile(DbgThread(), h);
 
     // Now open the profile and read the pipeline
-    h = cmsOpenProfileFromFile( "lcms2link.icc", "r");
+    h = cmsOpenProfileFromFile(DbgThread(), "lcms2link.icc", "r");
     if (h == NULL) return 0;
 
     pipeline = (cmsPipeline*) cmsReadTag(DbgThread(), h, cmsSigAToB1Tag);
@@ -7401,7 +7405,7 @@ static
 cmsInt32Number CheckFloatXYZ(void)
 {
     cmsHPROFILE input;
-    cmsHPROFILE xyzProfile = cmsCreateXYZProfile();
+    cmsHPROFILE xyzProfile = cmsCreateXYZProfile(DbgThread());
     cmsHTRANSFORM xform;
     cmsFloat32Number in[4];
     cmsFloat32Number out[4];
@@ -7414,7 +7418,7 @@ cmsInt32Number CheckFloatXYZ(void)
     // RGB to XYZ
     input = IdentityMatrixProfile( cmsSigRgbData);
 
-    xform = cmsCreateTransform( input, TYPE_RGB_FLT, xyzProfile, TYPE_XYZ_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), input, TYPE_RGB_FLT, xyzProfile, TYPE_XYZ_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), input);
 
     cmsDoTransform(DbgThread(),  xform, in, out, 1);
@@ -7429,7 +7433,7 @@ cmsInt32Number CheckFloatXYZ(void)
     // XYZ to XYZ
     input = IdentityMatrixProfile( cmsSigXYZData);
 
-    xform = cmsCreateTransform( input, TYPE_XYZ_FLT, xyzProfile, TYPE_XYZ_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), input, TYPE_XYZ_FLT, xyzProfile, TYPE_XYZ_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), input);
 
     cmsDoTransform(DbgThread(),  xform, in, out, 1);
@@ -7447,13 +7451,13 @@ cmsInt32Number CheckFloatXYZ(void)
 
 #   define TYPE_XYZA_FLT          (FLOAT_SH(1)|COLORSPACE_SH(PT_XYZ)|EXTRA_SH(1)|CHANNELS_SH(3)|BYTES_SH(4))
 
-    xform = cmsCreateTransform( input, TYPE_XYZA_FLT, xyzProfile, TYPE_XYZA_FLT, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_COPY_ALPHA);
-    cmsCloseProfile(input);
+    xform = cmsCreateTransform(DbgThread(), input, TYPE_XYZA_FLT, xyzProfile, TYPE_XYZA_FLT, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_COPY_ALPHA);
+    cmsCloseProfile(DbgThread(), input);
 
-    cmsDoTransform( xform, in, out, 1);
+    cmsDoTransform(DbgThread(), xform, in, out, 1);
 
 
-    cmsDeleteTransform( xform);
+    cmsDeleteTransform(DbgThread(),  xform);
 
      if (!IsGoodVal("Float XYZA->XYZA", in[0], out[0], FLOAT_PRECISSION) ||
          !IsGoodVal("Float XYZA->XYZA", in[1], out[1], FLOAT_PRECISSION) ||
@@ -7465,7 +7469,7 @@ cmsInt32Number CheckFloatXYZ(void)
     // XYZ to RGB
     input = IdentityMatrixProfile( cmsSigRgbData);
 
-    xform = cmsCreateTransform( xyzProfile, TYPE_XYZ_FLT, input, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), xyzProfile, TYPE_XYZ_FLT, input, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), input);
 
     cmsDoTransform(DbgThread(),  xform, in, out, 1);
@@ -7483,7 +7487,7 @@ cmsInt32Number CheckFloatXYZ(void)
     // XYZ to RGB
     input = IdentityMatrixProfile( cmsSigRgbData);
 
-    xform = cmsCreateTransform( input, TYPE_RGB_FLT, input, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
+    xform = cmsCreateTransform(DbgThread(), input, TYPE_RGB_FLT, input, TYPE_RGB_FLT, INTENT_RELATIVE_COLORIMETRIC, 0);
     cmsCloseProfile(DbgThread(), input);
 
     cmsDoTransform(DbgThread(),  xform, in, out, 1);
@@ -7521,11 +7525,11 @@ Bug reported
 static
 cmsInt32Number ChecksRGB2LabFLT(void)
 {
-    cmsHPROFILE hSRGB = cmsCreate_sRGBProfile();
-    cmsHPROFILE hLab  = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hSRGB = cmsCreate_sRGBProfile(DbgThread());
+    cmsHPROFILE hLab  = cmsCreateLab4Profile(DbgThread(), NULL);
 
-    cmsHTRANSFORM xform1 = cmsCreateTransform(hSRGB, TYPE_RGBA_FLT, hLab, TYPE_LabA_FLT, 0, cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
-    cmsHTRANSFORM xform2 = cmsCreateTransform(hLab, TYPE_LabA_FLT, hSRGB, TYPE_RGBA_FLT, 0, cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
+    cmsHTRANSFORM xform1 = cmsCreateTransform(DbgThread(), hSRGB, TYPE_RGBA_FLT, hLab, TYPE_LabA_FLT, 0, cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
+    cmsHTRANSFORM xform2 = cmsCreateTransform(DbgThread(), hLab, TYPE_LabA_FLT, hSRGB, TYPE_RGBA_FLT, 0, cmsFLAGS_NOCACHE|cmsFLAGS_NOOPTIMIZE);
 
     cmsFloat32Number RGBA1[4], RGBA2[4], LabA[4];
     int i;
@@ -7721,7 +7725,7 @@ cmsInt32Number CheckReadRAW(void)
 
 
     SubTest("RAW read on on-disk");
-    hProfile = cmsOpenProfileFromFile( "test1.icc", "r");
+    hProfile = cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r");
 
     if (hProfile == NULL)
         return 0;
@@ -7738,7 +7742,7 @@ cmsInt32Number CheckReadRAW(void)
         return 0;
 
     SubTest("RAW read on in-memory created profiles");
-    hProfile = cmsCreate_sRGBProfile();
+    hProfile = cmsCreate_sRGBProfile(DbgThread());
     tag_size = cmsReadRawTag(DbgThread(), hProfile, cmsSigGreenColorantTag, buffer, 4);
     tag_size1 = cmsReadRawTag(DbgThread(), hProfile, cmsSigGreenColorantTag, NULL, 0);
 
@@ -7764,7 +7768,7 @@ cmsInt32Number CheckMeta(void)
     int rc;
 
     /* open file */
-    p = cmsOpenProfileFromFile( "ibm-t61.icc", "r");
+    p = cmsOpenProfileFromFile(DbgThread(), "ibm-t61.icc", "r");
     if (p == NULL) return 0;
 
     /* read dictionary, but don't do anything with the value */
@@ -7790,7 +7794,7 @@ cmsInt32Number CheckMeta(void)
     cmsCloseProfile(DbgThread(), p);
 
     /* open newly created file and read metadata */
-    p = cmsOpenProfileFromFile( "new.icc", "r");
+    p = cmsOpenProfileFromFile(DbgThread(), "new.icc", "r");
     //ERROR: Bad dictionary Name/Value
     //ERROR: Corrupted tag 'meta'
     //test: test.c:59: main: Assertion `dict' failed.
@@ -7810,7 +7814,7 @@ cmsInt32Number CheckFloatNULLxform(void)
     cmsFloat32Number in[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
     cmsFloat32Number out[10];
 
-    cmsHTRANSFORM xform = cmsCreateTransform(NULL, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
+    cmsHTRANSFORM xform = cmsCreateTransform(DbgThread(), NULL, TYPE_GRAY_FLT, NULL, TYPE_GRAY_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NULLTRANSFORM);
 
     if (xform == NULL) {
         Fail("Unable to create float null transform");
@@ -7838,7 +7842,7 @@ cmsInt32Number CheckRemoveTag(void)
     cmsMLU *mlu;
     int ret;
 
-    p = cmsCreate_sRGBProfileTHR(NULL);
+    p = cmsCreate_sRGBProfile(NULL);
 
     /* set value */
     mlu = cmsMLUalloc (NULL, 1);
@@ -7870,12 +7874,12 @@ cmsInt32Number CheckMatrixSimplify(void)
        unsigned char buf[3] = { 127, 32, 64 };
 
 
-       pIn = cmsCreate_sRGBProfile();
-       pOut = cmsOpenProfileFromFile( "ibm-t61.icc", "r");
+       pIn = cmsCreate_sRGBProfile(DbgThread());
+       pOut = cmsOpenProfileFromFile(DbgThread(), "ibm-t61.icc", "r");
        if (pIn == NULL || pOut == NULL)
               return 0;
 
-       t = cmsCreateTransform(pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, 0);
+       t = cmsCreateTransform(DbgThread(), pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, 0);
        cmsDoTransformStride(DbgThread(), t, buf, buf, 1, 1);
        cmsDeleteTransform(DbgThread(), t);
        cmsCloseProfile(DbgThread(), pIn);
@@ -7920,12 +7924,12 @@ cmsInt32Number CheckTransformLineStride(void)
 
 
        memset(out, 0, sizeof(out));
-       pIn = cmsCreate_sRGBProfile();
-       pOut = cmsOpenProfileFromFile( "ibm-t61.icc", "r");
+       pIn = cmsCreate_sRGBProfile(DbgThread());
+       pOut = cmsOpenProfileFromFile(DbgThread(),  "ibm-t61.icc", "r");
        if (pIn == NULL || pOut == NULL)
               return 0;
 
-       t = cmsCreateTransform(pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(DbgThread(), pIn, TYPE_RGB_8, pOut, TYPE_RGB_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
        cmsDoTransformLineStride(DbgThread(), t, buf1, out, 2, 4, 7, 7, 0, 0);
        cmsDeleteTransform(DbgThread(), t);
@@ -7939,7 +7943,7 @@ cmsInt32Number CheckTransformLineStride(void)
 
        memset(out, 0, sizeof(out));
 
-       t = cmsCreateTransform(pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(DbgThread(), pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_8, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
        cmsDoTransformLineStride(DbgThread(), t, buf2, out, 2, 4, 9, 9, 0, 0);
 
@@ -7955,7 +7959,7 @@ cmsInt32Number CheckTransformLineStride(void)
 
        memset(out, 0, sizeof(out));
 
-       t = cmsCreateTransform(pIn, TYPE_RGBA_16, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(DbgThread(), pIn, TYPE_RGBA_16, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
        cmsDoTransformLineStride(DbgThread(), t, buf3, out, 2, 4, 18, 18, 0, 0);
 
@@ -7973,7 +7977,7 @@ cmsInt32Number CheckTransformLineStride(void)
 
 
        // From 8 to 16
-       t = cmsCreateTransform(pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
+       t = cmsCreateTransform(DbgThread(), pIn, TYPE_RGBA_8, pOut, TYPE_RGBA_16, INTENT_PERCEPTUAL, cmsFLAGS_COPY_ALPHA);
 
        cmsDoTransformLineStride(DbgThread(), t, buf2, out, 2, 4, 9, 18, 0, 0);
 
@@ -7999,9 +8003,10 @@ static
 int CheckPlanar8opt(void)
 {
     cmsHPROFILE aboveRGB = Create_AboveRGB();
-    cmsHPROFILE sRGB = cmsCreate_sRGBProfile();
+    cmsHPROFILE sRGB = cmsCreate_sRGBProfile(DbgThread());
 
-    cmsHTRANSFORM transform = cmsCreateTransform(sRGB, TYPE_RGB_8_PLANAR,
+    cmsHTRANSFORM transform = cmsCreateTransform(DbgThread(),
+        sRGB, TYPE_RGB_8_PLANAR,
         aboveRGB, TYPE_RGB_8_PLANAR,
         INTENT_PERCEPTUAL, 0);
 
@@ -8019,9 +8024,9 @@ static
 int CheckSE(void)
 {
     cmsHPROFILE input_profile = Create_AboveRGB();
-    cmsHPROFILE output_profile = cmsCreate_sRGBProfile();
+    cmsHPROFILE output_profile = cmsCreate_sRGBProfile(DbgThread());
 
-    cmsHTRANSFORM tr = cmsCreateTransform(input_profile, TYPE_RGBA_8, output_profile, TYPE_RGBA_16_SE, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_COPY_ALPHA);
+    cmsHTRANSFORM tr = cmsCreateTransform(DbgThread(), input_profile, TYPE_RGBA_8, output_profile, TYPE_RGBA_16_SE, INTENT_RELATIVE_COLORIMETRIC, cmsFLAGS_COPY_ALPHA);
 
     cmsUInt8Number rgba[4] = { 40, 41, 41, 0xfa };
     cmsUInt16Number out[4];
@@ -8054,11 +8059,11 @@ int CheckForgedMPE(void)
     cmsHTRANSFORM hTransform;
     cmsUInt8Number output[4];
 
-    srcProfile = cmsOpenProfileFromFile( "bad_mpe.icc", "r");
+    srcProfile = cmsOpenProfileFromFile(DbgThread(), "bad_mpe.icc", "r");
     if (!srcProfile)
         return 0;
 
-    dstProfile = cmsCreate_sRGBProfile();
+    dstProfile = cmsCreate_sRGBProfile(DbgThread());
     if (!dstProfile) {
         cmsCloseProfile(DbgThread(), srcProfile);
         return 0;
@@ -8076,14 +8081,14 @@ int CheckForgedMPE(void)
             COLORSPACE_SH(PT_ANY) | CHANNELS_SH(nSrcComponents) | BYTES_SH(1);
     }
 
-    cmsSetLogErrorHandler(ErrorReportingFunction);
+    cmsSetLogErrorHandler(DbgThread(), ErrorReportingFunction);
 
-    hTransform = cmsCreateTransform(srcProfile, srcFormat, dstProfile,
+    hTransform = cmsCreateTransform(DbgThread(), srcProfile, srcFormat, dstProfile,
         TYPE_BGR_8, intent, flags);
     cmsCloseProfile(DbgThread(), srcProfile);
     cmsCloseProfile(DbgThread(), dstProfile);
 
-    cmsSetLogErrorHandler(FatalErrorQuit);
+    cmsSetLogErrorHandler(DbgThread(), FatalErrorQuit);
 
     // Should report error
     if (!TrappedError) return 0;
@@ -8123,11 +8128,11 @@ int CheckProofingIntersection(void)
     cmsHPROFILE profile_null, hnd1, hnd2;
     cmsHTRANSFORM transform;
 
-    hnd1 = cmsCreate_sRGBProfile();
+    hnd1 = cmsCreate_sRGBProfile(DbgThread());
     hnd2 = Create_AboveRGB();
 
-    profile_null = cmsCreateNULLProfileTHR(DbgThread());
-    transform = cmsCreateProofingTransformTHR(DbgThread(),
+    profile_null = cmsCreateNULLProfile(DbgThread());
+    transform = cmsCreateProofingTransform(DbgThread(),
         hnd1,
         TYPE_RGB_FLT,
         profile_null,
@@ -8194,10 +8199,10 @@ void SpeedTest32bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn, TYPE_RGBA_FLT,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn, TYPE_RGBA_FLT,
         hlcmsProfileOut, TYPE_RGBA_FLT, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    cmsCloseProfile(DbgThread(), hlcmsProfileIn);
+    cmsCloseProfile(DbgThread(), hlcmsProfileOut);
 
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
@@ -8222,13 +8227,13 @@ void SpeedTest32bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE
 
     atime = clock();
 
-    cmsDoTransform(hlcmsxform, In, In, NumPixels);
+    cmsDoTransform(DbgThread(), hlcmsxform, In, In, NumPixels);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(Scanline_rgba32), diff);
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(DbgThread(), hlcmsxform);
 
 }
 
@@ -8246,7 +8251,7 @@ void SpeedTest16bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn, TYPE_RGB_16,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn, TYPE_RGB_16,
         hlcmsProfileOut, TYPE_RGB_16, Intent, cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hlcmsProfileIn);
     cmsCloseProfile(DbgThread(), hlcmsProfileOut);
@@ -8298,10 +8303,10 @@ void SpeedTest32bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn, TYPE_CMYK_FLT,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn, TYPE_CMYK_FLT,
         hlcmsProfileOut, TYPE_CMYK_FLT, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    cmsCloseProfile(DbgThread(), hlcmsProfileIn);
+    cmsCloseProfile(DbgThread(), hlcmsProfileOut);
 
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(Scanline_rgba32);
@@ -8326,7 +8331,7 @@ void SpeedTest32bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
 
     atime = clock();
 
-    cmsDoTransform(hlcmsxform, In, In, NumPixels);
+    cmsDoTransform(DbgThread(), hlcmsxform, In, In, NumPixels);
 
     diff = clock() - atime;
 
@@ -8334,7 +8339,7 @@ void SpeedTest32bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
 
     PrintPerformance(Mb, sizeof(Scanline_rgba32), diff);
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(DbgThread(), hlcmsxform);
 
 }
 
@@ -8352,7 +8357,7 @@ void SpeedTest16bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn, TYPE_CMYK_16,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn, TYPE_CMYK_16,
         hlcmsProfileOut, TYPE_CMYK_16, INTENT_PERCEPTUAL,  cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hlcmsProfileIn);
     cmsCloseProfile(DbgThread(), hlcmsProfileOut);
@@ -8405,7 +8410,7 @@ void SpeedTest8bits(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROFILE 
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn, TYPE_RGB_8,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn, TYPE_RGB_8,
                             hlcmsProfileOut, TYPE_RGB_8, Intent, cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hlcmsProfileIn);
     cmsCloseProfile(DbgThread(), hlcmsProfileOut);
@@ -8456,7 +8461,7 @@ void SpeedTest8bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROF
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn, TYPE_CMYK_8,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn, TYPE_CMYK_8,
                         hlcmsProfileOut, TYPE_CMYK_8, INTENT_PERCEPTUAL, cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hlcmsProfileIn);
     cmsCloseProfile(DbgThread(), hlcmsProfileOut);
@@ -8491,7 +8496,7 @@ void SpeedTest8bitsCMYK(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROF
     PrintPerformance(Mb, sizeof(Scanline_rgba8), diff);
 
 
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(DbgThread(), hlcmsxform);
 
 }
 
@@ -8511,10 +8516,10 @@ void SpeedTest32bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn,
         TYPE_GRAY_FLT, hlcmsProfileOut, TYPE_GRAY_FLT, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    cmsCloseProfile(DbgThread(), hlcmsProfileIn);
+    cmsCloseProfile(DbgThread(), hlcmsProfileOut);
 
     NumPixels = 256 / Interval * 256 / Interval * 256 / Interval;
     Mb = NumPixels * sizeof(cmsFloat32Number);
@@ -8535,7 +8540,7 @@ void SpeedTest32bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
 
     atime = clock();
 
-    cmsDoTransform(hlcmsxform, In, In, NumPixels);
+    cmsDoTransform(DbgThread(), hlcmsxform, In, In, NumPixels);
 
     diff = clock() - atime;
     free(In);
@@ -8558,10 +8563,10 @@ void SpeedTest16bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn,
         TYPE_GRAY_16, hlcmsProfileOut, TYPE_GRAY_16, Intent, cmsFLAGS_NOCACHE);
-    cmsCloseProfile(hlcmsProfileIn);
-    cmsCloseProfile(hlcmsProfileOut);
+    cmsCloseProfile(DbgThread(), hlcmsProfileIn);
+    cmsCloseProfile(DbgThread(), hlcmsProfileOut);
     Mb = 256*256*256 * sizeof(cmsUInt16Number);
 
     In = (cmsUInt16Number *) malloc(Mb);
@@ -8580,13 +8585,13 @@ void SpeedTest16bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPRO
 
     atime = clock();
 
-    cmsDoTransform(hlcmsxform, In, In, 256*256*256);
+    cmsDoTransform(DbgThread(), hlcmsxform, In, In, 256*256*256);
 
     diff = clock() - atime;
     free(In);
 
     PrintPerformance(Mb, sizeof(cmsUInt16Number), diff);
-    cmsDeleteTransform(hlcmsxform);
+    cmsDeleteTransform(DbgThread(), hlcmsxform);
 }
 
 
@@ -8604,7 +8609,7 @@ void SpeedTest8bitsGray(const char * Title, cmsHPROFILE hlcmsProfileIn, cmsHPROF
     if (hlcmsProfileIn == NULL || hlcmsProfileOut == NULL)
         Die("Unable to open profiles");
 
-    hlcmsxform  = cmsCreateTransformTHR(DbgThread(), hlcmsProfileIn,
+    hlcmsxform  = cmsCreateTransform(DbgThread(), hlcmsProfileIn,
         TYPE_GRAY_8, hlcmsProfileOut, TYPE_GRAY_8, Intent, cmsFLAGS_NOCACHE);
     cmsCloseProfile(DbgThread(), hlcmsProfileIn);
     cmsCloseProfile(DbgThread(), hlcmsProfileOut);
@@ -8644,7 +8649,7 @@ cmsHPROFILE CreateCurves(void)
     cmsHPROFILE h;
 
     Transfer[0] = Transfer[1] = Transfer[2] = Gamma;
-    h = cmsCreateLinearizationDeviceLink(cmsSigRgbData, Transfer);
+    h = cmsCreateLinearizationDeviceLink(DbgThread(), cmsSigRgbData, Transfer);
 
     cmsFreeToneCurve(DbgThread(), Gamma);
 
@@ -8660,35 +8665,35 @@ void SpeedTest(void)
     fflush(stdout);
 
     SpeedTest8bits("8 bits on CLUT profiles",
-        cmsOpenProfileFromFile("test5.icc", "r"),
-        cmsOpenProfileFromFile("test3.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test3.icc", "r"),
         INTENT_PERCEPTUAL);
 
     SpeedTest16bits("16 bits on CLUT profiles",
-        cmsOpenProfileFromFile( "test5.icc", "r"),
-        cmsOpenProfileFromFile( "test3.icc", "r"), INTENT_PERCEPTUAL);
+        cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test3.icc", "r"), INTENT_PERCEPTUAL);
 
     SpeedTest32bits("32 bits on CLUT profiles",
-        cmsOpenProfileFromFile("test5.icc", "r"),
-        cmsOpenProfileFromFile("test3.icc", "r"), INTENT_PERCEPTUAL);
+        cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test3.icc", "r"), INTENT_PERCEPTUAL);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bits("8 bits on Matrix-Shaper profiles",
-        cmsOpenProfileFromFile("test5.icc", "r"),
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
     SpeedTest16bits("16 bits on Matrix-Shaper profiles",
-       cmsOpenProfileFromFile("test5.icc", "r"),
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
     SpeedTest32bits("32 bits on Matrix-Shaper profiles",
-       cmsOpenProfileFromFile("test5.icc", "r"),
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
     printf("\n");
@@ -8696,18 +8701,18 @@ void SpeedTest(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bits("8 bits on SAME Matrix-Shaper profiles",
-        cmsOpenProfileFromFile("test5.icc", "r"),
-        cmsOpenProfileFromFile("test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
         INTENT_PERCEPTUAL);
 
     SpeedTest16bits("16 bits on SAME Matrix-Shaper profiles",
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
     SpeedTest32bits("32 bits on SAME Matrix-Shaper profiles",
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
-        cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_PERCEPTUAL);
 
     printf("\n");
@@ -8715,18 +8720,18 @@ void SpeedTest(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bits("8 bits on Matrix-Shaper profiles (AbsCol)",
-       cmsOpenProfileFromFile("test5.icc", "r"),
-       cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_ABSOLUTE_COLORIMETRIC);
 
     SpeedTest16bits("16 bits on Matrix-Shaper profiles (AbsCol)",
-       cmsOpenProfileFromFile("test5.icc", "r"),
-       cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_ABSOLUTE_COLORIMETRIC);
 
     SpeedTest32bits("32 bits on Matrix-Shaper profiles (AbsCol)",
-       cmsOpenProfileFromFile("test5.icc", "r"),
-       cmsOpenProfileFromFile("aRGBlcms2.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "test5.icc", "r"),
+       cmsOpenProfileFromFile(DbgThread(), "aRGBlcms2.icc", "r"),
         INTENT_ABSOLUTE_COLORIMETRIC);
 
     printf("\n");
@@ -8753,64 +8758,64 @@ void SpeedTest(void)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bitsCMYK("8 bits on CMYK profiles",
-        cmsOpenProfileFromFile("test1.icc", "r"),
-        cmsOpenProfileFromFile("test2.icc", "r"));
+        cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test2.icc", "r"));
 
     SpeedTest16bitsCMYK("16 bits on CMYK profiles",
-        cmsOpenProfileFromFile("test1.icc", "r"),
-        cmsOpenProfileFromFile("test2.icc", "r"));
+        cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test2.icc", "r"));
 
     SpeedTest32bitsCMYK("32 bits on CMYK profiles",
-        cmsOpenProfileFromFile("test1.icc", "r"),
-        cmsOpenProfileFromFile("test2.icc", "r"));
+        cmsOpenProfileFromFile(DbgThread(), "test1.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "test2.icc", "r"));
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bitsGray("8 bits on gray-to gray",
-        cmsOpenProfileFromFile("gray3lcms2.icc", "r"),
-        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+        cmsOpenProfileFromFile(DbgThread(), "gray3lcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     SpeedTest16bitsGray("16 bits on gray-to gray",
-        cmsOpenProfileFromFile("gray3lcms2.icc", "r"),
-        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+        cmsOpenProfileFromFile(DbgThread(), "gray3lcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     SpeedTest32bitsGray("32 bits on gray-to gray",
-        cmsOpenProfileFromFile("gray3lcms2.icc", "r"),
-        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+        cmsOpenProfileFromFile(DbgThread(), "gray3lcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bitsGray("8 bits on gray-to-lab gray",
-        cmsOpenProfileFromFile("graylcms2.icc", "r"),
-        cmsOpenProfileFromFile("glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     SpeedTest16bitsGray("16 bits on gray-to-lab gray",
-        cmsOpenProfileFromFile("graylcms2.icc", "r"),
-        cmsOpenProfileFromFile("glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     SpeedTest32bitsGray("32 bits on gray-to-lab gray",
-        cmsOpenProfileFromFile("graylcms2.icc", "r"),
-        cmsOpenProfileFromFile("glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "glablcms2.icc", "r"), INTENT_RELATIVE_COLORIMETRIC);
 
     printf("\n");
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     SpeedTest8bitsGray("8 bits on SAME gray-to-gray",
-        cmsOpenProfileFromFile("graylcms2.icc", "r"),
-        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"), INTENT_PERCEPTUAL);
 
     SpeedTest16bitsGray("16 bits on SAME gray-to-gray",
-        cmsOpenProfileFromFile("graylcms2.icc", "r"),
-        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"), INTENT_PERCEPTUAL);
 
     SpeedTest32bitsGray("32 bits on SAME gray-to-gray",
-        cmsOpenProfileFromFile("graylcms2.icc", "r"),
-        cmsOpenProfileFromFile("graylcms2.icc", "r"), INTENT_PERCEPTUAL);
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"),
+        cmsOpenProfileFromFile(DbgThread(), "graylcms2.icc", "r"), INTENT_PERCEPTUAL);
 
     printf("\n");
 }
@@ -8827,7 +8832,7 @@ void PrintSupportedIntents(void)
     cmsUInt32Number Codes[200];
     char* Descriptions[200];
 
-    n = cmsGetSupportedIntents(200, Codes, Descriptions);
+    n = cmsGetSupportedIntents(DbgThread(), 200, Codes, Descriptions);
 
     printf("Supported intents:\n");
     for (i=0; i < n; i++) {
@@ -8878,11 +8883,11 @@ int main(int argc, char* argv[])
 
 
     printf("Installing debug memory plug-in ... ");
-    cmsPluginTHR(DbgThread(), &DebugMemHandler);
+    cmsPlugin(DbgThread(), &DebugMemHandler);
     printf("done.\n");
 
     printf("Installing error logger ... ");
-    cmsSetLogErrorHandler(FatalErrorQuit);
+    cmsSetLogErrorHandler(DbgThread(), FatalErrorQuit);
     printf("done.\n");
 
     PrintSupportedIntents();

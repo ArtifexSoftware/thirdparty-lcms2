@@ -825,7 +825,7 @@ cmsTagDescriptor*    _cmsGetTagDescriptor(cmsContext ContextID, cmsTagSignature 
 
 // Error logging ---------------------------------------------------------------------------------------------------------
 
-void                 _cmsTagSignature2String(cmsContext ContextID, char String[5], cmsTagSignature sig);
+void                 _cmsTagSignature2String(char String[5], cmsTagSignature sig);
 
 // Interpolation ---------------------------------------------------------------------------------------------------------
 

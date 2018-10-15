@@ -485,7 +485,7 @@ void DefaultLogErrorHandlerFunction(cmsContext ContextID, cmsUInt32Number ErrorC
 }
 
 // Change log error, context based
-void CMSEXPORT cmsSetLogErrorHandlerTHR(cmsContext ContextID, cmsLogErrorHandlerFunction Fn)
+void CMSEXPORT cmsSetLogErrorHandler(cmsContext ContextID, cmsLogErrorHandlerFunction Fn)
 {
     _cmsLogErrorChunkType* lhg = (_cmsLogErrorChunkType*) _cmsContextGetClientChunk(ContextID, Logger);
 
@@ -496,12 +496,6 @@ void CMSEXPORT cmsSetLogErrorHandlerTHR(cmsContext ContextID, cmsLogErrorHandler
         else
             lhg -> LogErrorHandler = Fn;
     }
-}
-
-// Change log error, legacy
-void CMSEXPORT cmsSetLogErrorHandler(cmsLogErrorHandlerFunction Fn)
-{
-    cmsSetLogErrorHandlerTHR(NULL, Fn);
 }
 
 // Log an error
@@ -525,7 +519,7 @@ void CMSEXPORT cmsSignalError(cmsContext ContextID, cmsUInt32Number ErrorCode, c
 }
 
 // Utility function to print signatures
-void _cmsTagSignature2String(cmsContext ContextID, char String[5], cmsTagSignature sig)
+void _cmsTagSignature2String(char String[5], cmsTagSignature sig)
 {
     cmsUInt32Number be;
 

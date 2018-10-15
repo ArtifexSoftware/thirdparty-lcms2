@@ -1047,7 +1047,7 @@ cmsFloat64Number CMSEXPORT cmsGetProfileVersion(cmsContext ContextID, cmsHPROFIL
 
 
 // Create profile from IOhandler
-cmsHPROFILE CMSEXPORT cmsOpenProfileFromIOhandlerTHR(cmsContext ContextID, cmsIOHANDLER* io)
+cmsHPROFILE CMSEXPORT cmsOpenProfileFromIOhandler(cmsContext ContextID, cmsIOHANDLER* io)
 {
     _cmsICCPROFILE* NewIcc;
     cmsHPROFILE hEmpty = cmsCreateProfilePlaceholder(ContextID);
@@ -1066,7 +1066,7 @@ Error:
 }
 
 // Create profile from IOhandler
-cmsHPROFILE CMSEXPORT cmsOpenProfileFromIOhandler2THR(cmsContext ContextID, cmsIOHANDLER* io, cmsBool write)
+cmsHPROFILE CMSEXPORT cmsOpenProfileFromIOhandler2(cmsContext ContextID, cmsIOHANDLER* io, cmsBool write)
 {
     _cmsICCPROFILE* NewIcc;
     cmsHPROFILE hEmpty = cmsCreateProfilePlaceholder(ContextID);
@@ -1092,7 +1092,7 @@ Error:
 
 
 // Create profile from disk file
-cmsHPROFILE CMSEXPORT cmsOpenProfileFromFileTHR(cmsContext ContextID, const char *lpFileName, const char *sAccess)
+cmsHPROFILE CMSEXPORT cmsOpenProfileFromFile(cmsContext ContextID, const char *lpFileName, const char *sAccess)
 {
     _cmsICCPROFILE* NewIcc;
     cmsHPROFILE hEmpty = cmsCreateProfilePlaceholder(ContextID);
@@ -1120,13 +1120,7 @@ Error:
 }
 
 
-cmsHPROFILE CMSEXPORT cmsOpenProfileFromFile(const char *ICCProfile, const char *sAccess)
-{
-    return cmsOpenProfileFromFileTHR(NULL, ICCProfile, sAccess);
-}
-
-
-cmsHPROFILE  CMSEXPORT cmsOpenProfileFromStreamTHR(cmsContext ContextID, FILE* ICCProfile, const char *sAccess)
+cmsHPROFILE  CMSEXPORT cmsOpenProfileFromStream(cmsContext ContextID, FILE* ICCProfile, const char *sAccess)
 {
     _cmsICCPROFILE* NewIcc;
     cmsHPROFILE hEmpty = cmsCreateProfilePlaceholder(ContextID);
@@ -1153,14 +1147,9 @@ Error:
 
 }
 
-cmsHPROFILE  CMSEXPORT cmsOpenProfileFromStream(FILE* ICCProfile, const char *sAccess)
-{
-    return cmsOpenProfileFromStreamTHR(NULL, ICCProfile, sAccess);
-}
-
 
 // Open from memory block
-cmsHPROFILE CMSEXPORT cmsOpenProfileFromMemTHR(cmsContext ContextID, const void* MemPtr, cmsUInt32Number dwSize)
+cmsHPROFILE CMSEXPORT cmsOpenProfileFromMem(cmsContext ContextID, const void* MemPtr, cmsUInt32Number dwSize)
 {
     _cmsICCPROFILE* NewIcc;
     cmsHPROFILE hEmpty;
@@ -1182,11 +1171,6 @@ cmsHPROFILE CMSEXPORT cmsOpenProfileFromMemTHR(cmsContext ContextID, const void*
 Error:
     cmsCloseProfile(ContextID, hEmpty);
     return NULL;
-}
-
-cmsHPROFILE CMSEXPORT cmsOpenProfileFromMem(const void* MemPtr, cmsUInt32Number dwSize)
-{
-    return cmsOpenProfileFromMemTHR(NULL, MemPtr, dwSize);
 }
 
 
@@ -1283,7 +1267,7 @@ cmsBool SaveTags(cmsContext ContextID, _cmsICCPROFILE* Icc, _cmsICCPROFILE* File
 
                 char String[5];
 
-                _cmsTagSignature2String(ContextID, String, (cmsTagSignature) TypeBase);
+                _cmsTagSignature2String(String, (cmsTagSignature) TypeBase);
                 cmsSignalError(ContextID, cmsERROR_WRITE, "Couldn't write type '%s'", String);
                 return FALSE;
             }
@@ -1562,7 +1546,7 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
 
         char String[5];
 
-        _cmsTagSignature2String(ContextID, String, sig);
+        _cmsTagSignature2String(String, sig);
 
         // An unknown element was found.
         cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unknown tag type '%s' found.", String);
@@ -1595,7 +1579,7 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
 
         char String[5];
 
-        _cmsTagSignature2String(ContextID, String, sig);
+        _cmsTagSignature2String(String, sig);
         cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "Corrupted tag '%s'", String);
         goto Error;
     }
@@ -1606,7 +1590,7 @@ void* CMSEXPORT cmsReadTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTagSig
 
         char String[5];
 
-        _cmsTagSignature2String(ContextID, String, sig);
+        _cmsTagSignature2String(String, sig);
         cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "'%s' Inconsistent number of items: expected %d, got %d",
             String, TagDescriptor ->ElemCount, ElemCount);
         goto Error;
@@ -1710,8 +1694,8 @@ cmsBool CMSEXPORT cmsWriteTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTag
     // Does the tag support this type?
     if (!IsTypeSupported(TagDescriptor, Type)) {
 
-        _cmsTagSignature2String(ContextID, TypeString, (cmsTagSignature) Type);
-        _cmsTagSignature2String(ContextID, SigString,  sig);
+        _cmsTagSignature2String(TypeString, (cmsTagSignature) Type);
+        _cmsTagSignature2String(SigString,  sig);
 
         cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported type '%s' for tag '%s'", TypeString, SigString);
         goto Error;
@@ -1721,8 +1705,8 @@ cmsBool CMSEXPORT cmsWriteTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTag
     TypeHandler =  _cmsGetTagTypeHandler(ContextID, Type);
     if (TypeHandler == NULL) {
 
-        _cmsTagSignature2String(ContextID, TypeString, (cmsTagSignature) Type);
-        _cmsTagSignature2String(ContextID, SigString,  sig);
+        _cmsTagSignature2String(TypeString, (cmsTagSignature) Type);
+        _cmsTagSignature2String(SigString,  sig);
 
         cmsSignalError(ContextID, cmsERROR_UNKNOWN_EXTENSION, "Unsupported type '%s' for tag '%s'", TypeString, SigString);
         goto Error;           // Should never happen
@@ -1741,8 +1725,8 @@ cmsBool CMSEXPORT cmsWriteTag(cmsContext ContextID, cmsHPROFILE hProfile, cmsTag
 
     if (Icc ->TagPtrs[i] == NULL)  {
 
-        _cmsTagSignature2String(ContextID, TypeString, (cmsTagSignature) Type);
-        _cmsTagSignature2String(ContextID, SigString,  sig);
+        _cmsTagSignature2String(TypeString, (cmsTagSignature) Type);
+        _cmsTagSignature2String(SigString,  sig);
         cmsSignalError(ContextID, cmsERROR_CORRUPTION_DETECTED, "Malformed struct in type '%s' for tag '%s'", TypeString, SigString);
 
         goto Error;
