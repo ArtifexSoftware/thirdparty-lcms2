@@ -1153,7 +1153,7 @@ _cmsTRANSFORM* AllocEmptyTransform(cmsContext ContextID, cmsPipeline* lut,
     p->core->Lut = lut;
 
        // Let's see if any plug-in want to do the transform by itself
-       if (core->Lut != NULL) {
+       if (core->Lut != NULL && !(*dwFlags & cmsFLAGS_NOOPTIMIZE)) {
 
               for (Plugin = ctx->TransformCollection;
                      Plugin != NULL;
