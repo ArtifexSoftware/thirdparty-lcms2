@@ -1279,6 +1279,42 @@ cmsFloat64Number SpeedTest16bitsRGB(cmsContext ct, cmsHPROFILE hlcmsProfileIn, c
 }
 
 
+
+static
+void SpeedTest8(void)
+{
+    cmsContext noPlugin = cmsCreateContext(0, 0);
+
+    cmsFloat64Number t[10];
+
+    printf("\n\n");
+    printf("P E R F O R M A N C E   T E S T S   8 B I T S  (D E F A U L T)\n");
+    printf("==============================================================\n\n");
+    fflush(stdout);
+
+    PerformanceHeader();
+    t[0] = Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, noPlugin, "test5.icc", "test3.icc", sizeof(Scanline_rgb8bits), 0);
+    t[1] = Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, noPlugin, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
+    t[2] = Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, noPlugin, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
+    t[3] = Performance("8 bits on curves         ", SpeedTest8bitsRGB, noPlugin, NULL, NULL, sizeof(Scanline_rgb8bits), 0);
+
+    // Note that context 0 has the plug-in installed
+
+    printf("\n\n");
+    printf("P E R F O R M A N C E   T E S T S  8 B I T S  (P L U G I N)\n");
+    printf("===========================================================\n\n");
+    fflush(stdout);
+
+    PerformanceHeader();
+    Performance("8 bits on CLUT profiles  ", SpeedTest8bitsRGB, 0, "test5.icc", "test3.icc", sizeof(Scanline_rgb8bits), t[0]);
+    Performance("8 bits on Matrix-Shaper  ", SpeedTest8bitsRGB, 0, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), t[1]);
+    Performance("8 bits on same MatrixSh  ", SpeedTest8bitsRGB, 0, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), t[2]);
+    Performance("8 bits on curves         ", SpeedTest8bitsRGB, 0, NULL, NULL, sizeof(Scanline_rgb8bits), t[3]);
+
+    cmsDeleteContext(noPlugin);
+}
+
+#if 0
 static
 void SpeedTest8(cmsContext ct)
 {
@@ -1290,8 +1326,9 @@ void SpeedTest8(cmsContext ct)
        Performance("8 bits on Matrix-Shaper profiles", SpeedTest8bitsRGB, ct, "test5.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
        Performance("8 bits on same Matrix-Shaper    ", SpeedTest8bitsRGB, ct, "test0.icc", "test0.icc", sizeof(Scanline_rgb8bits), 0);
        Performance("8 bits on curves                ", SpeedTest8bitsRGB, ct, NULL, NULL, sizeof(Scanline_rgb8bits), 0);
-       // Performance("8 bits on CMYK CLUT profiles    ", SpeedTest8bitsCMYK, ct, "test1.icc", "test2.icc", sizeof(Scanline_rgba15bits), 0);
+
 }
+#endif
 
 
 static
@@ -1395,6 +1432,10 @@ void SpeedTestFloat(cmsContext noPlugin, cmsContext plugin)
        Performance("Floating point on same MatrixSh  ", SpeedTestFloatRGB, plugin, "test0.icc", "test0.icc", sizeof(Scanline_rgbFloat), t[2]);
        Performance("Floating point on curves         ", SpeedTestFloatRGB, plugin, NULL, NULL, sizeof(Scanline_rgbFloat), t[3]);
 }
+
+
+
+
 
 
 static
@@ -1741,7 +1782,6 @@ int main()
        cmsPlugin(plugin, cmsFastFloatExtensions());
        printf("done.\n\n");
 
-       CheckLab2Roundtrip(plugin);
 
        CheckComputeIncrements();
 

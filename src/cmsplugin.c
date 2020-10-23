@@ -186,7 +186,7 @@ cmsBool CMSEXPORT  _cmsReadFloat32Number(cmsContext ContextID, cmsIOHANDLER* io,
            return TRUE;
         #elif defined (__BORLANDC__)
            return TRUE;
-        #elif !defined(_MSC_VER) && !defined(HAVE_FPCLASSIFY)
+        #elif !defined(_MSC_VER) && (defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L) && !defined(HAVE_FPCLASSIFY)
            return TRUE;
         #else
 

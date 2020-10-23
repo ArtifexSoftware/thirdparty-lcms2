@@ -25,3 +25,4 @@ liblcms2mt_fast_float_la_SOURCES = \
   fast_float_15bits.c fast_float_15mats.c fast_float_curves.c fast_float_matsh.c fast_float_separate.c \
   fast_float_sup.c fast_float_tethra.c fast_float_cmyk.c fast_float_internal.h \
   fast_8_curves.c fast_8_matsh.c fast_8_tethra.c
+  fast_8_curves.c fast_8_matsh.c fast_8_matsh_sse.c fast_8_tethra.c

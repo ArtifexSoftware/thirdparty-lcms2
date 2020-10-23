@@ -173,6 +173,16 @@ cmsBool Optimize8MatrixShaper(cmsContext ContextID,
                               cmsUInt32Number* OutputFormat,
                               cmsUInt32Number* dwFlags);
 
+//  8 bits using SSE
+cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
+                             _cmsTransformFn* TransformFn,
+                              void** UserData,
+                              _cmsFreeUserDataFn* FreeUserData,
+                              cmsPipeline** Lut,
+                              cmsUInt32Number* InputFormat,
+                              cmsUInt32Number* OutputFormat,
+                              cmsUInt32Number* dwFlags);
+
 cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
                                _cmsTransformFn* TransformFn,
                                void** UserData,
