@@ -171,7 +171,7 @@ void MatShaperXform8(cmsContext ContextID,
 {
     XMatShaper8Data* p = (XMatShaper8Data*) _cmsGetTransformUserData(CMMcargo);
 
-    register cmsS1Fixed14Number l1, l2, l3;
+    cmsS1Fixed14Number l1, l2, l3;
     cmsS1Fixed14Number r, g, b;
     cmsUInt32Number ri, gi, bi;
     cmsUInt32Number i, ii;
@@ -195,6 +195,9 @@ void MatShaperXform8(cmsContext ContextID,
 
     _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+
+    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+        nalpha = 0;
 
     strideIn = strideOut = 0;
     for (i = 0; i < LineCount; i++) {

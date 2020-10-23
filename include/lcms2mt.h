@@ -86,7 +86,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2100 - 2000)
+#define LCMS_VERSION              (2110 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.

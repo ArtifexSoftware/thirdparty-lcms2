@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0460"
+   LastUpgradeVersion = "1160"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,65 +14,58 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "546B29A210AC677E0054D33A"
+               BlueprintIdentifier = "418B0A7724C5E25200DF2C21"
                BuildableName = "testbed"
                BlueprintName = "testbed"
-               ReferencedContainer = "container:LittleCMS.xcodeproj">
+               ReferencedContainer = "container:lcms2.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES"
-      buildConfiguration = "Debug">
+      shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "546B29A210AC677E0054D33A"
-            BuildableName = "testbed"
-            BlueprintName = "testbed"
-            ReferencedContainer = "container:LittleCMS.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </TestAction>
    <LaunchAction
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
-      useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Debug"
+      useCustomWorkingDirectory = "YES"
+      customWorkingDirectory = "/Users/marti/Documents/GitHub/Little-CMS/testbed"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "546B29A210AC677E0054D33A"
+            BlueprintIdentifier = "418B0A7724C5E25200DF2C21"
             BuildableName = "testbed"
             BlueprintName = "testbed"
-            ReferencedContainer = "container:LittleCMS.xcodeproj">
+            ReferencedContainer = "container:lcms2.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
+      buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "546B29A210AC677E0054D33A"
+            BlueprintIdentifier = "418B0A7724C5E25200DF2C21"
             BuildableName = "testbed"
             BlueprintName = "testbed"
-            ReferencedContainer = "container:LittleCMS.xcodeproj">
+            ReferencedContainer = "container:lcms2.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

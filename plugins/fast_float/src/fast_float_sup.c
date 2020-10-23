@@ -41,9 +41,10 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
        // Try to optimize by joining curves
        if (Optimize8ByJoiningCurves(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
+#ifndef CMS_DONT_USE_SSE2
        // Try to use SSE2 to optimize as a set of curves plus a matrix plus a set of curves
        if (Optimize8MatrixShaperSSE(TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
-
+#endif
        // Try to optimize as a set of curves plus a matrix plus a set of curves
        if (Optimize8MatrixShaper(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
 
@@ -81,7 +82,10 @@ static cmsPluginTransform PluginList = {
 
               { cmsPluginMagicNumber, REQUIRED_LCMS_VERSION, cmsPluginTransformSig, (cmsPluginBase *) &PluginFastFloat },
 
-              Floating_Point_Transforms_Dispatcher
+              // When initializing a union, the initializer list must have only one member, which initializes the first member of
+              // the union unless a designated initializer is used (C99)
+
+              (_cmsTransformFactory) Floating_Point_Transforms_Dispatcher
 };
 
 // This is the main plug-in installer.
@@ -90,4 +94,3 @@ void* cmsFastFloatExtensions(void)
 {
        return (void*)&PluginList;
 }
-

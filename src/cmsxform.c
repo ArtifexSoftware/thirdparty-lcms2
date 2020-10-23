@@ -1014,6 +1014,12 @@ void CMSEXPORT _cmsGetTransformFormattersFloat(struct _cmstransform_struct *CMMc
      if (ToOutput)  *ToOutput  = CMMcargo ->ToOutputFloat;
 }
 
+// returns original flags
+cmsUInt32Number CMSEXPORT _cmsGetTransformFlags(struct _cmstransform_struct* CMMcargo)
+{
+    _cmsAssert(CMMcargo != NULL);
+    return CMMcargo->core->dwOriginalFlags;
+}
 
 void
 _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number OutputFormat, cmsUInt32Number dwFlags)

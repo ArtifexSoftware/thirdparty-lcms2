@@ -1437,7 +1437,7 @@ cmsFloat64Number CMSEXPORT cmsEstimateGamma(cmsContext ContextID, const cmsToneC
 
 // Retrieve parameters on one-segment tone curves
 
-cmsFloat64Number* CMSEXPORT cmsGetToneCurveParams(const cmsToneCurve* t)
+cmsFloat64Number* CMSEXPORT cmsGetToneCurveParams(cmsContext contextID, const cmsToneCurve* t)
 {
     _cmsAssert(t != NULL);
 
