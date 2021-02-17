@@ -412,9 +412,9 @@ cmsBool Optimize8ByJoiningCurves(cmsContext ContextID,
 
     // Maybe the curves are linear at the end
     if (nChans == 1)
-        *TransformFn = (AllCurvesAreLinear(Data) ? FastGrayIdentity8 : FastEvaluateGrayCurves8);
+      *TransformFn = (_cmsTransformFn)(AllCurvesAreLinear(Data) ? FastGrayIdentity8 : FastEvaluateGrayCurves8);
     else
-        *TransformFn = (AllCurvesAreLinear(Data) ? FastRGBIdentity8 : FastEvaluateRGBCurves8);
+        *TransformFn = (_cmsTransformFn)(AllCurvesAreLinear(Data) ? FastRGBIdentity8 : FastEvaluateRGBCurves8);
 
     return TRUE;
 

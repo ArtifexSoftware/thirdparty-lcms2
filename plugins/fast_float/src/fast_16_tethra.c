@@ -22,7 +22,7 @@
 #include "fast_float_internal.h"
 
 // lcms internal
-cmsBool  _cmsOptimizePipeline(cmsContext ContextID,
+CMSAPI cmsBool  CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
                               cmsPipeline** Lut,
                               cmsUInt32Number  Intent,
                               cmsUInt32Number* InputFormat,
@@ -343,11 +343,11 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
 
 
     // If this is a matrix-shaper, the default does already a good job
-    if (cmsPipelineCheckAndRetreiveStages(*Lut, 4,
+    if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 4,
         cmsSigCurveSetElemType, cmsSigMatrixElemType, cmsSigMatrixElemType, cmsSigCurveSetElemType,
         NULL, NULL, NULL, NULL)) return FALSE;
 
-    if (cmsPipelineCheckAndRetreiveStages(*Lut, 2,
+    if (cmsPipelineCheckAndRetreiveStages(ContextID, *Lut, 2,
         cmsSigCurveSetElemType, cmsSigCurveSetElemType,
         NULL, NULL)) return FALSE;
 
@@ -375,7 +375,7 @@ cmsBool Optimize16BitRGBTransform(cmsContext ContextID,
     p16 = Performance16alloc(ContextID, data->Params);
     if (p16 == NULL) return FALSE;
 
-    *TransformFn = PerformanceEval16;
+    *TransformFn = (_cmsTransformFn)PerformanceEval16;
     *UserData   = p16;
     *FreeDataFn = Performance16free;
     *InputFormat  |= 0x02000000;

@@ -339,7 +339,7 @@ cmsBool OptimizeMatrixShaper15(cmsContext ContextID,
               *UserData = SetMatShaper(ContextID, mpeC1->TheCurves, &res, (cmsVEC3*)Data2->Offset, mpeC2->TheCurves, IdentityMat);
               *FreeUserData = FreeMatShaper;
 
-              *TransformFn = MatShaperXform;
+              *TransformFn = (_cmsTransformFn)MatShaperXform;
        }
 
 

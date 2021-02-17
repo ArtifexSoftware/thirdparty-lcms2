@@ -474,9 +474,9 @@ cmsBool OptimizeFloatByJoiningCurves(cmsContext ContextID,
 
     // Maybe the curves are linear at the end
     if (nChans == 1)
-        *TransformFn = (KCurveIsLinear(Data) ? FastFloatGrayIdentity : FastEvaluateFloatGrayCurves);
+        *TransformFn = (_cmsTransformFn)(KCurveIsLinear(Data) ? FastFloatGrayIdentity : FastEvaluateFloatGrayCurves);
     else
-        *TransformFn = (AllRGBCurvesAreLinear(Data) ? FastFloatRGBIdentity : FastEvaluateFloatRGBCurves);
+      *TransformFn = (_cmsTransformFn)(AllRGBCurvesAreLinear(Data) ? FastFloatRGBIdentity : FastEvaluateFloatRGBCurves);
 
     return TRUE;
 

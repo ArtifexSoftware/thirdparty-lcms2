@@ -339,7 +339,7 @@ cmsBool OptimizeFloatMatrixShaper(cmsContext ContextID,
         *UserData = SetMatShaper(ContextID, mpeC1 ->TheCurves, &res, (cmsVEC3*) Data2 ->Offset, mpeC2->TheCurves);
         *FreeUserData = FreeMatShaper;
 
-        *TransformFn = (_cmsTransformFn) MatShaperFloat;
+        *TransformFn = (_cmsTransformFn)MatShaperFloat;
     }
 
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;

@@ -3,10 +3,14 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4123B46925518DB1005F0287 /* linkicc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4123B46825518DB1005F0287 /* linkicc.c */; };
+		4123B4A425518FFB005F0287 /* xgetopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 4123B4A325518FFB005F0287 /* xgetopt.c */; };
+		4123B4B82551903B005F0287 /* tificc.c in Sources */ = {isa = PBXBuildFile; fileRef = 4123B4B72551903B005F0287 /* tificc.c */; };
+		4123B5042551A1C8005F0287 /* libfast_float_plugin.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A8F24C5E35200DF2C21 /* libfast_float_plugin.a */; };
 		418B0A5224C5E1C900DF2C21 /* cmsgamma.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0A3824C5E1C700DF2C21 /* cmsgamma.c */; };
 		418B0A5324C5E1C900DF2C21 /* cmsintrp.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0A3924C5E1C700DF2C21 /* cmsintrp.c */; };
 		418B0A5424C5E1C900DF2C21 /* cmsgmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0A3A24C5E1C700DF2C21 /* cmsgmt.c */; };
@@ -52,7 +56,6 @@
 		418B0AAD24C5E37800DF2C21 /* fast_8_curves.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0A9F24C5E37700DF2C21 /* fast_8_curves.c */; };
 		418B0AAE24C5E37800DF2C21 /* fast_float_matsh.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AA024C5E37800DF2C21 /* fast_float_matsh.c */; };
 		418B0AB024C5E38C00DF2C21 /* lcms2_fast_float.h in Headers */ = {isa = PBXBuildFile; fileRef = 418B0AAF24C5E38C00DF2C21 /* lcms2_fast_float.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		418B0AC124C5E47800DF2C21 /* libfast_float_plugin.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A8F24C5E35200DF2C21 /* libfast_float_plugin.a */; };
 		418B0AC224C5E47C00DF2C21 /* liblcms2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A3124C5E19500DF2C21 /* liblcms2.a */; };
 		418B0ADA24C5E58A00DF2C21 /* liblcms2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A3124C5E19500DF2C21 /* liblcms2.a */; };
 		418B0AEA24C5E5CF00DF2C21 /* liblcms2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A3124C5E19500DF2C21 /* liblcms2.a */; };
@@ -60,11 +63,9 @@
 		418B0AF624C5E6C800DF2C21 /* xgetopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AF324C5E6C700DF2C21 /* xgetopt.c */; };
 		418B0AF724C5E6C800DF2C21 /* vprf.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AF424C5E6C700DF2C21 /* vprf.c */; };
 		418B0AF924C5E6D200DF2C21 /* transicc.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AF824C5E6D200DF2C21 /* transicc.c */; };
-		418B0AFB24C5E6EF00DF2C21 /* linkicc.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AFA24C5E6EE00DF2C21 /* linkicc.c */; };
 		418B0AFF24C5E73100DF2C21 /* xgetopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AFD24C5E73100DF2C21 /* xgetopt.c */; };
 		418B0B0024C5E73100DF2C21 /* vprf.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0AFE24C5E73100DF2C21 /* vprf.c */; };
-		418B0B0F24C5E79200DF2C21 /* tificc.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0B0E24C5E79200DF2C21 /* tificc.c */; };
-		418B0B1324C5E7BB00DF2C21 /* xgetopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0B1124C5E7BB00DF2C21 /* xgetopt.c */; };
+		418B0B0F24C5E79200DF2C21 /* utils.h in Sources */ = {isa = PBXBuildFile; fileRef = 418B0B0E24C5E79200DF2C21 /* utils.h */; };
 		418B0B1424C5E7BB00DF2C21 /* vprf.c in Sources */ = {isa = PBXBuildFile; fileRef = 418B0B1224C5E7BB00DF2C21 /* vprf.c */; };
 		418B0B1524C5E7CF00DF2C21 /* liblcms2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A3124C5E19500DF2C21 /* liblcms2.a */; };
 		418B0B2124C5E8FA00DF2C21 /* liblcms2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 418B0A3124C5E19500DF2C21 /* liblcms2.a */; };
@@ -160,7 +161,7 @@
 		418B0AB624C5E42900DF2C21 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
+			dstPath = /usr/share/man/man1;
 			dstSubfolderSpec = 0;
 			files = (
 			);
@@ -214,6 +215,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4123B46825518DB1005F0287 /* linkicc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = linkicc.c; sourceTree = "<group>"; };
+		4123B4A325518FFB005F0287 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../common/xgetopt.c; sourceTree = "<group>"; };
+		4123B4B72551903B005F0287 /* tificc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tificc.c; sourceTree = "<group>"; };
+		4123B4C2255190FE005F0287 /* tifdiff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tifdiff.c; sourceTree = "<group>"; };
 		418B0A3124C5E19500DF2C21 /* liblcms2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = liblcms2.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		418B0A3824C5E1C700DF2C21 /* cmsgamma.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cmsgamma.c; path = ../../../src/cmsgamma.c; sourceTree = "<group>"; };
 		418B0A3924C5E1C700DF2C21 /* cmsintrp.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = cmsintrp.c; path = ../../../src/cmsintrp.c; sourceTree = "<group>"; };
@@ -261,39 +266,35 @@
 		418B0A9F24C5E37700DF2C21 /* fast_8_curves.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = fast_8_curves.c; path = ../../../plugins/fast_float/src/fast_8_curves.c; sourceTree = "<group>"; };
 		418B0AA024C5E37800DF2C21 /* fast_float_matsh.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = fast_float_matsh.c; path = ../../../plugins/fast_float/src/fast_float_matsh.c; sourceTree = "<group>"; };
 		418B0AAF24C5E38C00DF2C21 /* lcms2_fast_float.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = lcms2_fast_float.h; path = ../../../plugins/fast_float/include/lcms2_fast_float.h; sourceTree = "<group>"; };
-		418B0AB824C5E42900DF2C21 /* fast_float_testbed */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fast_float_testbed; sourceTree = BUILT_PRODUCTS_DIR; };
+		418B0AB824C5E42900DF2C21 /* testbed */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = testbed; path = fast_float_testbed; sourceTree = BUILT_PRODUCTS_DIR; };
 		418B0ACB24C5E4EA00DF2C21 /* transicc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = transicc; sourceTree = BUILT_PRODUCTS_DIR; };
 		418B0AE124C5E5C300DF2C21 /* linkicc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = linkicc; sourceTree = BUILT_PRODUCTS_DIR; };
-		418B0AF124C5E6B000DF2C21 /* fast_float_testbed.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fast_float_testbed.c; path = ../../../../plugins/fast_float/testbed/fast_float_testbed.c; sourceTree = "<group>"; };
-		418B0AF324C5E6C700DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../../utils/common/xgetopt.c; sourceTree = "<group>"; };
-		418B0AF424C5E6C700DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../../utils/common/vprf.c; sourceTree = "<group>"; };
-		418B0AF524C5E6C800DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../../utils/common/utils.h; sourceTree = "<group>"; };
-		418B0AF824C5E6D200DF2C21 /* transicc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = transicc.c; path = ../../../../utils/transicc/transicc.c; sourceTree = "<group>"; };
-		418B0AFA24C5E6EE00DF2C21 /* linkicc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = linkicc.c; path = ../../../../utils/linkicc/linkicc.c; sourceTree = "<group>"; };
-		418B0AFC24C5E73100DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../../utils/common/utils.h; sourceTree = "<group>"; };
-		418B0AFD24C5E73100DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../../utils/common/xgetopt.c; sourceTree = "<group>"; };
-		418B0AFE24C5E73100DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../../utils/common/vprf.c; sourceTree = "<group>"; };
+		418B0AF124C5E6B000DF2C21 /* fast_float_testbed.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fast_float_testbed.c; path = ../../../plugins/fast_float/testbed/fast_float_testbed.c; sourceTree = SOURCE_ROOT; };
+		418B0AF324C5E6C700DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../utils/common/xgetopt.c; sourceTree = SOURCE_ROOT; };
+		418B0AF424C5E6C700DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../utils/common/vprf.c; sourceTree = SOURCE_ROOT; };
+		418B0AF524C5E6C800DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../utils/common/utils.h; sourceTree = SOURCE_ROOT; };
+		418B0AF824C5E6D200DF2C21 /* transicc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = transicc.c; path = ../../../utils/transicc/transicc.c; sourceTree = SOURCE_ROOT; };
+		418B0AFC24C5E73100DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../utils/common/utils.h; sourceTree = SOURCE_ROOT; };
+		418B0AFD24C5E73100DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../utils/common/xgetopt.c; sourceTree = SOURCE_ROOT; };
+		418B0AFE24C5E73100DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../utils/common/vprf.c; sourceTree = SOURCE_ROOT; };
 		418B0B0524C5E76100DF2C21 /* tificc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tificc; sourceTree = BUILT_PRODUCTS_DIR; };
-		418B0B0E24C5E79200DF2C21 /* tificc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tificc.c; path = ../../../../utils/tificc/tificc.c; sourceTree = "<group>"; };
-		418B0B1024C5E7BB00DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../../utils/common/utils.h; sourceTree = "<group>"; };
-		418B0B1124C5E7BB00DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../../utils/common/xgetopt.c; sourceTree = "<group>"; };
-		418B0B1224C5E7BB00DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../../utils/common/vprf.c; sourceTree = "<group>"; };
+		418B0B0E24C5E79200DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../utils/common/utils.h; sourceTree = SOURCE_ROOT; };
+		418B0B1224C5E7BB00DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../utils/common/vprf.c; sourceTree = SOURCE_ROOT; };
 		418B0B1A24C5E85600DF2C21 /* tifdiff */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tifdiff; sourceTree = BUILT_PRODUCTS_DIR; };
-		418B0B2424C5E92100DF2C21 /* tifdiff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tifdiff.c; path = ../../../../utils/tificc/tifdiff.c; sourceTree = "<group>"; };
-		418B0B2624C5E92B00DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../../utils/common/utils.h; sourceTree = "<group>"; };
-		418B0B2724C5E92B00DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../../utils/common/vprf.c; sourceTree = "<group>"; };
-		418B0B2824C5E92B00DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../../utils/common/xgetopt.c; sourceTree = "<group>"; };
+		418B0B2424C5E92100DF2C21 /* tifdiff.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tifdiff.c; path = ../../../utils/tificc/tifdiff.c; sourceTree = SOURCE_ROOT; };
+		418B0B2724C5E92B00DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../common/vprf.c; sourceTree = "<group>"; };
+		418B0B2824C5E92B00DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../common/xgetopt.c; sourceTree = "<group>"; };
 		418B0B2F24C5E95D00DF2C21 /* jpegicc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = jpegicc; sourceTree = BUILT_PRODUCTS_DIR; };
-		418B0B3624C5E98E00DF2C21 /* iccjpeg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = iccjpeg.c; path = ../../../../utils/jpgicc/iccjpeg.c; sourceTree = "<group>"; };
-		418B0B3724C5E98E00DF2C21 /* iccjpeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iccjpeg.h; path = ../../../../utils/jpgicc/iccjpeg.h; sourceTree = "<group>"; };
-		418B0B3924C5E99600DF2C21 /* jpgicc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = jpgicc.c; path = ../../../../utils/jpgicc/jpgicc.c; sourceTree = "<group>"; };
-		418B0B3E24C5E9F700DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../../utils/common/vprf.c; sourceTree = "<group>"; };
-		418B0B3F24C5E9F700DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../../utils/common/xgetopt.c; sourceTree = "<group>"; };
-		418B0B4024C5E9F700DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../../utils/common/utils.h; sourceTree = "<group>"; };
-		418B0B4324C5EC1D00DF2C21 /* testcms2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcms2.c; path = ../../../../testbed/testcms2.c; sourceTree = "<group>"; };
-		418B0B4424C5EC1D00DF2C21 /* testcms2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testcms2.h; path = ../../../../testbed/testcms2.h; sourceTree = "<group>"; };
-		418B0B4524C5EC1D00DF2C21 /* testplugin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testplugin.c; path = ../../../../testbed/testplugin.c; sourceTree = "<group>"; };
-		418B0B4824C5EC2A00DF2C21 /* zoo_icc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zoo_icc.c; path = ../../../../testbed/zoo_icc.c; sourceTree = "<group>"; };
+		418B0B3624C5E98E00DF2C21 /* iccjpeg.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = iccjpeg.c; path = ../../../utils/jpgicc/iccjpeg.c; sourceTree = SOURCE_ROOT; };
+		418B0B3724C5E98E00DF2C21 /* iccjpeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = iccjpeg.h; path = ../../../utils/jpgicc/iccjpeg.h; sourceTree = SOURCE_ROOT; };
+		418B0B3924C5E99600DF2C21 /* jpgicc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = jpgicc.c; sourceTree = "<group>"; };
+		418B0B3E24C5E9F700DF2C21 /* vprf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vprf.c; path = ../../../utils/common/vprf.c; sourceTree = SOURCE_ROOT; };
+		418B0B3F24C5E9F700DF2C21 /* xgetopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xgetopt.c; path = ../../../utils/common/xgetopt.c; sourceTree = SOURCE_ROOT; };
+		418B0B4024C5E9F700DF2C21 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../../utils/common/utils.h; sourceTree = SOURCE_ROOT; };
+		418B0B4324C5EC1D00DF2C21 /* testcms2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcms2.c; path = ../../../testbed/testcms2.c; sourceTree = SOURCE_ROOT; };
+		418B0B4424C5EC1D00DF2C21 /* testcms2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testcms2.h; path = ../../../testbed/testcms2.h; sourceTree = SOURCE_ROOT; };
+		418B0B4524C5EC1D00DF2C21 /* testplugin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testplugin.c; path = ../../../testbed/testplugin.c; sourceTree = "<group>"; };
+		418B0B4824C5EC2A00DF2C21 /* zoo_icc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zoo_icc.c; path = ../../../testbed/zoo_icc.c; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -324,7 +325,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				418B0AC224C5E47C00DF2C21 /* liblcms2.a in Frameworks */,
-				418B0AC124C5E47800DF2C21 /* libfast_float_plugin.a in Frameworks */,
+				4123B5042551A1C8005F0287 /* libfast_float_plugin.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +396,7 @@
 				418B0A3124C5E19500DF2C21 /* liblcms2.a */,
 				418B0A7824C5E25200DF2C21 /* testbed */,
 				418B0A8F24C5E35200DF2C21 /* libfast_float_plugin.a */,
-				418B0AB824C5E42900DF2C21 /* fast_float_testbed */,
+				418B0AB824C5E42900DF2C21 /* testbed */,
 				418B0ACB24C5E4EA00DF2C21 /* transicc */,
 				418B0AE124C5E5C300DF2C21 /* linkicc */,
 				418B0B0524C5E76100DF2C21 /* tificc */,
@@ -456,8 +457,8 @@
 				418B0B4424C5EC1D00DF2C21 /* testcms2.h */,
 				418B0B4524C5EC1D00DF2C21 /* testplugin.c */,
 			);
-			path = testbed;
-			sourceTree = "<group>";
+			name = testbed;
+			sourceTree = SOURCE_ROOT;
 		};
 		418B0A8924C5E30000DF2C21 /* Frameworks */ = {
 			isa = PBXGroup;
@@ -493,7 +494,8 @@
 			children = (
 				418B0AF124C5E6B000DF2C21 /* fast_float_testbed.c */,
 			);
-			path = fast_float_testbed;
+			name = fast_float_testbed;
+			path = ../../../plugins/fast_float/testbed;
 			sourceTree = "<group>";
 		};
 		418B0ACC24C5E4EA00DF2C21 /* transicc */ = {
@@ -504,41 +506,44 @@
 				418B0AF424C5E6C700DF2C21 /* vprf.c */,
 				418B0AF324C5E6C700DF2C21 /* xgetopt.c */,
 			);
-			path = transicc;
-			sourceTree = "<group>";
+			name = transicc;
+			sourceTree = SOURCE_ROOT;
 		};
 		418B0AE224C5E5C300DF2C21 /* linkicc */ = {
 			isa = PBXGroup;
 			children = (
+				4123B46825518DB1005F0287 /* linkicc.c */,
 				418B0AFC24C5E73100DF2C21 /* utils.h */,
 				418B0AFE24C5E73100DF2C21 /* vprf.c */,
 				418B0AFD24C5E73100DF2C21 /* xgetopt.c */,
-				418B0AFA24C5E6EE00DF2C21 /* linkicc.c */,
 			);
-			path = linkicc;
-			sourceTree = "<group>";
+			name = linkicc;
+			path = ../../../utils/linkicc;
+			sourceTree = SOURCE_ROOT;
 		};
 		418B0B0624C5E76100DF2C21 /* tificc */ = {
 			isa = PBXGroup;
 			children = (
-				418B0B1024C5E7BB00DF2C21 /* utils.h */,
+				4123B4B72551903B005F0287 /* tificc.c */,
+				4123B4A325518FFB005F0287 /* xgetopt.c */,
 				418B0B1224C5E7BB00DF2C21 /* vprf.c */,
-				418B0B1124C5E7BB00DF2C21 /* xgetopt.c */,
-				418B0B0E24C5E79200DF2C21 /* tificc.c */,
+				418B0B0E24C5E79200DF2C21 /* utils.h */,
 			);
-			path = tificc;
-			sourceTree = "<group>";
+			name = tificc;
+			path = ../../../utils/tificc;
+			sourceTree = SOURCE_ROOT;
 		};
 		418B0B1B24C5E85600DF2C21 /* tifdiff */ = {
 			isa = PBXGroup;
 			children = (
-				418B0B2624C5E92B00DF2C21 /* utils.h */,
+				4123B4C2255190FE005F0287 /* tifdiff.c */,
 				418B0B2724C5E92B00DF2C21 /* vprf.c */,
 				418B0B2824C5E92B00DF2C21 /* xgetopt.c */,
 				418B0B2424C5E92100DF2C21 /* tifdiff.c */,
 			);
-			path = tifdiff;
-			sourceTree = "<group>";
+			name = tifdiff;
+			path = ../../../utils/tificc;
+			sourceTree = SOURCE_ROOT;
 		};
 		418B0B3024C5E95D00DF2C21 /* jpegicc */ = {
 			isa = PBXGroup;
@@ -550,7 +555,8 @@
 				418B0B3624C5E98E00DF2C21 /* iccjpeg.c */,
 				418B0B3724C5E98E00DF2C21 /* iccjpeg.h */,
 			);
-			path = jpegicc;
+			name = jpegicc;
+			path = ../../../utils/jpgicc;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -647,7 +653,7 @@
 			);
 			name = fast_float_testbed;
 			productName = fast_float_testbed;
-			productReference = 418B0AB824C5E42900DF2C21 /* fast_float_testbed */;
+			productReference = 418B0AB824C5E42900DF2C21 /* testbed */;
 			productType = "com.apple.product-type.tool";
 		};
 		418B0ACA24C5E4EA00DF2C21 /* transicc */ = {
@@ -746,7 +752,7 @@
 		418B0A2924C5E19500DF2C21 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1160;
+				LastUpgradeCheck = 1210;
 				ORGANIZATIONNAME = littlecms;
 				TargetAttributes = {
 					418B0A3024C5E19500DF2C21 = {
@@ -779,7 +785,7 @@
 				};
 			};
 			buildConfigurationList = 418B0A2C24C5E19500DF2C21 /* Build configuration list for PBXProject "lcms2" */;
-			compatibilityVersion = "Xcode 9.3";
+			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -890,9 +896,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				418B0AFB24C5E6EF00DF2C21 /* linkicc.c in Sources */,
 				418B0B0024C5E73100DF2C21 /* vprf.c in Sources */,
 				418B0AFF24C5E73100DF2C21 /* xgetopt.c in Sources */,
+				4123B46925518DB1005F0287 /* linkicc.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -900,9 +906,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				418B0B0F24C5E79200DF2C21 /* tificc.c in Sources */,
+				4123B4A425518FFB005F0287 /* xgetopt.c in Sources */,
+				418B0B0F24C5E79200DF2C21 /* utils.h in Sources */,
 				418B0B1424C5E7BB00DF2C21 /* vprf.c in Sources */,
-				418B0B1324C5E7BB00DF2C21 /* xgetopt.c in Sources */,
+				4123B4B82551903B005F0287 /* tificc.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1004,6 +1011,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1062,6 +1070,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1083,6 +1092,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -1102,6 +1112,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				EXECUTABLE_PREFIX = lib;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -1196,6 +1207,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = /usr/local/include;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_LDFLAGS = (
 					"-L",
 					/usr/local/lib,
@@ -1210,6 +1222,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = /usr/local/include;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_LDFLAGS = (
 					"-L",
 					/usr/local/lib,

@@ -168,7 +168,8 @@ XMatShaper8Data* SetMatShaper(cmsContext ContextID, cmsToneCurve* Curve1[3], cms
 
 // A fast matrix-shaper evaluator for 8 bits.
 static
-void MatShaperXform8SSE(struct _cmstransform_struct *CMMcargo,
+void MatShaperXform8SSE(cmsContext ContextID,
+                     struct _cmstransform_struct *CMMcargo,
                      const void* Input,
                      void* Output,
                      cmsUInt32Number PixelsPerLine,
@@ -209,8 +210,8 @@ void MatShaperXform8SSE(struct _cmstransform_struct *CMMcargo,
     cmsUInt32Number* output_index = (cmsUInt32Number*)(((uintptr_t)buffer + 16) & ~0xf);
 
 
-    _cmsComputeComponentIncrements(cmsGetTransformInputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
-    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat((cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
+    _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
     if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
@@ -270,7 +271,7 @@ void MatShaperXform8SSE(struct _cmstransform_struct *CMMcargo,
                /**
                * Take next value whilst store is being performed
                */
-               if (i < PixelsPerLine - 1)
+               if (ii < PixelsPerLine - 1)
                {
                    rvector = _mm_set1_ps(p->Shaper1R[*rin]);
                    gvector = _mm_set1_ps(p->Shaper1G[*gin]);
@@ -334,7 +335,6 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
     cmsMAT3 res;
     cmsBool IdentityMat = FALSE;
     cmsPipeline* Dest, *Src;
-    cmsContext ContextID;
     cmsUInt32Number nChans;
 
     // Check for SSE2 support
@@ -357,18 +357,18 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
     nChans    = T_CHANNELS(*InputFormat);
 
     // Get both matrices, which are 3x3
-    Data1 = (_cmsStageMatrixData*) cmsStageData(Matrix1);
-    Data2 = (_cmsStageMatrixData*) cmsStageData(Matrix2);
+    Data1 = (_cmsStageMatrixData*) cmsStageData(ContextID, Matrix1);
+    Data2 = (_cmsStageMatrixData*) cmsStageData(ContextID, Matrix2);
 
     // Input offset should be zero
     if (Data1->Offset != NULL) return FALSE;
 
     // Multiply both matrices to get the result
-    _cmsMAT3per(&res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
+    _cmsMAT3per(ContextID, &res, (cmsMAT3*)Data2->Double, (cmsMAT3*)Data1->Double);
 
     // Now the result is in res + Data2 -> Offset. Maybe is a plain identity?
     IdentityMat = FALSE;
-    if (_cmsMAT3isIdentity(&res) && Data2->Offset == NULL) {
+    if (_cmsMAT3isIdentity(ContextID, &res) && Data2->Offset == NULL) {
 
         // We can get rid of full matrix
         IdentityMat = TRUE;
@@ -379,7 +379,7 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
     if (!Dest) return FALSE;
 
     // Assamble the new LUT
-    cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageDup(Curve1));
+    cmsPipelineInsertStage(ContextID, Dest, cmsAT_BEGIN, cmsStageDup(ContextID, Curve1));
 
     if (!IdentityMat) {
 
@@ -388,7 +388,7 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
     }
 
 
-    cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, cmsStageDup(Curve2));
+    cmsPipelineInsertStage(ContextID, Dest, cmsAT_END, cmsStageDup(ContextID, Curve2));
 
     // If identity on matrix, we can further optimize the curves, so call the join curves routine
     if (IdentityMat) {
@@ -396,8 +396,8 @@ cmsBool Optimize8MatrixShaperSSE(cmsContext ContextID,
       Optimize8ByJoiningCurves(ContextID, TransformFn, UserData, FreeUserData, &Dest, InputFormat, OutputFormat, dwFlags);
     }
     else {
-        _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(Curve1);
-        _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(Curve2);
+        _cmsStageToneCurvesData* mpeC1 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve1);
+        _cmsStageToneCurvesData* mpeC2 = (_cmsStageToneCurvesData*) cmsStageData(ContextID, Curve2);
 
         // In this particular optimization, cache does not help as it takes more time to deal with
         // the cache that with the pixel handling

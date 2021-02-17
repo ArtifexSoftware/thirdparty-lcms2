@@ -103,7 +103,7 @@ void FillSecondShaper(cmsContext ContextID, cmsUInt8Number* Table, cmsToneCurve*
     for (i=0; i < 0x4001; i++) {
 
         R   = (cmsFloat32Number) (i / 16384.0f);
-        Val = cmsEvalToneCurveFloat(Curve, R);
+        Val = cmsEvalToneCurveFloat(ContextID, Curve, R);
         w = (cmsInt32Number) (Val * 255.0f + 0.5f);
         if (w < 0) w = 0;
         if (w > 255) w = 255;
