@@ -462,7 +462,7 @@ cmsFloat64Number Clip(cmsFloat64Number v)
 }
 
 static
-cmsInt32Number ForwardSampler(cmsContext ContextID, register const cmsUInt16Number In[], cmsUInt16Number Out[], void* Cargo)
+cmsInt32Number ForwardSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], cmsUInt16Number Out[], void* Cargo)
 {
     FakeCMYKParams* p = (FakeCMYKParams*) Cargo;
     cmsFloat64Number rgb[3], cmyk[4];
@@ -492,7 +492,7 @@ cmsInt32Number ForwardSampler(cmsContext ContextID, register const cmsUInt16Numb
 
 
 static
-cmsInt32Number ReverseSampler(cmsContext ContextID, register const cmsUInt16Number In[], register cmsUInt16Number Out[], register void* Cargo)
+cmsInt32Number ReverseSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
 {
     FakeCMYKParams* p = (FakeCMYKParams*) Cargo;
     cmsFloat64Number c, m, y, k, rgb[3];
@@ -1725,9 +1725,10 @@ cmsUInt16Number Fn8D3(cmsUInt16Number a1, cmsUInt16Number a2, cmsUInt16Number a3
 
 
 static
-cmsInt32Number Sampler3D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler3D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], 0, 0, 0, 0, 0, 3);
@@ -1741,9 +1742,10 @@ cmsInt32Number Sampler3D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler4D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler4D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], 0, 0, 0, 0, 4);
@@ -1756,9 +1758,10 @@ cmsInt32Number Sampler4D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler5D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler5D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], 0, 0, 0, 5);
@@ -1771,9 +1774,10 @@ cmsInt32Number Sampler5D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler6D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler6D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], In[5], 0, 0, 6);
@@ -1786,9 +1790,10 @@ cmsInt32Number Sampler6D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler7D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler7D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], In[5], In[6], 0, 7);
@@ -1801,9 +1806,10 @@ cmsInt32Number Sampler7D(cmsContext ContextID, register const cmsUInt16Number In
 }
 
 static
-cmsInt32Number Sampler8D(cmsContext ContextID, register const cmsUInt16Number In[],
-               register cmsUInt16Number Out[],
-               register void * Cargo)
+cmsInt32Number Sampler8D(cmsContext ContextID,
+               CMSREGISTER const cmsUInt16Number In[],
+               CMSREGISTER cmsUInt16Number Out[],
+               CMSREGISTER void * Cargo)
 {
 
     Out[0] = Fn8D1(In[0], In[1], In[2], In[3], In[4], In[5], In[6], In[7], 8);
@@ -3758,6 +3764,73 @@ Error:
 
 
 
+// For educational purposes ONLY. No error checking is performed!
+static
+cmsInt32Number CreateNamedColorProfile(cmsContext ContextID)
+{
+    // Color list database
+    cmsNAMEDCOLORLIST* colors = cmsAllocNamedColorList(ContextID, 0, 10, 4, "PANTONE", "TCX");
+
+    // Containers for names
+    cmsMLU* DescriptionMLU, *CopyrightMLU;
+
+    // Create n empty profile
+    cmsHPROFILE hProfile = cmsOpenProfileFromFile(ContextID, "named.icc", "w");
+
+    // Values
+    cmsCIELab Lab;
+    cmsUInt16Number PCS[3], Colorant[4];
+
+    // Set profile class
+    cmsSetProfileVersion(ContextID, hProfile, 4.3);
+    cmsSetDeviceClass(ContextID, hProfile, cmsSigNamedColorClass);
+    cmsSetColorSpace(ContextID, hProfile, cmsSigCmykData);
+    cmsSetPCS(ContextID, hProfile, cmsSigLabData);
+    cmsSetHeaderRenderingIntent(ContextID, hProfile, INTENT_PERCEPTUAL);
+
+    // Add description and copyright only in english/US
+    DescriptionMLU = cmsMLUalloc(ContextID, 1);
+    CopyrightMLU   = cmsMLUalloc(ContextID, 1);
+
+    cmsMLUsetWide(ContextID, DescriptionMLU, "en", "US", L"Profile description");
+    cmsMLUsetWide(ContextID, CopyrightMLU,   "en", "US", L"Profile copyright");
+
+    cmsWriteTag(ContextID, hProfile, cmsSigProfileDescriptionTag, DescriptionMLU);
+    cmsWriteTag(ContextID, hProfile, cmsSigCopyrightTag, CopyrightMLU);
+
+    // Set the media white point
+    cmsWriteTag(ContextID, hProfile, cmsSigMediaWhitePointTag, cmsD50_XYZ());
+
+
+    // Populate one value, Colorant = CMYK values in 16 bits, PCS[] = Encoded Lab values (in V2 format!!)
+    Lab.L = 50; Lab.a = 10; Lab.b = -10;
+    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
+    Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
+    cmsAppendNamedColor(ContextID, colors, "Hazelnut 14-1315", PCS, Colorant);
+
+    // Another one. Consider to write a routine for that
+    Lab.L = 40; Lab.a = -5; Lab.b = 8;
+    cmsFloat2LabEncodedV2(ContextID, PCS, &Lab);
+    Colorant[0] = 10 * 257; Colorant[1] = 20 * 257; Colorant[2] = 30 * 257; Colorant[3] = 40 * 257;
+    cmsAppendNamedColor(ContextID, colors, "Kale 18-0107", PCS, Colorant);
+
+    // Write the colors database
+    cmsWriteTag(ContextID, hProfile, cmsSigNamedColor2Tag, colors);
+
+    // That will create the file
+    cmsCloseProfile(ContextID, hProfile);
+
+    // Free resources
+    cmsFreeNamedColorList(ContextID, colors);
+    cmsMLUfree(ContextID, DescriptionMLU);
+    cmsMLUfree(ContextID, CopyrightMLU);
+
+    remove("named.icc");
+
+    return 1;
+}
+
+
 // ----------------------------------------------------------------------------------------------------------
 
 // Formatters
@@ -4879,7 +4952,7 @@ cmsBool CheckOneStr(cmsContext ContextID, cmsMLU* mlu, cmsInt32Number n)
 
 
 static
-void SetOneStr(cmsContext ContextID, cmsMLU** mlu, wchar_t* s1, wchar_t* s2)
+void SetOneStr(cmsContext ContextID, cmsMLU** mlu, const wchar_t* s1, const wchar_t* s2)
 {
     *mlu = cmsMLUalloc(ContextID, 0);
     cmsMLUsetWide(ContextID, *mlu, "en", "US", s1);
@@ -9053,6 +9126,8 @@ int main(int argc, char* argv[])
 
     // Named color
     Check(ctx, "Named color lists", CheckNamedColorList);
+    Check(ctx, "Create named color profile", CreateNamedColorProfile);
+
 
     // Profile I/O (this one is huge!)
     Check(ctx, "Profile creation", CheckProfileCreation);

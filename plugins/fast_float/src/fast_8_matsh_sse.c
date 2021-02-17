@@ -270,7 +270,7 @@ void MatShaperXform8SSE(struct _cmstransform_struct *CMMcargo,
                /**
                * Take next value whilst store is being performed
                */
-               if (i < PixelsPerLine - 1)
+               if (ii < PixelsPerLine - 1)
                {
                    rvector = _mm_set1_ps(p->Shaper1R[*rin]);
                    gvector = _mm_set1_ps(p->Shaper1G[*gin]);

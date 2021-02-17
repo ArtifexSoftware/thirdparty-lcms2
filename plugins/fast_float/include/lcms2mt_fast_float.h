@@ -30,12 +30,17 @@ extern "C" {
 #   endif
 #endif
 
-#define LCMS2_FAST_FLOAT_VERSION   1300
+#define LCMS2_FAST_FLOAT_VERSION   1400
 
 // Configuration toggles
 
-// Uncomment this if yout target platform can deal with SSE2
-// #define CMS_DONT_USE_SSE2 1
+// Uncomment this if you want to avoid SSE2 entirely.
+// Default is commented out. There are two kernels, one is vectorized and the other is not.
+// On inizialization, there is a SSE2 detection. If the SSE2 detection succeeds, then the vectorized code is selected.
+// If the CPU is old and does not support SSE2, then the non-vectorized  code is used.
+// If you define the toggle, there is no detection and the non-vectorized kernel is always used.
+
+//  #define CMS_DONT_USE_SSE2 1
 
 
 // The one and only plug-in entry point. To install this plugin in your code
@@ -44,7 +49,7 @@ extern "C" {
 //  cmsPlugin(cmsFastFloatExtensions());
 //
 
-void* cmsFastFloatExtensions(void);
+CMSAPI void* CMSEXPORT cmsFastFloatExtensions(void);
 
 
 // New encodings that the plug-in implements

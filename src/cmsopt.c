@@ -419,7 +419,10 @@ Prelin16Data* PrelinOpt16alloc(cmsContext ContextID,
 // Sampler implemented by another LUT. This is a clean way to precalculate the devicelink 3D CLUT for
 // almost any transform. We use floating point precision and then convert from floating point to 16 bits.
 static
-cmsInt32Number XFormSampler16(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], CMSREGISTER cmsUInt16Number Out[], CMSREGISTER void* Cargo)
+cmsInt32Number XFormSampler16(cmsContext ContextID,
+                              CMSREGISTER const cmsUInt16Number In[],
+                              CMSREGISTER cmsUInt16Number Out[],
+                              CMSREGISTER void* Cargo)
 {
     cmsPipeline* Lut = (cmsPipeline*) Cargo;
     cmsFloat32Number InFloat[cmsMAXCHANNELS], OutFloat[cmsMAXCHANNELS];
@@ -778,7 +781,7 @@ Error:
 
     if (DataSetIn == NULL && DataSetOut == NULL) {
 
-        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsOPTeval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
+        _cmsPipelineSetOptimizationParameters(ContextID, Dest, (_cmsPipelineEval16Fn) DataCLUT->Params->Interpolation.Lerp16, DataCLUT->Params, NULL, NULL);
     }
     else {
 
@@ -1913,7 +1916,7 @@ cmsBool  _cmsRegisterOptimizationPlugin(cmsContext ContextID, cmsPluginBase* Dat
 }
 
 // The entry point for LUT optimization
-cmsBool _cmsOptimizePipeline(cmsContext ContextID,
+cmsBool CMSEXPORT _cmsOptimizePipeline(cmsContext ContextID,
                              cmsPipeline**    PtrLut,
                              cmsUInt32Number  Intent,
                              cmsUInt32Number* InputFormat,

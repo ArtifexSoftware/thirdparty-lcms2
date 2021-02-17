@@ -87,9 +87,9 @@ void FloatCMYKCLUTEval(cmsContext ContextID,
     cmsFloat32Number        c0, c1 = 0, c2 = 0, c3 = 0;
 
     cmsUInt32Number         OutChan;
-    FloatCMYKData*          p8 = (FloatCMYKData*) _cmsGetTransformUserData(CMMcargo);
+    FloatCMYKData*          pcmyk = (FloatCMYKData*) _cmsGetTransformUserData(CMMcargo);
 
-    const cmsInterpParams*  p = p8 ->p;
+    const cmsInterpParams*  p = pcmyk ->p;
     cmsUInt32Number        TotalOut = p -> nOutputs;
     cmsUInt32Number        TotalPlusAlpha;
     const cmsFloat32Number* LutTable = (const cmsFloat32Number*)p->Table;
@@ -331,9 +331,8 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     int nGridPoints;
     cmsPipeline* OptimizedLUT = NULL;
     cmsStage* OptimizedCLUTmpe;
-    cmsColorSpaceSignature OutputColorSpace;
     cmsStage* mpe;
-    FloatCMYKData* p8;
+    FloatCMYKData* pcmyk;
     _cmsStageCLutData* data;
 
     // For empty transforms, do nothing
@@ -357,8 +356,7 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
             if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
     }
 
-    OutputColorSpace = _cmsICCcolorSpace(ContextID, T_COLORSPACE(*OutputFormat));
-    nGridPoints      = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
+    nGridPoints = _cmsReasonableGridpointsByColorspace(cmsSigRgbData, *dwFlags);
 
     // Create the result LUT
     OptimizedLUT = cmsPipelineAlloc(ContextID, 4, cmsPipelineOutputChannels(ContextID, OriginalLut));
@@ -377,15 +375,15 @@ cmsBool OptimizeCLUTCMYKTransform(cmsContext ContextID,
     // Set the evaluator, copy parameters
     data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
 
-    p8 = FloatCMYKAlloc(ContextID, data ->Params);
-    if (p8 == NULL) return FALSE;
+    pcmyk = FloatCMYKAlloc(ContextID, data ->Params);
+    if (pcmyk == NULL) return FALSE;
 
     // And return the obtained LUT
     cmsPipelineFree(ContextID, OriginalLut);
 
     *Lut = OptimizedLUT;
     *TransformFn = FloatCMYKCLUTEval;
-    *UserData   = p8;
+    *UserData   = pcmyk;
     *FreeDataFn = _cmsFree;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
     return TRUE;
