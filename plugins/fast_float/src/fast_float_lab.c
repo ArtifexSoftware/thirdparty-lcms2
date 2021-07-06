@@ -8,12 +8,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -87,7 +87,7 @@ void tabulateSigmoid(cmsContext ContextID, cmsInt32Number type, cmsFloat32Number
     const cmsFloat64Number sigmoidal_slope = 2.5;
     cmsToneCurve* original;
     cmsInt32Number i;
-    
+
     memset(table, 0, sizeof(cmsFloat32Number) * tablePoints);
     original = cmsBuildParametricToneCurve(ContextID, type, &sigmoidal_slope);
     if (original != NULL)
@@ -98,7 +98,7 @@ void tabulateSigmoid(cmsContext ContextID, cmsInt32Number type, cmsFloat32Number
 
             table[i] = fclamp(cmsEvalToneCurveFloat(ContextID, original, v));
         }
-     
+
         cmsFreeToneCurve(ContextID, original);
     }
 }
@@ -109,26 +109,26 @@ static
 LabCLUTdata* LabCLUTAlloc(cmsContext ContextID, const cmsInterpParams* p)
 {
     LabCLUTdata* fd;
-    
+
     fd = (LabCLUTdata*) _cmsMallocZero(ContextID, sizeof(LabCLUTdata));
     if (fd == NULL) return NULL;
-    
+
     fd ->ContextID = ContextID;
     fd ->p = p;
-    
-    tabulateSigmoid(ContextID, +TYPE_SIGMOID, fd->sigmoidIn, SIGMOID_POINTS);     
-    tabulateSigmoid(ContextID, -TYPE_SIGMOID, fd->sigmoidOut, SIGMOID_POINTS);    
+
+    tabulateSigmoid(ContextID, +TYPE_SIGMOID, fd->sigmoidIn, SIGMOID_POINTS);
+    tabulateSigmoid(ContextID, -TYPE_SIGMOID, fd->sigmoidOut, SIGMOID_POINTS);
 
     return fd;
 }
 
 static
 void LabCLUTFree(cmsContext ContextID, void* v)
-{    
+{
     _cmsFree(ContextID, v);
 }
 
-// Sampler implemented by another LUT. 
+// Sampler implemented by another LUT.
 static
 int XFormSampler(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[], CMSREGISTER cmsFloat32Number Out[], CMSREGISTER void* Cargo)
 {
@@ -140,8 +140,20 @@ int XFormSampler(cmsContext ContextID, CMSREGISTER const cmsFloat32Number In[], 
     linearized[1] = LinLerp1D(In[1], container->data->sigmoidOut);
     linearized[2] = LinLerp1D(In[2], container->data->sigmoidOut);
 
-    cmsPipelineEvalFloat(ContextID, linearized, Out, container->original);    
+    cmsPipelineEvalFloat(ContextID, linearized, Out, container->original);
     return TRUE;
+}
+
+
+// To prevent out of bounds indexing
+cmsINLINE cmsFloat32Number fclamp128(cmsFloat32Number v)
+{
+    return ((v < -128) || isnan(v)) ? -128.0f : (v > 128.0f ? 128.0f : v);
+}
+
+cmsINLINE cmsFloat32Number fclamp100(cmsFloat32Number v)
+{
+    return ((v < 1.0e-9f) || isnan(v)) ? 0.0f : (v > 100.0f ? 100.0f : v);
 }
 
 // A optimized interpolation for Lab.
@@ -190,7 +202,7 @@ void LabCLUTEval(cmsContext ContextID,
 
     cmsUInt32Number nchans, nalpha;
     cmsUInt32Number strideIn, strideOut;
-                                                        
+
     _cmsComputeComponentIncrements(InputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
@@ -216,9 +228,10 @@ void LabCLUTEval(cmsContext ContextID,
         for (ii = 0; ii < PixelsPerLine; ii++) {
 
             // Decode Lab and go across sigmoids on a*/b*
-            l = fclamp((*(cmsFloat32Number*)lin) / 100.0f);
-            a = LinLerp1D(((*(cmsFloat32Number*)ain) + 128.0f) / 255.0f, pfloat->sigmoidIn);
-            b = LinLerp1D(((*(cmsFloat32Number*)bin) + 128.0f) / 255.0f, pfloat->sigmoidIn);
+            l = fclamp100( *(cmsFloat32Number*)lin ) / 100.0f;
+
+            a = LinLerp1D((( fclamp128( *(cmsFloat32Number*)ain)) + 128.0f) / 255.0f, pfloat->sigmoidIn);
+            b = LinLerp1D((( fclamp128( *(cmsFloat32Number*)bin)) + 128.0f) / 255.0f, pfloat->sigmoidIn);
 
             lin += SourceIncrements[0];
             ain += SourceIncrements[1];
@@ -227,11 +240,11 @@ void LabCLUTEval(cmsContext ContextID,
             px = l * p->Domain[0];
             py = a * p->Domain[1];
             pz = b * p->Domain[2];
-            
+
             x0 = _cmsQuickFloor(px); rx = (px - (cmsFloat32Number)x0);
             y0 = _cmsQuickFloor(py); ry = (py - (cmsFloat32Number)y0);
             z0 = _cmsQuickFloor(pz); rz = (pz - (cmsFloat32Number)z0);
-            
+
             X0 = p->opta[2] * x0;
             X1 = X0 + (l >= 1.0f ? 0 : p->opta[2]);
 
@@ -304,7 +317,10 @@ void LabCLUTEval(cmsContext ContextID,
             }
 
             if (xin)
-                *out[TotalOut] = *xin;
+            {
+                *(cmsFloat32Number*) (out[TotalOut]) = *xin;
+                out[TotalOut] += DestIncrements[TotalOut];
+            }
         }
 
         strideIn  += Stride->BytesPerLineIn;
@@ -335,7 +351,7 @@ int GetGridpoints(cmsUInt32Number dwFlags)
         if (dwFlags & cmsFLAGS_LOWRESPRECALC) {
             return 33;
         }
-        else 
+        else
             return 51;
 
 }
@@ -346,16 +362,15 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
                                   _cmsTransformFn* TransformFn,
                                   void** UserData,
                                   _cmsFreeUserDataFn* FreeDataFn,
-                                  cmsPipeline** Lut, 
-                                  cmsUInt32Number* InputFormat, 
-                                  cmsUInt32Number* OutputFormat, 
-                                  cmsUInt32Number* dwFlags)      
+                                  cmsPipeline** Lut,
+                                  cmsUInt32Number* InputFormat,
+                                  cmsUInt32Number* OutputFormat,
+                                  cmsUInt32Number* dwFlags)
 {
     cmsPipeline* OriginalLut;
-    int nGridPoints;    
-    cmsPipeline* OptimizedLUT = NULL;    
+    int nGridPoints;
+    cmsPipeline* OptimizedLUT = NULL;
     cmsStage* OptimizedCLUTmpe;
-    cmsStage* mpe;
     LabCLUTdata* pfloat;
     _cmsStageCLutData* data;
     ResamplingContainer container;
@@ -375,31 +390,24 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
 
     OriginalLut = *Lut;
 
-    // Named color pipelines cannot be optimized either
-    for (mpe = cmsPipelineGetPtrToFirstStage(ContextID, OriginalLut);
-        mpe != NULL;
-        mpe = cmsStageNext(ContextID, mpe)) {
-        if (cmsStageType(ContextID, mpe) == cmsSigNamedColorElemType) return FALSE;
-    }
-
     nGridPoints = GetGridpoints(*dwFlags);
-             
+
     // Create the result LUT
     OptimizedLUT = cmsPipelineAlloc(ContextID, 3, cmsPipelineOutputChannels(ContextID, OriginalLut));
     if (OptimizedLUT == NULL) goto Error;
-    
+
     // Allocate the CLUT for result
     OptimizedCLUTmpe = cmsStageAllocCLutFloat(ContextID, nGridPoints, 3, cmsPipelineOutputChannels(ContextID, OriginalLut), NULL);
 
     // Add the CLUT to the destination LUT
     cmsPipelineInsertStage(ContextID, OptimizedLUT, cmsAT_BEGIN, OptimizedCLUTmpe);
-    
-    // Set the evaluator, copy parameters   
+
+    // Set the evaluator, copy parameters
     data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
 
     // Allocate data
     pfloat = LabCLUTAlloc(ContextID, data ->Params);
-    if (pfloat == NULL) return FALSE;   
+    if (pfloat == NULL) return FALSE;
 
     container.data = pfloat;
     container.original = OriginalLut;
@@ -418,9 +426,8 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
     return TRUE;
 
 Error:
-      
+
     if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
 
-    return FALSE;    
+    return FALSE;
 }
-
