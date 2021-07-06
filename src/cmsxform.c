@@ -540,11 +540,11 @@ void TransformOnePixelWithGamutCheck(cmsContext ContextID, _cmsTRANSFORM* p,
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
 } while (0)
@@ -554,11 +554,11 @@ do {                               \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
 } while (0)
@@ -568,11 +568,11 @@ do {                                            \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -584,11 +584,11 @@ do {                               \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -600,11 +600,11 @@ do {                                            \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -617,11 +617,11 @@ do {                               \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -634,13 +634,13 @@ do {                                            \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                 \
+#define UNPACK(CTX,T,D,S,Z,A)               \
 do {                                        \
         (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
         (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
         (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
 } while (0)
@@ -650,13 +650,13 @@ do {                               \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                         \
+#define UNPACK(CTX,T,D,S,Z,A)                       \
 do {                                                \
         (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
         (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
         (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
 } while (0)
@@ -666,13 +666,13 @@ do {                                            \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -684,13 +684,13 @@ do {                               \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -702,13 +702,13 @@ do {                                            \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -721,13 +721,13 @@ do {                               \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -740,14 +740,14 @@ do {                                            \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[3] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
 } while (0)
@@ -757,14 +757,14 @@ do {                               \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
 } while (0)
@@ -774,14 +774,14 @@ do {                                            \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[3] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -793,14 +793,14 @@ do {                               \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -812,14 +812,14 @@ do {                                            \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[3] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -832,14 +832,14 @@ do {                               \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 0
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -854,11 +854,11 @@ do {                                            \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
 } while (0)
@@ -868,11 +868,11 @@ do {                               \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
 } while (0)
@@ -882,11 +882,11 @@ do {                                            \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -898,11 +898,11 @@ do {                               \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -914,11 +914,11 @@ do {                                            \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -931,11 +931,11 @@ do {                               \
 #define CACHED
 #define INBYTES 2
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -948,13 +948,13 @@ do {                                            \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                 \
+#define UNPACK(CTX,T,D,S,Z,A)               \
 do {                                        \
         (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
         (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
         (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
 } while (0)
@@ -964,13 +964,13 @@ do {                               \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                         \
+#define UNPACK(CTX,T,D,S,Z,A)                       \
 do {                                                \
         (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
         (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
         (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
 } while (0)
@@ -980,13 +980,13 @@ do {                                            \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -998,13 +998,13 @@ do {                               \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -1016,13 +1016,13 @@ do {                                            \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -1035,13 +1035,13 @@ do {                               \
 #define CACHED
 #define INBYTES 6
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -1054,14 +1054,14 @@ do {                                            \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[3] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
 } while (0)
@@ -1071,14 +1071,14 @@ do {                               \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
 } while (0)
@@ -1088,14 +1088,14 @@ do {                                            \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[3] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -1107,14 +1107,14 @@ do {                               \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
@@ -1126,14 +1126,14 @@ do {                                            \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 1
-#define UNPACK(CTX,T,D,S,Z)                \
+#define UNPACK(CTX,T,D,S,Z,A)              \
 do {                                       \
        (D)[0] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[1] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[2] = FROM_8_TO_16(*(S)); (S)++; \
        (D)[3] = FROM_8_TO_16(*(S)); (S)++; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)          \
+#define PACK(CTX,T,S,D,Z,A)        \
 do {                               \
     *(D)++ = FROM_16_TO_8((S)[0]); \
     *(D)++ = FROM_16_TO_8((S)[1]); \
@@ -1146,19 +1146,397 @@ do {                               \
 #define CACHED
 #define INBYTES 8
 #define EXTRABYTES 2
-#define UNPACK(CTX,T,D,S,Z)                        \
+#define UNPACK(CTX,T,D,S,Z,A)                      \
 do {                                               \
        (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
        (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
 } while (0)
-#define PACK(CTX,T,S,D,Z)                       \
+#define PACK(CTX,T,S,D,Z,A)                     \
 do {                                            \
     *(cmsUInt16Number *)(D) = (S)[0]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[1]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[2]; (D) += 2; \
     *(cmsUInt16Number *)(D) = (S)[3]; (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+
+static inline mul255(int a, int b)
+{
+	/* see Jim Blinn's book "Dirty Pixels" for how this works */
+	int x = a * b + 128;
+	x += x >> 8;
+	return x >> 8;
+}
+
+static inline mul65535(int a, int b)
+{
+	/* see Jim Blinn's book "Dirty Pixels" for how this works */
+	int x = a * b + 0x8000;
+	x += x >> 16;
+	return x >> 16;
+}
+
+// Same again, but with premultiplied alpha
+//
+// Special ones for common cases.
+#define FUNCTION_NAME CachedXFORM1to1_P1
+#define CACHED
+#define INBYTES 2
+#define OUTBYTES 2
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[1]
+#define UNPACK(CTX,T,D,S,Z,A)                 \
+do {                                          \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM1x2to1x2_P1
+#define CACHED
+#define INBYTES 2
+#define OUTBYTES 2
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[1])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    cmsUInt32Number inva = 0xffff0000U / (A); \
+    (D)[0] = (cmsUInt16Number)(((*(cmsUInt16Number *)(S)) * inva)>>16); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM1to3_P1
+#define CACHED
+#define INBYTES 2
+#define OUTBYTES 6
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[1]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[1]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[2]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM1x2to3x2_P1
+#define CACHED
+#define INBYTES 2
+#define OUTBYTES 6
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[1])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[1],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[2],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM1to4_P1
+#define CACHED
+#define INBYTES 2
+#define OUTBYTES 8
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[1]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[1]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[2]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[3]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM1x2to4x2_P1
+#define CACHED
+#define INBYTES 2
+#define OUTBYTES 8
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[1])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[1],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[2],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[3],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM3to1_P1
+#define CACHED
+#define INBYTES 6
+#define OUTBYTES 2
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[3]
+#define UNPACK(CTX,T,D,S,Z,A)               \
+do {                                        \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[1] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[2] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM3x2to1x2_P1
+#define CACHED
+#define INBYTES 6
+#define OUTBYTES 2
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[3])
+#define UNPACK(CTX,T,D,S,Z,A)                       \
+do {                                                \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM3to3_P1
+#define CACHED
+#define INBYTES 6
+#define OUTBYTES 6
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[3]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[1] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[2] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[1]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[2]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM3x2to3x2_P1
+#define CACHED
+#define INBYTES 6
+#define OUTBYTES 6
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[3])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[1],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[2],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM3to4_P1
+#define CACHED
+#define INBYTES 6
+#define OUTBYTES 8
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[3]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[1] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[2] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[1]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[2]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[3]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM3x2to4x2_P1
+#define CACHED
+#define INBYTES 6
+#define OUTBYTES 8
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[3])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[1],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[2],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[3],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM4to1_P1
+#define CACHED
+#define INBYTES 8
+#define OUTBYTES 2
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[4]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[1] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[2] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[3] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM4x2to1x2_P1
+#define CACHED
+#define INBYTES 8
+#define OUTBYTES 2
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[4])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM4to3_P1
+#define CACHED
+#define INBYTES 8
+#define OUTBYTES 6
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[4]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[1] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[2] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[3] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[1]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[2]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM4x2to3x2_P1
+#define CACHED
+#define INBYTES 8
+#define OUTBYTES 6
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[4])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[1],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[2],A); (D) += 2; \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM4to4_P1
+#define CACHED
+#define INBYTES 8
+#define OUTBYTES 8
+#define EXTRABYTES 1
+#define PREALPHA(CTX,T,S) (S)[4]
+#define UNPACK(CTX,T,D,S,Z,A)              \
+do {                                       \
+    cmsUInt32Number inva = 0xFFFFU / (A); \
+    (D)[0] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[1] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[2] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+    (D)[3] = (cmsUInt16Number)((*(S) * inva)>>8); (S)++; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)        \
+do {                               \
+    *(D)++ = mul255(FROM_16_TO_8((S)[0]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[1]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[2]),(A)); \
+    *(D)++ = mul255(FROM_16_TO_8((S)[3]),(A)); \
+} while (0)
+#include "extra_xform.h"
+
+#define FUNCTION_NAME CachedXFORM4x2to4x2_P1
+#define CACHED
+#define INBYTES 8
+#define OUTBYTES 8
+#define EXTRABYTES 2
+#define PREALPHA(CTX,T,S) (((cmsUInt16Number *)(void *)(S))[4])
+#define UNPACK(CTX,T,D,S,Z,A)                      \
+do {                                               \
+    (D)[0] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[1] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[2] = *(cmsUInt16Number *)(S); (S) += 2; \
+    (D)[3] = *(cmsUInt16Number *)(S); (S) += 2; \
+} while (0)
+#define PACK(CTX,T,S,D,Z,A)                     \
+do {                                            \
+    *(cmsUInt16Number *)(D) = mul65535((S)[0],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[1],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[2],A); (D) += 2; \
+    *(cmsUInt16Number *)(D) = mul65535((S)[3],A); (D) += 2; \
 } while (0)
 #include "extra_xform.h"
 
@@ -1370,64 +1748,132 @@ _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number
         return;
     }
     if (T_EXTRA(InputFormat) == 1 && T_EXTRA(OutputFormat) == 1) {
-        if ((InputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3)|EXTRA_SH(1))) == 0 &&
-            (OutputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3)|EXTRA_SH(1))) == 0) {
-            switch ((InputFormat & (CHANNELS_SH(7)|BYTES_SH(3)))|
-                    ((OutputFormat & (CHANNELS_SH(7)|BYTES_SH(3)))<<6)) {
-                case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM1to1_1;
-                    return;
-                case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM1x2to1x2_1;
-                    return;
-                case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM1to3_1;
-                    return;
-                case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM1x2to3x2_1;
-                    return;
-                case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM1to4_1;
-                    return;
-                case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM1x2to4x2_1;
-                    return;
-                case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
-                    p ->xform = CachedXFORM3to1_1;
-                    return;
-                case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
-                    p ->xform = CachedXFORM3x2to1x2_1;
-                    return;
-                case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM3to3_1;
-                    return;
-                case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM3x2to3x2_1;
-                    return;
-                case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM3to4_1;
-                    return;
-                case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM3x2to4x2_1;
-                    return;
-                case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM4to1_1;
-                    return;
-                case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM4x2to1x2_1;
-                    return;
-                case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM4to3_1;
-                    return;
-                case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM4x2to3x2_1;
-                    return;
-                case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
-                    p->xform = CachedXFORM4to4_1;
-                    return;
-                case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
-                    p->xform = CachedXFORM4x2to4x2_1;
-                    return;
+        if (T_PREMULT(InputFormat) ^ T_PREMULT(OutputFormat)) {
+            // Error!
+            p ->xform = NullXFORM;
+            return;
+        }
+        if (T_PREMULT(InputFormat)) {
+            if ((InputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3)|EXTRA_SH(1)|PREMULT_SH(1))) == 0 &&
+                (OutputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3)|EXTRA_SH(1)|PREMULT_SH(1))) == 0) {
+                switch ((InputFormat & (CHANNELS_SH(7)|BYTES_SH(3)))|
+                        ((OutputFormat & (CHANNELS_SH(7)|BYTES_SH(3)))<<6)) {
+                    case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM1to1_P1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM1x2to1x2_P1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM1to3_P1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM1x2to3x2_P1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM1to4_P1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM1x2to4x2_P1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
+                        p ->xform = CachedXFORM3to1_P1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
+                        p ->xform = CachedXFORM3x2to1x2_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM3to3_P1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM3x2to3x2_P1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM3to4_P1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM3x2to4x2_P1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM4to1_P1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM4x2to1x2_P1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM4to3_P1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM4x2to3x2_P1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM4to4_P1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM4x2to4x2_P1;
+                        return;
+                }
+            }
+        } else {
+            if ((InputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3)|EXTRA_SH(1))) == 0 &&
+                (OutputFormat & ~(COLORSPACE_SH(31)|CHANNELS_SH(7)|BYTES_SH(3)|EXTRA_SH(1))) == 0) {
+                switch ((InputFormat & (CHANNELS_SH(7)|BYTES_SH(3)))|
+                        ((OutputFormat & (CHANNELS_SH(7)|BYTES_SH(3)))<<6)) {
+                    case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM1to1_1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM1x2to1x2_1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM1to3_1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM1x2to3x2_1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM1to4_1;
+                        return;
+                    case CHANNELS_SH(1) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM1x2to4x2_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
+                        p ->xform = CachedXFORM3to1_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
+                        p ->xform = CachedXFORM3x2to1x2_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM3to3_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM3x2to3x2_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM3to4_1;
+                        return;
+                    case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM3x2to4x2_1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(1) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM4to1_1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM4x2to1x2_1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM4to3_1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(3) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM4x2to3x2_1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(1) | ((CHANNELS_SH(4) | BYTES_SH(1))<<6):
+                        p->xform = CachedXFORM4to4_1;
+                        return;
+                    case CHANNELS_SH(4) | BYTES_SH(2) | ((CHANNELS_SH(4) | BYTES_SH(2))<<6):
+                        p->xform = CachedXFORM4x2to4x2_1;
+                        return;
+                }
             }
         }
     }

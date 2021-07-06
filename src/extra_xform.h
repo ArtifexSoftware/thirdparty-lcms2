@@ -18,16 +18,23 @@
 // number of bytes in an unpacked data chunk (NOT including extras). INBYTES
 // will only have an effect if CACHED or NO_UNPACK.
 //
+// For Premultiplied Alpha modes, you must define PREMULT(CTX,T,S) to return
+// the alpha value. This can be in any range you like, as long as 0 means 0.
+//
 // If you know the code to be used to unpack (or pack, or both) data to/from
 // the simple 16 bit transform input/output format, then you can choose
 // to this directly by defining UNPACK/PACK macros as follows:
-//   UNPACK(T,TO,FROM,SIZE) (Opt)   code to unpack input data (T = Transform
-//                                  TO = buffer to unpack into, FROM = data,
-//                                  SIZE = size of data)
-//   PACK(T,FROM,TO,SIZE)   (Opt)   code to pack transformed input data
-//                                  (T = Transform, FROM = transformed data,
-//                                  TO = output buffer to pack into,
-//                                  SIZE = size of data)
+//   UNPACK(T,TO,FROM,SIZE,AL) (Opt)   code to unpack input data (T = Transform
+//                                     TO = buffer to unpack into, FROM = data,
+//                                     SIZE = size of data, AL = Alpha)
+//   PACK(T,FROM,TO,SIZE,AL)   (Opt)   code to pack transformed input data
+//                                    (T = Transform, FROM = transformed data,
+//                                    TO = output buffer to pack into,
+//                                    SIZE = size of data, AL = Alpha)
+// Ignore AL unless PREMULT is defined, in which case it will be in the format
+// returned from PREMULT. AL is guaranteed to be non-zero. UNPACK should undo
+// the premultiplication by AL (i.e. divide by AL), and PACK should apply AL
+// (i.e. multiply by AL).
 //
 // As an alternative to the above, if you know the function name that would
 // be called, supply that in UNPACKFN and PACKFN and inlining compilers
@@ -98,32 +105,36 @@
 #if   defined(UNPACK)
  // Nothing to do, UNPACK is already defined
 #elif defined(NO_UNPACK)
- #define UNPACK(CTX,T,TO,FROM,STRIDE) do { } while (0)
+ #define UNPACK(CTX,T,TO,FROM,STRIDE,AL) do { } while (0)
 #elif defined(UNPACKFN)
- #define UNPACK(CTX,T,TO,FROM,STRIDE) \
-    do { (FROM) = UNPACKFN((CTX),(T),(TO),(FROM),(STRIDE)); } while (0)
+ #define UNPACK(CTX,T,TO,FROM,STRIDE,AL) \
+    do { (FROM) = UNPACKFN((CTX),(T),(TO),(FROM),(STRIDE),(AL)); } while (0)
 #elif defined(XFORM_FLOAT)
- #define UNPACK(CTX,T,TO,FROM,STRIDE) \
+ #define UNPACK(CTX,T,TO,FROM,STRIDE,AL) \
     do { (FROM) = (T)->FromInputFloat((CTX),(T),(TO),(FROM),(STRIDE)); } while (0)
 #else
- #define UNPACK(CTX,T,TO,FROM,STRIDE) \
+ #define UNPACK(CTX,T,TO,FROM,STRIDE,AL) \
     do { (FROM) = (T)->FromInput((CTX),(T),(TO),(FROM),(STRIDE)); } while (0)
 #endif
 
 #if defined(PACK)
  // Nothing to do, PACK is already defined
 #elif defined(NO_PACK)
- #define PACK(CTX,T,FROM,TO,STRIDE) \
+ #define PACK(CTX,T,FROM,TO,STRIDE,AL) \
      do { (FROM) += ((OUTBYTES)/sizeof(XFORM_TYPE)); } while (0)
 #elif defined(PACKFN)
- #define PACK(CTX,T,FROM,TO,STRIDE) \
+ #define PACK(CTX,T,FROM,TO,STRIDE,AL) \
      do { (TO) = PACKFN((CTX),(T),(FROM),(TO),(STRIDE)); } while (0)
 #elif defined(XFORM_FLOAT)
- #define PACK(CTX,T,FROM,TO,STRIDE) \
+ #define PACK(CTX,T,FROM,TO,STRIDE,AL) \
      do { (TO) = (T)->ToOutputFloat((CTX),(T),(FROM),(TO),(STRIDE)); } while (0)
 #else
- #define PACK(CTX,T,FROM,TO,STRIDE) \
+ #define PACK(CTX,T,FROM,TO,STRIDE,AL) \
      do { (TO) = (T)->ToOutput((CTX),(T),(FROM),(TO),(STRIDE)); } while (0)
+#endif
+
+#ifndef ZEROPACK
+#define ZEROPACK(CTX,T,TO) memset((TO),0,1+((OUTBYTES)/sizeof(XFORM_TYPE)))
 #endif
 
 #if defined(NO_PACK) && !defined(COPY_MATCHED)
@@ -244,53 +255,62 @@ void FUNCTION_NAME(cmsContext ContextID,
         currIn = (XFORM_TYPE *)accum;
 #endif
         while (n-- > 0) { // prevIn == CacheIn, wOut = CacheOut
-            UNPACK(ContextID,p,currIn,accum,bppi);
+#ifdef PREALPHA
+            cmsUInt32Number alpha = PREALPHA(ContextID,p,accum);
+            if (alpha == 0) {
+                ZEROPACK(ContextID,p,output);
+            } else {
+#endif
+                UNPACK(ContextID,p,currIn,accum,bppi,alpha);
 #ifdef CACHED
-            if (COMPARE(currIn, prevIn))
+                if (COMPARE(currIn, prevIn))
 #endif /* CACHED */
-            {
+                {
 #ifdef GAMUTCHECK
  #ifdef XFORM_FLOAT
-                cmsFloat32Number OutOfGamut;
+                    cmsFloat32Number OutOfGamut;
 
-                // Evaluate gamut marker.
-                cmsPipelineEvalFloat(currIn, &OutOfGamut, core->GamutCheck);
+                    // Evaluate gamut marker.
+                    cmsPipelineEvalFloat(currIn, &OutOfGamut, core->GamutCheck);
 
-                // Is current color out of gamut?
-                if (OutOfGamut > 0.0)
-                    // Certainly, out of gamut
-                    for (j=0; j < cmsMAXCHANNELS; j++)
-                        fOut[j] = -1.0;
-                else
+                    // Is current color out of gamut?
+                    if (OutOfGamut > 0.0)
+                        // Certainly, out of gamut
+                        for (j=0; j < cmsMAXCHANNELS; j++)
+                            fOut[j] = -1.0;
+                    else
  #else
-                cmsUInt16Number wOutOfGamut;
+                    cmsUInt16Number wOutOfGamut;
 
-                evalGamut(ContextID, currIn, &wOutOfGamut, core->GamutCheck->Data);
-                if (wOutOfGamut >= 1)
-                    /* RJW: Could be faster? copy once to a local buffer? */
-                    cmsGetAlarmCodes(ContextID, wOut);
-                else
+                    evalGamut(ContextID, currIn, &wOutOfGamut, core->GamutCheck->Data);
+                    if (wOutOfGamut >= 1)
+                        /* RJW: Could be faster? copy once to a local buffer? */
+                        cmsGetAlarmCodes(ContextID, wOut);
+                    else
  #endif /* FLOAT_XFORM */
 #endif /* GAMUTCHECK */
-                    eval(ContextID, currIn, wOut, data);
+                        eval(ContextID, currIn, wOut, data);
 #ifdef NO_UNPACK
  #ifdef CACHED
-                prevIn = currIn;
+                    prevIn = currIn;
  #endif
-                currIn = (XFORM_TYPE *)(((char *)currIn) + INBYTES + EXTRABYTES);
+                    currIn = (XFORM_TYPE *)(((char *)currIn) + INBYTES + EXTRABYTES);
 #else
  #ifdef CACHED
-                {XFORM_TYPE *tmp = currIn; currIn = prevIn; prevIn = tmp;} // SWAP
+                    {XFORM_TYPE *tmp = currIn; currIn = prevIn; prevIn = tmp;} // SWAP
  #endif /* CACHED */
 #endif /* NO_UNPACK */
-            }
+                }
 #ifdef NO_PACK
-            else
-                COPY_MATCHED(prevOut,wOut);
-            prevOut = wOut;
+                else
+                    COPY_MATCHED(prevOut,wOut);
+                prevOut = wOut;
 #endif
-            PACK(ContextID,p,wOut,output,bppo);
-            COPY_EXTRAS(p,accum,output);
+                PACK(ContextID,p,wOut,output,bppo,alpha);
+                COPY_EXTRAS(p,accum,output);
+#ifdef PREALPHA
+            }
+#endif
         } /* End x loop */
         in = (void *)((cmsUInt8Number *)in + Stride->BytesPerLineIn);
         out = (void *)((cmsUInt8Number *)out + Stride->BytesPerLineOut);
@@ -334,3 +354,5 @@ void FUNCTION_NAME(cmsContext ContextID,
 #undef EXTRABYTES
 #undef COPY_EXTRAS
 #undef BULK_COPY_EXTRAS
+#undef PREALPHA
+#undef ZEROPACK

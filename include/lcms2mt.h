@@ -676,9 +676,9 @@ typedef void* cmsHTRANSFORM;
 
 // Format of pixel is defined by one cmsUInt32Number, using bit fields as follows
 //
-//                              2               1            0
-//                         543210 9 8 76543 2 1 0 9 8 7654 321
-//                         EEEEEE A O TTTTT Y F P X S CCCC BBB
+//                        22  2222 1111  1111 11
+//                        54  3210 9876  5432 1098  7654 3210
+//                        ME  EEEE EAOT  TTTT YFPX  SCCC CBBB
 //
 //            A: Floating point -- With this flag we can differentiate 16 bits as float and as int
 //            O: Optimized -- previous optimization already returns the final 8-bit value
@@ -691,7 +691,9 @@ typedef void* cmsHTRANSFORM;
 //            C: Channels (Samples per pixel)
 //            B: bytes per sample
 //            Y: Swap first - changes ABGR to BGRA and KCMY to CMYK
+//            M: preMultiplied alpha.
 
+#define PREMULT_SH(e)          ((e) << 25)
 #define EXTRA_SH(e)            ((e) << 19)
 #define FLOAT_SH(a)            ((a) << 18)
 #define OPTIMIZED_SH(s)        ((s) << 17)
@@ -705,6 +707,7 @@ typedef void* cmsHTRANSFORM;
 #define BYTES_SH(b)            (b)
 
 // These macros unpack format specifiers into integers
+#define T_PREMULT(e)          (((e)>>25)&1)
 #define T_EXTRA(e)            (((e)>>19)&63)
 #define T_FLOAT(a)            (((a)>>18)&1)
 #define T_OPTIMIZED(o)        (((o)>>17)&1)
