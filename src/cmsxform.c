@@ -2025,7 +2025,7 @@ _cmsFindFormatter(_cmsTRANSFORM* p, cmsUInt32Number InputFormat, cmsUInt32Number
                         p ->xform = CachedXFORM3to1_P1;
                         return;
                     case CHANNELS_SH(3) | BYTES_SH(2) | ((CHANNELS_SH(1) | BYTES_SH(2))<<6):
-                        p ->xform = CachedXFORM3x2to1x2_2;
+                        p ->xform = CachedXFORM3x2to1x2_P2;
                         return;
                     case CHANNELS_SH(3) | BYTES_SH(1) | ((CHANNELS_SH(3) | BYTES_SH(1))<<6):
                         p->xform = CachedXFORM3to3_P1;
