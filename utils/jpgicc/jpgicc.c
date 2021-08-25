@@ -408,7 +408,7 @@ uint32_t read32(uint8_t* arr, size_t pos, int swapBytes, size_t max)
             return (arr[pos] << 24) | (arr[pos + 1] << 16) | (arr[pos + 2] << 8) | arr[pos + 3];
         }
 
-        return arr[pos] | (arr[pos + 1] << 8) | (arr[pos + 2] << 16) | (arr[pos + 3] << 24); 
+        return arr[pos] | (arr[pos + 1] << 8) | (arr[pos + 2] << 16) | (arr[pos + 3] << 24);
     }
 }
 
@@ -464,7 +464,7 @@ cmsBool HandleEXIF(struct jpeg_decompress_struct* cinfo)
     uint32_t i, numEntries;
     double XRes = -1, YRes = -1;
     int Unit = 2; // Inches
-    
+
 
     for (ptr = cinfo ->marker_list; ptr; ptr = ptr ->next) {
 

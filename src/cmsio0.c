@@ -501,7 +501,7 @@ cmsHPROFILE CMSEXPORT cmsCreateProfilePlaceholder(cmsContext ContextID)
 
     // Set default version
     Icc ->Version =  0x02100000;
-    
+
     // Set creation date/time
     if (!_cmsGetTime(&Icc->Created))
         goto Error;

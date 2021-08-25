@@ -27,15 +27,15 @@
 //    xgetopt.c  -- loosely based on System V getopt()
 //
 //    option ::= SW [optLetter]* [argLetter space* argument]
-//   
+//
 
 #include <string.h>
 #include <stdio.h>
 
-int     xoptind = 1;   
-char   *xoptarg;       
+int     xoptind = 1;
+char   *xoptarg;
 
-static  char   *nextArg = NULL;    
+static  char   *nextArg = NULL;
 
 #define SW '-'
 
