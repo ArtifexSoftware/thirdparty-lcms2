@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2024 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.14 rc1
+// Version 2.16
 //
 
 #ifndef _lcms2mt_H
@@ -76,6 +76,9 @@
 
 #ifndef CMS_USE_CPP_API
 #   ifdef __cplusplus
+#       if __cplusplus >= 201703L
+#            define CMS_NO_REGISTER_KEYWORD 1  
+#       endif
 extern "C" {
 #   endif
 #endif
@@ -86,7 +89,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2140 - 2000)
+#define LCMS_VERSION              (2160 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -237,7 +240,7 @@ typedef int                  cmsBool;
 
 
 // Calling convention -- this is hardly platform and compiler dependent
-#ifdef CMS_IS_WINDOWS_
+#if defined(CMS_IS_WINDOWS_) && !defined(__GNUC__)
 #  if defined(CMS_DLL) || defined(CMS_DLL_BUILD)
 #     ifdef __BORLANDC__
 #        define CMSEXPORT       __stdcall _export
@@ -335,7 +338,8 @@ typedef enum {
     cmsSigUInt8ArrayType                    = 0x75693038,  // 'ui08'
     cmsSigVcgtType                          = 0x76636774,  // 'vcgt'
     cmsSigViewingConditionsType             = 0x76696577,  // 'view'
-    cmsSigXYZType                           = 0x58595A20   // 'XYZ '
+    cmsSigXYZType                           = 0x58595A20,  // 'XYZ '
+    cmsSigMHC2Type                          = 0x4D484332   // 'MHC2'
 
 
 } cmsTagTypeSignature;
@@ -413,7 +417,8 @@ typedef enum {
     cmsSigVcgtTag                           = 0x76636774,  // 'vcgt'
     cmsSigMetaTag                           = 0x6D657461,  // 'meta'
     cmsSigcicpTag                           = 0x63696370,  // 'cicp'
-    cmsSigArgyllArtsTag                     = 0x61727473   // 'arts'
+    cmsSigArgyllArtsTag                     = 0x61727473,  // 'arts'
+    cmsSigMHC2Tag                           = 0x4D484332   // 'MHC2'
 
 } cmsTagSignature;
 
@@ -959,6 +964,7 @@ typedef void* cmsHTRANSFORM;
 #define TYPE_RGB_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0))
 #define TYPE_BGR_DBL          (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(0)|DOSWAP_SH(1))
 #define TYPE_CMYK_DBL         (FLOAT_SH(1)|COLORSPACE_SH(PT_CMYK)|CHANNELS_SH(4)|BYTES_SH(0))
+#define TYPE_OKLAB_DBL        (FLOAT_SH(1)|COLORSPACE_SH(PT_MCH3)|CHANNELS_SH(3)|BYTES_SH(0))
 
 // IEEE 754-2008 "half"
 #define TYPE_GRAY_HALF_FLT    (FLOAT_SH(1)|COLORSPACE_SH(PT_GRAY)|CHANNELS_SH(1)|BYTES_SH(2))
@@ -1058,6 +1064,19 @@ typedef struct {
     cmsUInt8Number  VideoFullRangeFlag;
 
 } cmsVideoSignalType;
+
+typedef struct {
+    cmsUInt32Number   CurveEntries;
+    cmsFloat64Number* RedCurve;
+    cmsFloat64Number* GreenCurve;
+    cmsFloat64Number* BlueCurve;
+
+    cmsFloat64Number  MinLuminance;         // ST.2086 min luminance in nits
+    cmsFloat64Number  PeakLuminance;        // ST.2086 peak luminance in nits
+
+    cmsFloat64Number XYZ2XYZmatrix[3][4];
+
+} cmsMHC2Type;
 
 
 
@@ -1228,7 +1247,8 @@ CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveMonotonic(cmsContext ContextID,
 CMSAPI cmsBool           CMSEXPORT cmsIsToneCurveDescending(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsInt32Number    CMSEXPORT cmsGetToneCurveParametricType(cmsContext ContextID, const cmsToneCurve* t);
 CMSAPI cmsFloat64Number  CMSEXPORT cmsEstimateGamma(cmsContext ContextID, const cmsToneCurve* t, cmsFloat64Number Precision);
-CMSAPI cmsFloat64Number* CMSEXPORT cmsGetToneCurveParams(cmsContext ContextID, const cmsToneCurve* t);
+
+CMSAPI const cmsCurveSegment* CMSEXPORT cmsGetToneCurveSegment(cmsContext ContextID, cmsInt32Number n, const cmsToneCurve* t);
 
 // Tone curve tabular estimation
 CMSAPI cmsUInt32Number         CMSEXPORT cmsGetToneCurveEstimatedTableEntries(cmsContext ContextID, const cmsToneCurve* t);
@@ -1322,8 +1342,11 @@ CMSAPI cmsBool           CMSEXPORT cmsSliceSpaceFloat(cmsContext ContextID, cmsU
 
 typedef struct _cms_MLU_struct cmsMLU;
 
-#define  cmsNoLanguage "\0\0"
-#define  cmsNoCountry  "\0\0"
+#define  cmsNoLanguage    "\0\0"
+#define  cmsNoCountry     "\0\0"
+
+// Special language/country to retrieve unicode field for description in V2 profiles. Use with care.
+#define  cmsV2Unicode     "\xff\xff"
 
 CMSAPI cmsMLU*           CMSEXPORT cmsMLUalloc(cmsContext ContextID, cmsUInt32Number nItems);
 CMSAPI void              CMSEXPORT cmsMLUfree(cmsContext ContextID, cmsMLU* mlu);
@@ -1335,6 +1358,9 @@ CMSAPI cmsBool           CMSEXPORT cmsMLUsetASCII(cmsContext ContextID, cmsMLU* 
 CMSAPI cmsBool           CMSEXPORT cmsMLUsetWide(cmsContext ContextID, cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
                                                   const wchar_t* WideString);
+CMSAPI cmsBool           CMSEXPORT cmsMLUsetUTF8(cmsContext ContextID, cmsMLU* mlu,
+                                                  const char LanguageCode[3], const char CountryCode[3],
+                                                  const char* UTF8String);
 
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cmsMLU* mlu,
                                                   const char LanguageCode[3], const char CountryCode[3],
@@ -1343,6 +1369,10 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetASCII(cmsContext ContextID, const cm
 CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetWide(cmsContext ContextID, const cmsMLU* mlu,
                                                  const char LanguageCode[3], const char CountryCode[3],
                                                  wchar_t* Buffer, cmsUInt32Number BufferSize);
+CMSAPI cmsUInt32Number   CMSEXPORT cmsMLUgetUTF8(cmsContext ContextID, const cmsMLU* mlu,
+                                                 const char LanguageCode[3], const char CountryCode[3],
+                                                 char* Buffer, cmsUInt32Number BufferSize);
+
 
 CMSAPI cmsBool           CMSEXPORT cmsMLUgetTranslation(cmsContext ContextID, const cmsMLU* mlu,
                                                          const char LanguageCode[3], const char CountryCode[3],
@@ -1566,6 +1596,10 @@ CMSAPI cmsUInt32Number   CMSEXPORT cmsGetProfileInfoASCII(cmsContext ContextID, 
                                                             const char LanguageCode[3], const char CountryCode[3],
                                                             char* Buffer, cmsUInt32Number BufferSize);
 
+CMSAPI cmsUInt32Number  CMSEXPORT cmsGetProfileInfoUTF8(cmsContext ContextID, cmsHPROFILE hProfile, cmsInfoType Info,
+                                                            const char LanguageCode[3], const char CountryCode[3],
+                                                            char* Buffer, cmsUInt32Number BufferSize);
+
 // IO handlers ----------------------------------------------------------------------------------------------------------
 
 typedef struct _cms_io_handler cmsIOHANDLER;
@@ -1631,6 +1665,26 @@ CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext Conte
                                                                 cmsFloat64Number Saturation,
                                                                 cmsUInt32Number TempSrc,
                                                                 cmsUInt32Number TempDest);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateDeviceLinkFromCubeFile(cmsContext ContextID, const char* cFileName);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateLab2Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint);
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateLab4Profile(cmsContext ContextID, const cmsCIExyY* WhitePoint);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateXYZProfile(cmsContext ContextID);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreate_sRGBProfile(cmsContext ContextID);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreate_OkLabProfile(cmsContext ctx);
+
+CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateBCHSWabstractProfile(cmsContext ContextID,
+                                                             cmsUInt32Number nLUTPoints,
+                                                             cmsFloat64Number Bright,
+                                                             cmsFloat64Number Contrast,
+                                                             cmsFloat64Number Hue,
+                                                             cmsFloat64Number Saturation,
+                                                             cmsUInt32Number TempSrc,
+                                                             cmsUInt32Number TempDest);
 
 CMSAPI cmsHPROFILE      CMSEXPORT cmsCreateNULLProfile(cmsContext ContextID);
 

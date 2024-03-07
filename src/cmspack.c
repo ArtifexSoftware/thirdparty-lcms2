@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2024 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -190,7 +190,7 @@ cmsUInt8Number* UnrollPlanarBytes(cmsContext ContextID,
     else
     {
         if (Premul && Extra)
-            alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(accum[(nChan) * Stride]));
+            alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(accum[nChan * Stride]));
     }
 
     for (i=0; i < nChan; i++) {
@@ -599,8 +599,8 @@ cmsUInt8Number* UnrollAnyWordsPremul(cmsContext ContextID,
    cmsUInt32Number ExtraFirst  = DoSwap ^ SwapFirst;
    cmsUInt32Number i;
 
-   cmsUInt16Number alpha = (ExtraFirst ? accum[0] : accum[nChan - 1]);
-   cmsUInt32Number alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(alpha));
+   cmsUInt16Number alpha = (ExtraFirst ? ((cmsUInt16Number*)accum)[0] : ((cmsUInt16Number*)accum)[nChan]);
+   cmsUInt32Number alpha_factor = _cmsToFixedDomain(alpha);
 
     if (ExtraFirst) {
         accum += sizeof(cmsUInt16Number);
@@ -685,9 +685,9 @@ cmsUInt8Number* UnrollPlanarWordsPremul(cmsContext ContextID,
     cmsUInt32Number i;
     cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;
     cmsUInt8Number* Init = accum;
-
-    cmsUInt16Number  alpha = (ExtraFirst ? accum[0] : accum[(nChan - 1) * Stride]);
-    cmsUInt32Number alpha_factor = _cmsToFixedDomain(FROM_8_TO_16(alpha));
+    
+    cmsUInt16Number alpha = (ExtraFirst ? ((cmsUInt16Number*)accum)[0] : ((cmsUInt16Number*)accum)[nChan * Stride / 2]);
+    cmsUInt32Number alpha_factor = _cmsToFixedDomain(alpha);
 
     if (ExtraFirst) {
         accum += Stride;
@@ -1119,8 +1119,7 @@ cmsINLINE cmsBool IsInkSpace(cmsUInt32Number Type)
 }
 
 // Return the size in bytes of a given formatter
-static
-cmsUInt32Number PixelSize(cmsUInt32Number Format)
+cmsINLINE cmsUInt32Number PixelSize(cmsUInt32Number Format)
 {
     cmsUInt32Number fmt_bytes = T_BYTES(Format);
 
@@ -1471,7 +1470,7 @@ cmsUInt8Number* UnrollDoublesToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
     if (Premul && Extra)
     {
         if (Planar)
-            alpha_factor = (ExtraFirst ? ptr[0] : ptr[(nChan) * Stride]) / maximum;
+            alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan * Stride]) / maximum;
         else
             alpha_factor = (ExtraFirst ? ptr[0] : ptr[nChan]) / maximum;
     }
@@ -1757,7 +1756,7 @@ cmsUInt8Number* PackChunkyBytes(cmsContext ContextID,
         if (Reverse)
             v = REVERSE_FLAVOR_16(v);
 
-        if (Premul && alpha_factor != 0)
+        if (Premul)
         {
             v = (cmsUInt16Number)((cmsUInt32Number)((cmsUInt32Number)v * alpha_factor + 0x8000) >> 16);
         }
@@ -1827,7 +1826,7 @@ cmsUInt8Number* PackChunkyWords(cmsContext ContextID,
         if (Reverse)
             v = REVERSE_FLAVOR_16(v);
 
-        if (Premul && alpha_factor != 0)
+        if (Premul)
         {
             v = (cmsUInt16Number)((cmsUInt32Number)((cmsUInt32Number)v * alpha_factor + 0x8000) >> 16);
         }
@@ -1895,7 +1894,7 @@ cmsUInt8Number* PackPlanarBytes(cmsContext ContextID,
         if (Reverse)
             v = REVERSE_FLAVOR_16(v);
 
-        if (Premul && alpha_factor != 0)
+        if (Premul)
         {
             v = (cmsUInt16Number)((cmsUInt32Number)((cmsUInt32Number)v * alpha_factor + 0x8000) >> 16);
         }
@@ -1956,7 +1955,7 @@ cmsUInt8Number* PackPlanarWords(cmsContext ContextID,
         if (Reverse)
             v =  REVERSE_FLAVOR_16(v);
 
-        if (Premul && alpha_factor != 0)
+        if (Premul)
         {
             v = (cmsUInt16Number)((cmsUInt32Number)((cmsUInt32Number)v * alpha_factor + 0x8000) >> 16);
         }
@@ -3055,6 +3054,109 @@ cmsUInt8Number* PackFloatFrom16(cmsContext ContextID,
 // --------------------------------------------------------------------------------------------------------
 
 static
+cmsUInt8Number* PackBytesFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+                                    cmsFloat32Number wOut[],
+                                    cmsUInt8Number* output,
+                                    cmsUInt32Number Stride)
+{
+    cmsUInt32Number nChan = T_CHANNELS(info->OutputFormat);
+    cmsUInt32Number DoSwap = T_DOSWAP(info->OutputFormat);
+    cmsUInt32Number Reverse = T_FLAVOR(info->OutputFormat);
+    cmsUInt32Number Extra = T_EXTRA(info->OutputFormat);
+    cmsUInt32Number SwapFirst = T_SWAPFIRST(info->OutputFormat);
+    cmsUInt32Number Planar = T_PLANAR(info->OutputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;    
+    cmsUInt8Number* swap1 = (cmsUInt8Number*)output;
+    cmsFloat64Number v = 0;
+    cmsUInt8Number vv = 0;
+    cmsUInt32Number i, start = 0;
+    
+    if (ExtraFirst)
+        start = Extra;
+
+    for (i = 0; i < nChan; i++) {
+
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
+
+        v = wOut[index] * 65535.0;
+
+        if (Reverse)
+            v = 65535.0 - v;
+        
+        vv =  FROM_16_TO_8(_cmsQuickSaturateWord(v));
+
+        if (Planar)
+            ((cmsUInt8Number*)output)[(i + start) * Stride] = vv;
+        else
+            ((cmsUInt8Number*)output)[i + start] = vv;
+    }
+
+
+    if (Extra == 0 && SwapFirst) {
+
+        memmove(swap1 + 1, swap1, (nChan - 1) * sizeof(cmsUInt8Number));
+        *swap1 = vv;
+    }
+
+    if (T_PLANAR(info->OutputFormat))
+        return output + sizeof(cmsUInt8Number);
+    else
+        return output + (nChan + Extra) * sizeof(cmsUInt8Number);
+}
+
+static
+cmsUInt8Number* PackWordsFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
+                                    cmsFloat32Number wOut[],
+                                    cmsUInt8Number* output,
+                                    cmsUInt32Number Stride)
+{
+    cmsUInt32Number nChan = T_CHANNELS(info->OutputFormat);
+    cmsUInt32Number DoSwap = T_DOSWAP(info->OutputFormat);
+    cmsUInt32Number Reverse = T_FLAVOR(info->OutputFormat);
+    cmsUInt32Number Extra = T_EXTRA(info->OutputFormat);
+    cmsUInt32Number SwapFirst = T_SWAPFIRST(info->OutputFormat);
+    cmsUInt32Number Planar = T_PLANAR(info->OutputFormat);
+    cmsUInt32Number ExtraFirst = DoSwap ^ SwapFirst;    
+    cmsUInt16Number* swap1 = (cmsUInt16Number*)output;
+    cmsFloat64Number v = 0;
+    cmsUInt16Number vv = 0;
+    cmsUInt32Number i, start = 0;
+    
+    if (ExtraFirst)
+        start = Extra;
+
+    Stride /= 2;
+    for (i = 0; i < nChan; i++) {
+
+        cmsUInt32Number index = DoSwap ? (nChan - i - 1) : i;
+
+        v = wOut[index] * 65535.0;
+
+        if (Reverse)
+            v = 65535.0 - v;
+
+        vv = _cmsQuickSaturateWord(v);
+
+        if (Planar)
+            ((cmsUInt16Number*)output)[(i + start) * Stride] = vv;
+        else
+            ((cmsUInt16Number*)output)[i + start] = vv;
+    }
+
+    if (Extra == 0 && SwapFirst) {
+
+        memmove(swap1 + 1, swap1, (nChan - 1) * sizeof(cmsUInt16Number));
+        *swap1 = vv;
+    }
+
+    if (T_PLANAR(info->OutputFormat))
+        return output + sizeof(cmsUInt16Number);
+    else
+        return output + (nChan + Extra) * sizeof(cmsUInt16Number);
+}
+
+
+static
 cmsUInt8Number* PackFloatsFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                                     cmsFloat32Number wOut[],
                                     cmsUInt8Number* output,
@@ -3087,7 +3189,7 @@ cmsUInt8Number* PackFloatsFromFloat(cmsContext ContextID, _cmsTRANSFORM* info,
                      v = maximum - v;
 
               if (Planar)
-                     ((cmsFloat32Number*)output)[(i + start)* Stride] = (cmsFloat32Number)v;
+                     ((cmsFloat32Number*)output)[(i + start) * Stride] = (cmsFloat32Number)v;
               else
                      ((cmsFloat32Number*)output)[i + start] = (cmsFloat32Number)v;
        }
@@ -3214,6 +3316,77 @@ cmsUInt8Number* PackLabDoubleFromFloat(cmsContext ContextID, _cmsTRANSFORM* Info
         return output + (sizeof(cmsFloat64Number)*3 + T_EXTRA(Info ->OutputFormat) * sizeof(cmsFloat64Number));
     }
 
+}
+
+
+static
+cmsUInt8Number* PackEncodedBytesLabV2FromFloat(cmsContext ContextID, _cmsTRANSFORM* Info,
+                                           cmsFloat32Number wOut[],
+                                           cmsUInt8Number* output,
+                                           cmsUInt32Number Stride)
+{    
+    cmsCIELab Lab;
+    cmsUInt16Number wlab[3];
+
+    Lab.L = (cmsFloat64Number)(wOut[0] * 100.0);
+    Lab.a = (cmsFloat64Number)(wOut[1] * 255.0 - 128.0);
+    Lab.b = (cmsFloat64Number)(wOut[2] * 255.0 - 128.0);
+
+    cmsFloat2LabEncoded(ContextID, wlab, &Lab);
+    
+    if (T_PLANAR(Info -> OutputFormat)) {
+
+        Stride /= PixelSize(Info->OutputFormat);       
+    
+        output[0]        = wlab[0] >> 8;
+        output[Stride]   = wlab[1] >> 8;
+        output[Stride*2] = wlab[2] >> 8;
+
+        return output + 1;
+    }
+    else {
+
+        output[0] = wlab[0] >> 8;
+        output[1] = wlab[1] >> 8;
+        output[2] = wlab[2] >> 8;
+
+        return output + (3 + T_EXTRA(Info ->OutputFormat));
+    }
+}
+
+static
+cmsUInt8Number* PackEncodedWordsLabV2FromFloat(cmsContext ContextID, _cmsTRANSFORM* Info,
+                                           cmsFloat32Number wOut[],
+                                           cmsUInt8Number* output,
+                                           cmsUInt32Number Stride)
+{    
+    cmsCIELab Lab;
+    cmsUInt16Number wlab[3];
+
+    Lab.L = (cmsFloat64Number)(wOut[0] * 100.0);
+    Lab.a = (cmsFloat64Number)(wOut[1] * 255.0 - 128.0);
+    Lab.b = (cmsFloat64Number)(wOut[2] * 255.0 - 128.0);
+
+    cmsFloat2LabEncodedV2(ContextID, wlab, &Lab);
+    
+    if (T_PLANAR(Info -> OutputFormat)) {
+
+        Stride /= PixelSize(Info->OutputFormat);       
+    
+        ((cmsUInt16Number*) output)[0]        = wlab[0];
+        ((cmsUInt16Number*) output)[Stride]   = wlab[1];
+        ((cmsUInt16Number*) output)[Stride*2] = wlab[2];
+
+        return output + sizeof(cmsUInt16Number);
+    }
+    else {
+
+         ((cmsUInt16Number*) output)[0] = wlab[0];
+         ((cmsUInt16Number*) output)[1] = wlab[1];
+         ((cmsUInt16Number*) output)[2] = wlab[2];
+
+        return output + (3 + T_EXTRA(Info ->OutputFormat)) * sizeof(cmsUInt16Number);
+    }
 }
 
 
@@ -3357,7 +3530,7 @@ cmsUInt8Number* UnrollHalfToFloat(cmsContext ContextID, _cmsTRANSFORM* info,
     cmsUInt32Number i, start = 0;
     cmsFloat32Number maximum = IsInkSpace(info ->InputFormat) ? 100.0F : 1.0F;
 
-    Stride /= PixelSize(info->OutputFormat);
+    Stride /= PixelSize(info->InputFormat);
 
     if (ExtraFirst)
             start = Extra;
@@ -3752,12 +3925,22 @@ static const cmsFormattersFloat OutputFormattersFloat[] = {
     {     TYPE_Lab_DBL,                                                ANYPLANAR|ANYEXTRA,   PackLabDoubleFromFloat},
     {     TYPE_XYZ_DBL,                                                ANYPLANAR|ANYEXTRA,   PackXYZDoubleFromFloat},
 
+    {     TYPE_LabV2_8,                                                ANYPLANAR|ANYEXTRA,   PackEncodedBytesLabV2FromFloat},
+    {     TYPE_LabV2_16,                                               ANYPLANAR|ANYEXTRA,   PackEncodedWordsLabV2FromFloat},
+
     {     FLOAT_SH(1)|BYTES_SH(4), ANYPLANAR|
                              ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE,   PackFloatsFromFloat },
     {     FLOAT_SH(1)|BYTES_SH(0), ANYPLANAR|
                              ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE,   PackDoublesFromFloat },
-#ifndef CMS_NO_HALF_SUPPORT
-    {     FLOAT_SH(1)|BYTES_SH(2),
+
+    {     BYTES_SH(2), ANYPLANAR|
+                             ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE,   PackWordsFromFloat },
+
+    {     BYTES_SH(1), ANYPLANAR|
+                             ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE,   PackBytesFromFloat },
+
+#ifndef CMS_NO_HALF_SUPPORT 
+    {     FLOAT_SH(1)|BYTES_SH(2),                                   
                              ANYFLAVOR|ANYSWAPFIRST|ANYSWAP|ANYEXTRA|ANYCHANNELS|ANYSPACE,   PackHalfFromFloat },
 #endif
 

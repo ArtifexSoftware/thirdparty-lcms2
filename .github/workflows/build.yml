@@ -2,82 +2,70 @@ name: Build
 
 on: [push, pull_request]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.job }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: read-all
+
 jobs:
 
   Ubuntu:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runner: [ ubuntu-20.04, ubuntu-latest ]
+    runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build Ubuntu
         run: |
-          ./configure --with-fastfloat
+          ./configure --with-fastfloat --with-threaded
           make 
           make check
 
-  Ubuntu-18-04:
-    runs-on: ubuntu-18.04
+  macOS:
+    strategy:
+      matrix:
+        runner: [ macos-12, macos-14 ]
+    runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Build Ubuntu
+      - uses: actions/checkout@v4
+      - name: Build macOS
         run: |
-          ./configure --with-fastfloat
-          make 
-          make check
-          
-  MacOS:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build MacOS
-        run: |
-          ./configure --with-fastfloat
+          ./configure --with-fastfloat --with-threaded
           make 
           make check        
     
-  Windows-64:
-    runs-on: windows-latest
-    
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ilammy/msvc-dev-cmd@v1   
-        with:
-            arch: x64
-                
-      - name: Build Windows 64 bit        
-        run: devenv .\Projects\VC2019\lcms2.sln /Rebuild "Release|x64" /Project testbed  
-        
-      - name: Run tests               
-        run: testbed\testbed.exe --chdir testbed
-            
-
-  Windows-32:
+  Windows:
+    strategy:
+      matrix:
+        arch: [ win32, x64 ]
     runs-on: windows-latest    
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1   
         with:
-            arch: win32
-            
-      - name: Build Windows 32 bit       
-        run: devenv .\Projects\VC2019\lcms2.sln /Rebuild "Release|Win32" /Project testbed  
+            arch: ${{ matrix.arch }}
 
-      - name: Run tests          
+      - name: Build Windows
+        run: devenv .\Projects\VC2019\lcms2.sln /Rebuild "Release|${{ matrix.arch }}" /Project testbed  
+
+      - name: Run tests               
         run: testbed\testbed.exe --chdir testbed
-                    
-        
+
   Ubuntu-meson:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install packages
         run: |
           sudo apt-get -y install build-essential python3-pip ninja-build
-          pip install meson==0.59.2
+          pip install meson==0.64.0
 
       - name: Build Ubuntu
         run: |
-          meson setup build
+          meson setup build -Dfastfloat=true -Dthreaded=true
           meson compile -C build
           meson test -C build
 
@@ -85,11 +73,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install packages
         run: |
-          pip install meson==0.59.2
+          pip install meson==0.64.0
 
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build Windows
@@ -97,3 +85,4 @@ jobs:
           meson setup build
           meson compile -C build
           meson test -C build
+

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2022 Marti Maria Saguer
+//  Copyright (c) 1998-2024 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -69,9 +69,9 @@ cmsInt32Number CheckAllocContext(cmsContext ContextID)
      c3 = DupContext(c1, NULL);
      c4 = DupContext(c2, NULL);
 
-     cmsDeleteContext(c1);  // Should be deleted by using nomal malloc
+     cmsDeleteContext(c1);  // Should be deleted by using normal malloc
      cmsDeleteContext(c2);  // Should be deleted by using debug malloc
-     cmsDeleteContext(c3);  // Should be deleted by using nomal malloc
+     cmsDeleteContext(c3);  // Should be deleted by using normal malloc
      cmsDeleteContext(c4);  // Should be deleted by using debug malloc
 
      return 1;
@@ -1305,9 +1305,7 @@ cmsBool  TransformFactory(cmsContext ContextID, _cmsTransformFn* xformPtr,
 // The Plug-in entry point
 static cmsPluginTransform FullTransformPluginSample = {
 
-     { cmsPluginMagicNumber, 2060-2000, cmsPluginTransformSig, NULL},
-
-     TransformFactory
+     { TransformFactory }                          
 };
 
 cmsInt32Number CheckTransformPlugin(cmsContext ContextID)

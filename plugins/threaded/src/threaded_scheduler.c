@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, multithreaded extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2024 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -22,8 +22,8 @@
 #include "threaded_internal.h"
 
 // The scheduler is responsible to split the work in several portions in a way that each
-// portion can be calculated by a different thread. All loacking is already done by lcms 
-// mutexes, and memory should not overlap.
+// portion can be calculated by a different thread. All locking is already done by lcms 
+// mutexes, memory should not overlap.
 void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
                        const void* InputBuffer,
                        void* OutputBuffer,
@@ -78,7 +78,7 @@ void  _cmsThrScheduler(struct _cmstransform_struct* CMMcargo,
     // All seems ok so far
     if (_cmsThrSplitWork(&master, nSlices, slices))
     {
-        // Work is splitted. Create threads
+        // Work is split. Create threads
         cmsUInt32Number i;
 
         for (i = 1; i < nSlices; i++)

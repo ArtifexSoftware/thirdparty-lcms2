@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2022 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2024 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -134,12 +134,15 @@ cmsINLINE cmsFloat32Number flerp(const cmsFloat32Number LutTable[], cmsFloat32Nu
        cmsFloat32Number rest;
        int cell0, cell1;
 
-       if ((v < 1.0e-9f) || isnan(v)) {
-              return LutTable[0];
+       if (isnan(v))
+           return LutTable[0];
+
+       if (v < 1.0e-9f) {
+              return v;
        }
        else
               if (v >= 1.0) {
-              return LutTable[MAX_NODES_IN_CURVE - 1];
+                    return v;
               }
 
        v *= (MAX_NODES_IN_CURVE - 1);
