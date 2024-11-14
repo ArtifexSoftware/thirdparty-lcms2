@@ -583,8 +583,8 @@ void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void*
         cmsUInt8Number* SourcePtr;
         cmsUInt8Number* DestPtr;
 
-        cmsUInt32Number SourceStrideIncrement = 0;
-        cmsUInt32Number DestStrideIncrement = 0;
+        size_t SourceStrideIncrement = 0;
+        size_t DestStrideIncrement = 0;
 
         // The loop itself
         for (i = 0; i < LineCount; i++) {
@@ -611,8 +611,8 @@ void _cmsHandleExtraChannels(cmsContext ContextID, _cmsTRANSFORM* p, const void*
         cmsUInt8Number* SourcePtr[cmsMAXEXTRACHANNELS];
         cmsUInt8Number* DestPtr[cmsMAXEXTRACHANNELS];
 
-        cmsUInt32Number SourceStrideIncrements[cmsMAXEXTRACHANNELS];
-        cmsUInt32Number DestStrideIncrements[cmsMAXEXTRACHANNELS];
+        size_t SourceStrideIncrements[cmsMAXEXTRACHANNELS];
+        size_t DestStrideIncrements[cmsMAXEXTRACHANNELS];
 
         memset(SourceStrideIncrements, 0, sizeof(SourceStrideIncrements));
         memset(DestStrideIncrements, 0, sizeof(DestStrideIncrements));

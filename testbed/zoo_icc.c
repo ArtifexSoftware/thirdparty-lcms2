@@ -60,13 +60,12 @@ void ReadAllRAWTags(cmsContext ContextID, cmsHPROFILE h)
 {
     cmsInt32Number i, n;
     cmsTagSignature sig;
-    cmsInt32Number len;
-
+    
     n = cmsGetTagCount(ContextID, h);
     for (i=0; i < n; i++) {
 
         sig = cmsGetTagSignature(ContextID, h, i);
-        len = cmsReadRawTag(ContextID, h, sig, NULL, 0);
+        cmsReadRawTag(ContextID, h, sig, NULL, 0);
     }
 }
 

@@ -195,8 +195,10 @@ void MatShaperXform8SSE(cmsContext ContextID,
     cmsUInt8Number* bout;
     cmsUInt8Number* aout = NULL;
 
-    cmsUInt32Number nalpha, strideIn, strideOut;
-
+    cmsUInt32Number nalpha;
+    size_t strideIn, strideOut;
+ 
+ 
     __m128 mat0 = _mm_load_ps(p->Mat[0]);
     __m128 mat1 = _mm_load_ps(p->Mat[1]);
     __m128 mat2 = _mm_load_ps(p->Mat[2]);

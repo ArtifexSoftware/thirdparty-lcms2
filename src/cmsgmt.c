@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2021 Marti Maria Saguer
+//  Copyright (c) 1998-2024 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -244,7 +244,6 @@ int GamutSampler(cmsContext ContextID, CMSREGISTER const cmsUInt16Number In[], C
     // Take difference of converted value
     dE2 = cmsDeltaE(ContextID, &LabIn2, &LabOut2);
 
-
     // if dE1 is small and dE2 is small, value is likely to be in gamut
     if (dE1 < t->Threshold && dE2 < t->Threshold)
         Out[0] = 0;
@@ -298,8 +297,9 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     cmsUInt32Number dwFormat;
     GAMUTCHAIN Chain;
     cmsUInt32Number nGridpoints;
-    cmsInt32Number nChannels;
+    cmsInt32Number nChannels, nInputChannels;
     cmsColorSpaceSignature ColorSpace;
+    cmsColorSpaceSignature InputColorSpace;
     cmsUInt32Number i;
     cmsHPROFILE ProfileList[256];
     cmsBool     BPCList[256];
@@ -345,11 +345,13 @@ cmsPipeline* _cmsCreateGamutCheckPipeline(cmsContext ContextID,
     AdaptationList[nGamutPCSposition] = 1.0;
     IntentList[nGamutPCSposition] = INTENT_RELATIVE_COLORIMETRIC;
 
-
     ColorSpace  = cmsGetColorSpace(ContextID, hGamut);
     nChannels   = cmsChannelsOfColorSpace(ContextID, ColorSpace);
     nGridpoints = _cmsReasonableGridpointsByColorspace(ContextID, ColorSpace, cmsFLAGS_HIGHRESPRECALC);
-    dwFormat    = (CHANNELS_SH(nChannels)|BYTES_SH(2));
+    
+    InputColorSpace = cmsGetColorSpace(ContextID, ProfileList[0]);
+    nInputChannels  = cmsChannelsOfColorSpace(ContextID, InputColorSpace);
+    dwFormat        = (CHANNELS_SH(nInputChannels)|BYTES_SH(2));
 
     // 16 bits to Lab double
     Chain.hInput = cmsCreateExtendedTransform(ContextID,

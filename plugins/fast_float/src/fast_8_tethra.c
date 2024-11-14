@@ -144,7 +144,8 @@ void PerformanceEval8(cmsContext ContextID,
     const cmsUInt8Number* bin;
     const cmsUInt8Number* ain = NULL;
 
-    cmsUInt32Number nalpha, strideIn, strideOut;
+    cmsUInt32Number nalpha;
+    size_t strideIn, strideOut;
 
      _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
      _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);

@@ -5210,7 +5210,6 @@ cmsInt32Number CheckVCGT(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE
 
 
 // Only one of the two following may be used, as they share the same tag
-static
 cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
       cmsHANDLE hDict;
@@ -5254,9 +5253,6 @@ cmsInt32Number CheckDictionary16(cmsContext ContextID, cmsInt32Number Pass,  cms
     return 0;
 }
 
-
-
-static
 cmsInt32Number CheckDictionary24(cmsContext ContextID, cmsInt32Number Pass,  cmsHPROFILE hProfile)
 {
     cmsHANDLE hDict;
@@ -8832,9 +8828,45 @@ int CheckSaveLinearizationDevicelink(void)
     remove("lin_rgb.icc");
 
     return 1;
+}
 
+static
+int CheckGamutCheckFloats(void)
+{
 
+    cmsUInt16Number alarms[16] = { 0x0f0f,3,4,5,6,7,8,9,10 };
+    
 
+    cmsHPROFILE hLab = cmsCreateLab4Profile(NULL);
+    cmsHPROFILE hNull = cmsCreateNULLProfile();
+    cmsHPROFILE hsRGB = cmsCreate_sRGBProfile();
+
+    cmsHTRANSFORM xfrm = cmsCreateProofingTransform(hLab,
+        TYPE_Lab_DBL, hNull, TYPE_GRAY_8, hsRGB,
+        INTENT_RELATIVE_COLORIMETRIC, INTENT_ABSOLUTE_COLORIMETRIC,
+        cmsFLAGS_GAMUTCHECK);
+
+    cmsCloseProfile(hLab);
+    cmsCloseProfile(hNull);
+    cmsCloseProfile(hsRGB);
+
+    cmsCIELab Lab = { 50, -125, 125 };
+    cmsCIELab Lab2 = { 50, -10, 12 };
+
+    cmsUInt8Number gamut;
+
+    cmsSetAlarmCodes(alarms);
+
+    cmsDoTransform(xfrm, &Lab, &gamut, 1);  // Gives the alarm != 0
+    if (gamut != 0x0f)
+        Fail("Gamut check not good");
+
+    cmsDoTransform(xfrm, &Lab2, &gamut, 1);
+    if (gamut != 0)
+        Fail("Gamut check zero");
+
+    cmsDeleteTransform(xfrm);
+    return 1;
 }
 
 
@@ -9534,8 +9566,11 @@ int main(int argc, char* argv[])
     cmsInt32Number DoSpeedTests = 1;
     cmsInt32Number DoCheckTests = 1;
     cmsInt32Number DoPluginTests = 1;
+
+#ifdef CMS_IS_WINDOWS_
     cmsInt32Number DoZooTests = 0;
     cmsContext ctx;
+#endif
 
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
@@ -9567,7 +9602,7 @@ int main(int argc, char* argv[])
     printf("Installing error logger ... ");
     cmsSetLogErrorHandler(NULL, FatalErrorQuit);
     printf("done.\n");
-       
+        
     PrintSupportedIntents();
 
     Check(ctx, "Base types", CheckBaseTypes);
@@ -9781,6 +9816,7 @@ int main(int argc, char* argv[])
     Check(ctx, "Corrupted built-in by using cmsWriteRawTag", CheckInducedCorruption);
     Check(ctx, "Bad CGATS file", CheckBadCGATS);
     Check(ctx, "Saving linearization devicelink", CheckSaveLinearizationDevicelink);
+    Check(ctx, "Gamut check on floats", CheckGamutCheckFloats);
     }
 
     if (DoPluginTests)

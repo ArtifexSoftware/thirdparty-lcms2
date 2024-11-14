@@ -722,7 +722,6 @@ static
 cmsBool is_cmyk_devicelink(cmsContext ContextID, cmsHPROFILE hProfile)
 {
     return cmsGetDeviceClass(ContextID, hProfile) == cmsSigLinkClass &&
-            cmsGetColorSpace(ContextID, hProfile) == cmsSigCmykData &&
             cmsGetColorSpace(ContextID, hProfile) == cmsSigCmykData;
 }
 

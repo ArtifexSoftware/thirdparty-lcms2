@@ -110,7 +110,8 @@ void PerformanceEval16(cmsContext ContextID,
 
        int    in16, out16;  // Used by macros!
 
-       cmsUInt32Number nalpha, strideIn, strideOut;
+	cmsUInt32Number nalpha;
+       size_t strideIn, strideOut;
 
        cmsUInt32Number dwInFormat = cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);
        cmsUInt32Number dwOutFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo);

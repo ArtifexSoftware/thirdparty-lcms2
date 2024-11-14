@@ -581,6 +581,178 @@ void Type_ColorantOrderType_Free(cmsContext ContextID, struct _cms_typehandler_s
 }
 
 // ********************************************************************************
+// Type cmsSigUInt8ArrayType
+// ********************************************************************************
+// This type represents an array of generic 1-byte/8-bit quantity.
+
+static
+void* Type_UInt8_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+{
+    cmsUInt8Number* array;
+    cmsUInt32Number i, n;
+
+    *nItems = 0;
+    n = SizeOfTag / sizeof(cmsUInt8Number);
+    array = (cmsUInt8Number*)_cmsCalloc(ContextID, n, sizeof(cmsUInt8Number));
+    if (array == NULL) return NULL;
+
+    for (i = 0; i < n; i++) {
+
+        if (!_cmsReadUInt8Number(ContextID, io, &array[i])) {
+
+            _cmsFree(ContextID, array);
+            return NULL;
+        }
+    }
+
+    *nItems = n;
+    return (void*)array;
+}
+
+static
+cmsBool Type_UInt8_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+{
+    cmsUInt8Number* Value = (cmsUInt8Number*)Ptr;
+    cmsUInt32Number i;
+
+    for (i = 0; i < nItems; i++) {
+
+        if (!_cmsWriteUInt8Number(ContextID, io, Value[i])) return FALSE;
+    }
+
+    return TRUE;
+
+    cmsUNUSED_PARAMETER(self);
+}
+
+static
+void* Type_UInt8_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+{
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt8Number));
+}
+
+
+static
+void Type_UInt8_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
+{
+    _cmsFree(ContextID, Ptr);
+}
+
+// ********************************************************************************
+// Type cmsSigUInt32ArrayType
+// ********************************************************************************
+// This type represents an array of generic 4-byte/32-bit quantity.
+static
+void* Type_UInt32_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+{
+    cmsUInt32Number* array;
+    cmsUInt32Number i, n;
+
+    *nItems = 0;
+    n = SizeOfTag / sizeof(cmsUInt32Number);
+    array = (cmsUInt32Number*)_cmsCalloc(ContextID, n, sizeof(cmsUInt32Number));
+    if (array == NULL) return NULL;
+
+    for (i = 0; i < n; i++) {
+
+        if (!_cmsReadUInt32Number(ContextID, io, &array[i])) {
+
+            _cmsFree(ContextID, array);
+            return NULL;
+        }
+    }
+
+    *nItems = n;
+    return (void*)array;
+}
+
+static
+cmsBool Type_UInt32_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+{
+    cmsUInt32Number* Value = (cmsUInt32Number*)Ptr;
+    cmsUInt32Number i;
+
+    for (i = 0; i < nItems; i++) {
+
+        if (!_cmsWriteUInt32Number(ContextID, io, Value[i])) return FALSE;
+    }
+
+    return TRUE;
+
+    cmsUNUSED_PARAMETER(self);
+}
+
+static
+void* Type_UInt32_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+{
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt32Number));
+}
+
+
+static
+void Type_UInt32_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
+{
+    _cmsFree(ContextID, Ptr);
+}
+
+// ********************************************************************************
+// Type cmsSigUInt64ArrayType
+// ********************************************************************************
+// This type represents an array of generic 8-byte/64-bit quantity.
+static
+void* Type_UInt64_Read(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, cmsUInt32Number* nItems, cmsUInt32Number SizeOfTag)
+{
+    cmsUInt64Number* array;
+    cmsUInt32Number i, n;
+
+    *nItems = 0;
+    n = SizeOfTag / sizeof(cmsUInt64Number);
+    array = (cmsUInt64Number*)_cmsCalloc(ContextID, n, sizeof(cmsUInt64Number));
+    if (array == NULL) return NULL;
+
+    for (i = 0; i < n; i++) {
+
+        if (!_cmsReadUInt64Number(ContextID, io, &array[i])) {
+
+            _cmsFree(ContextID, array);
+            return NULL;
+        }
+    }
+
+    *nItems = n;
+    return (void*)array;
+}
+
+static
+cmsBool Type_UInt64_Write(cmsContext ContextID, struct _cms_typehandler_struct* self, cmsIOHANDLER* io, void* Ptr, cmsUInt32Number nItems)
+{
+    cmsUInt64Number* Value = (cmsUInt64Number*)Ptr;
+    cmsUInt32Number i;
+
+    for (i = 0; i < nItems; i++) {
+
+        if (!_cmsWriteUInt64Number(ContextID, io, &Value[i])) return FALSE;
+    }
+
+    return TRUE;
+
+    cmsUNUSED_PARAMETER(self);
+}
+
+static
+void* Type_UInt64_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
+{
+    return _cmsDupMem(ContextID, Ptr, n * sizeof(cmsUInt64Number));
+}
+
+
+static
+void Type_UInt64_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, void* Ptr)
+{
+    _cmsFree(ContextID, Ptr);
+}
+
+// ********************************************************************************
 // Type cmsSigS15Fixed16ArrayType
 // ********************************************************************************
 // This type represents an array of generic 4-byte/32-bit fixed point quantity.
@@ -1127,7 +1299,7 @@ cmsBool  Type_Text_Description_Write(cmsContext ContextID, struct _cms_typehandl
     if (!io ->Write(ContextID, io, 67, Filler)) goto Error;
 
     // possibly add pad at the end of tag
-    if(len_aligned - len_tag_requirement > 0)
+    if (len_aligned > len_tag_requirement)
       if (!io ->Write(ContextID, io, len_aligned - len_tag_requirement, Filler)) goto Error;
 
     rc = TRUE;
@@ -5804,7 +5976,10 @@ static _cmsTagTypeLinkedList SupportedTagTypes[] = {
 {TYPE_HANDLER(cmsSigDictType,                  Dictionary),         (_cmsTagTypeLinkedList*) &SupportedTagTypes[30] },
 {TYPE_HANDLER(cmsSigcicpType,                  VideoSignal),        (_cmsTagTypeLinkedList*) &SupportedTagTypes[31] },
 {TYPE_HANDLER(cmsSigVcgtType,                  vcgt),               (_cmsTagTypeLinkedList*) &SupportedTagTypes[32] },
-{TYPE_HANDLER(cmsSigMHC2Type,                  MHC2),                NULL }
+{TYPE_HANDLER(cmsSigMHC2Type,                  MHC2),               (_cmsTagTypeLinkedList*) &SupportedTagTypes[33] },
+{TYPE_HANDLER(cmsSigUInt8ArrayType,            UInt8),              (_cmsTagTypeLinkedList*) &SupportedTagTypes[34] },
+{TYPE_HANDLER(cmsSigUInt32ArrayType,           UInt32),             (_cmsTagTypeLinkedList*) &SupportedTagTypes[35] },
+{TYPE_HANDLER(cmsSigUInt64ArrayType,           UInt64),             NULL }
 };
 
 

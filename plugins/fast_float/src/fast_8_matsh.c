@@ -191,7 +191,8 @@ void MatShaperXform8(cmsContext ContextID,
     cmsUInt8Number* bout;
     cmsUInt8Number* aout = NULL;
 
-    cmsUInt32Number nalpha, strideIn, strideOut;
+    cmsUInt32Number nalpha;
+    size_t strideIn, strideOut;
 
     _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);

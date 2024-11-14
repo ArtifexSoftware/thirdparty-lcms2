@@ -23,7 +23,7 @@
 //
 //---------------------------------------------------------------------------------
 //
-// Version 2.16
+// Version 2.17alpha0
 //
 
 #ifndef _lcms2mt_H
@@ -89,7 +89,7 @@ extern "C" {
 // use OUR numbers with a mainline LCMS to fail, so
 // we have to go under 2000-2100. Let's subtract
 // 2000 from the mainline release.
-#define LCMS_VERSION              (2160 - 2000)
+#define LCMS_VERSION              (2170 - 2000)
 
 // We expect any LCMS2MT release to fall within the
 // following range.
@@ -258,7 +258,7 @@ typedef int                  cmsBool;
 #       define CMSAPI
 #  endif
 #else  // not Windows
-#  ifdef HAVE_FUNC_ATTRIBUTE_VISIBILITY
+#  if defined(HAVE_FUNC_ATTRIBUTE_VISIBILITY) && !defined(CMS_NO_VISIBILITY)
 #     define CMSEXPORT
 #     define CMSAPI    __attribute__((visibility("default")))
 #else
@@ -969,7 +969,6 @@ typedef void* cmsHTRANSFORM;
 // IEEE 754-2008 "half"
 #define TYPE_GRAY_HALF_FLT    (FLOAT_SH(1)|COLORSPACE_SH(PT_GRAY)|CHANNELS_SH(1)|BYTES_SH(2))
 #define TYPE_RGB_HALF_FLT     (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|CHANNELS_SH(3)|BYTES_SH(2))
-#define TYPE_RGBA_HALF_FLT    (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|EXTRA_SH(1)|CHANNELS_SH(3)|BYTES_SH(2))
 #define TYPE_CMYK_HALF_FLT    (FLOAT_SH(1)|COLORSPACE_SH(PT_CMYK)|CHANNELS_SH(4)|BYTES_SH(2))
 
 #define TYPE_RGBA_HALF_FLT    (FLOAT_SH(1)|COLORSPACE_SH(PT_RGB)|EXTRA_SH(1)|CHANNELS_SH(3)|BYTES_SH(2))
