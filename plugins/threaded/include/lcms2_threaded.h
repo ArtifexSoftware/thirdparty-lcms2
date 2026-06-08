@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, multithread extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -34,7 +34,7 @@ extern "C" {
 #   endif
 #endif
 
-#define LCMS2_THREADED_VERSION   1000
+#define LCMS2_THREADED_VERSION   LCMS_VERSION
 
 // Configuration toggles
 

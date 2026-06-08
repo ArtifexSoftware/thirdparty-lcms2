@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -195,8 +195,10 @@ void MatShaperXform8SSE(cmsContext ContextID,
     cmsUInt8Number* bout;
     cmsUInt8Number* aout = NULL;
 
-    cmsUInt32Number nalpha, strideIn, strideOut;
-
+    cmsUInt32Number nalpha;
+    size_t strideIn, strideOut;
+ 
+ 
     __m128 mat0 = _mm_load_ps(p->Mat[0]);
     __m128 mat1 = _mm_load_ps(p->Mat[1]);
     __m128 mat2 = _mm_load_ps(p->Mat[2]);
@@ -213,7 +215,7 @@ void MatShaperXform8SSE(cmsContext ContextID,
     _cmsComputeComponentIncrements(cmsGetTransformInputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneIn, NULL, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM)CMMcargo), Stride->BytesPerPlaneOut, NULL, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
     strideIn = strideOut = 0;

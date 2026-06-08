@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -96,12 +96,12 @@ void FloatCLUTEval(cmsContext ContextID,
     cmsUInt32Number OutputFormat = cmsGetTransformOutputFormat(ContextID, (cmsHTRANSFORM) CMMcargo);
 
     cmsUInt32Number nchans, nalpha;
-    cmsUInt32Number strideIn, strideOut;
-
+    size_t strideIn, strideOut;
+                                                        
     _cmsComputeComponentIncrements(InputFormat, Stride->BytesPerPlaneIn, &nchans, &nalpha, SourceStartingOrder, SourceIncrements);
     _cmsComputeComponentIncrements(OutputFormat, Stride->BytesPerPlaneOut, &nchans, &nalpha, DestStartingOrder, DestIncrements);
 
-    if (!(_cmsGetTransformFlags((cmsHTRANSFORM)CMMcargo) & cmsFLAGS_COPY_ALPHA))
+    if (!(_cmsGetTransformFlags(CMMcargo) & cmsFLAGS_COPY_ALPHA))
         nalpha = 0;
 
     strideIn = strideOut = 0;
@@ -136,6 +136,7 @@ void FloatCLUTEval(cmsContext ContextID,
             x0 = (int) floorf(px); rx = (px - (cmsFloat32Number)x0);
             y0 = (int) floorf(py); ry = (py - (cmsFloat32Number)y0);
             z0 = (int) floorf(pz); rz = (pz - (cmsFloat32Number)z0);
+
 
             X0 = p->opta[2] * x0;
             X1 = X0 + (r >= 1.0 ? 0 : p->opta[2]);
@@ -297,10 +298,32 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
 
             cmsPipelineInsertStage(OriginalLut, cmsAT_END, lab_fix);
         }
-        else {
-            if (T_COLORSPACE(*OutputFormat) != PT_GRAY &&
-                T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
-        }
+        else
+            // If output is XYZ 
+            if (T_COLORSPACE(*OutputFormat) == PT_XYZ) {
+
+                /**
+                * XYZ is encoded in 1.15 fixed point, but in 
+                * out table it is on 0..1.0 range, so we need to  adjust it. 
+                */
+
+#define MAX_ENCODEABLE_XYZ  (1.0 + 32767.0/32768.0)
+
+                static const cmsFloat64Number mat[] = { MAX_ENCODEABLE_XYZ,      0,   0,
+                                                            0,  MAX_ENCODEABLE_XYZ,   0,
+                                                            0,      0,   MAX_ENCODEABLE_XYZ };
+
+                
+                cmsStage* XYZ_fix = cmsStageAllocMatrix(ContextID, 3, 3, mat, NULL);
+                if (XYZ_fix == NULL) goto Error;
+
+                cmsPipelineInsertStage(OriginalLut, cmsAT_END, XYZ_fix);
+
+            }
+            else {
+                if (T_COLORSPACE(*OutputFormat) != PT_GRAY &&
+                    T_COLORSPACE(*OutputFormat) != PT_RGB) return FALSE;
+            }
 
 
     // Resample the LUT
@@ -323,7 +346,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     *Lut = OptimizedLUT;
     *TransformFn = (_cmsTransformFn)FloatCLUTEval;
     *UserData   = pfloat;
-    *FreeDataFn = _cmsFree;
+    *FreeDataFn = _fast_float_free_user_data;
     *dwFlags &= ~cmsFLAGS_CAN_CHANGE_FORMATTER;
     return TRUE;
 

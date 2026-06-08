@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -147,7 +147,7 @@ void SlicePerLines(const _cmsWorkSlice* master, cmsInt32Number nslices,
     }
 
     // Add left lines because rounding
-    if (slices > 0) slices[nslices - 1].LineCount += TotalLines;
+    if (nslices > 0) slices[nslices - 1].LineCount += TotalLines;
 }
 
 // Per pixels on big blocks of one line
@@ -178,7 +178,7 @@ void SlicePerPixels(const _cmsWorkSlice* master, cmsInt32Number nslices,
     }
 
     // Add left pixels because rounding
-    if (slices > 0) slices[nslices - 1].PixelsPerLine += TotalPixels;
+    if (nslices > 0) slices[nslices - 1].PixelsPerLine += TotalPixels;
 }
 
 

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -65,7 +65,6 @@ cmsUInt8Number* Unroll15bitsGray(cmsContext ContextID,
        UNUSED_PARAMETER(ContextID);
        UNUSED_PARAMETER(CMMcargo);
        UNUSED_PARAMETER(Stride);
-       UNUSED_PARAMETER(ContextID);
 
        Values[0] = From15To16(*(cmsUInt16Number*)Buffer);
 

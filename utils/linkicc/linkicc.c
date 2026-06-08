@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System
-//  Copyright (c) 1998-2023 Marti Maria Saguer
+//  Copyright (c) 1998-2026 Marti Maria Saguer
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the "Software"),
@@ -50,7 +50,10 @@ static
 int Help(cmsContext ContextID, int level)
 {
     UTILS_UNUSED_PARAMETER(level);
-
+    
+    fprintf(stderr, "Little CMS ICC device link generator - v3.3 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
+    fprintf(stderr, "Copyright (c) 1998-2026 Marti Maria Saguer. See COPYING file for details.\n\n");
+    
     fprintf(stderr, "\nlinkicc: Links profiles into a single devicelink.\n");
 
     fprintf(stderr, "\n");
@@ -269,10 +272,6 @@ int main(int argc, char *argv[])
     cmsHTRANSFORM hTransform = NULL;
     cmsContext ContextID = NULL;
 
-    // Here we are
-    fprintf(stderr, "Little CMS ICC device link generator - v3.2 [LittleCMS %2.2f]\n", cmsGetEncodedCMMversion() / 1000.0);
-    fprintf(stderr, "Copyright (c) 1998-2023 Marti Maria Saguer. See COPYING file for details.\n");
-    fflush(stderr);
 
     // Initialize
     InitUtils(ContextID, "linkicc");

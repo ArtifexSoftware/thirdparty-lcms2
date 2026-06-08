@@ -1,9 +1,9 @@
 project(
   'Little-CMS',
   'c',
-  version: '2.16',
-  meson_version: '>=0.49.0',
-  default_options: ['c_std=gnu11']
+  version: '2.19',
+  meson_version: '>=0.52.0',
+  # default_options: ['c_std=c99']
 )
 
 version_components = meson.project_version().split('.')
@@ -108,14 +108,13 @@ win = import('windows')
 
 subdir('include')
 subdir('src')
+
+if get_option('tests').enabled()
 subdir('testbed')
+endif
 
 if get_option('utils')
 subdir('utils')
-endif
-
-if get_option('samples')
-  subdir('utils/samples')
 endif
 
 extra_libraries = []

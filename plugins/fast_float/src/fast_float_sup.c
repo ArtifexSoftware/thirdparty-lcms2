@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------------
 //
 //  Little Color Management System, fast floating point extensions
-//  Copyright (c) 1998-2023 Marti Maria Saguer, all rights reserved
+//  Copyright (c) 1998-2026 Marti Maria Saguer, all rights reserved
 //
 //
 // This program is free software: you can redistribute it and/or modify
@@ -40,7 +40,11 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
     if (T_FLAVOR(*InputFormat) || T_FLAVOR(*OutputFormat)) return FALSE;
 
     // Check consistency for alpha channel copy
-    if (*dwFlags & cmsFLAGS_COPY_ALPHA && (T_EXTRA(*InputFormat) != T_EXTRA(*OutputFormat))) return FALSE;        
+    if (*dwFlags & cmsFLAGS_COPY_ALPHA)
+    {
+        if ((T_EXTRA(*InputFormat) != T_EXTRA(*OutputFormat))) return FALSE;
+        if (T_PREMUL(*InputFormat) || T_PREMUL(*OutputFormat)) return FALSE;
+    }
 
     // Try to optimize as a set of curves plus a matrix plus a set of curves
     if (OptimizeMatrixShaper15(ContextID, TransformFn, UserData, FreeUserData, Lut, InputFormat, OutputFormat, dwFlags)) return TRUE;
@@ -80,11 +84,20 @@ cmsBool Floating_Point_Transforms_Dispatcher(cmsContext ContextID,
     return FALSE;
 }
 
+// On Win32, CMSEXPORT expands to __stdcall but cmsFormatterFactory is __cdecl.
+// This wrapper has the cdecl calling convention so it can be stored in the plugin struct.
+static cmsFormatter Formatter_15Bit_Factory_wrapper(cmsUInt32Number Type,
+                                                    cmsFormatterDirection Dir,
+                                                    cmsUInt32Number dwFlags)
+{
+    return Formatter_15Bit_Factory(Type, Dir, dwFlags);
+}
+
 // The Plug-in entry points
 static cmsPluginFormatters PluginFastFloat = {
               { cmsPluginMagicNumber, REQUIRED_LCMS_VERSION, cmsPluginFormattersSig, NULL },
 
-              Formatter_15Bit_Factory
+              Formatter_15Bit_Factory_wrapper
 };
 
 static cmsPluginTransform PluginList = {
