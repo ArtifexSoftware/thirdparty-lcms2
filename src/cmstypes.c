@@ -5560,10 +5560,22 @@ void *Type_Dictionary_Read(cmsContext ContextID, struct _cms_typehandler_struct*
             rc = cmsDictAddEntry(ContextID, hDict, NameWCS, ValueWCS, DisplayNameMLU, DisplayValueMLU);
         }
 
-        if (NameWCS != NULL) _cmsFree(ContextID, NameWCS);
-        if (ValueWCS != NULL) _cmsFree(ContextID, ValueWCS);
-        if (DisplayNameMLU != NULL) cmsMLUfree(ContextID, DisplayNameMLU);
-        if (DisplayValueMLU != NULL) cmsMLUfree(ContextID, DisplayValueMLU);
+        if (NameWCS != NULL) {
+            _cmsFree(ContextID, NameWCS);
+            NameWCS = NULL;
+        }
+        if (ValueWCS != NULL) {
+            _cmsFree(ContextID, ValueWCS);
+            ValueWCS = NULL;
+        }
+        if (DisplayNameMLU != NULL) {
+            cmsMLUfree(ContextID, DisplayNameMLU);
+            DisplayNameMLU = NULL;
+        }
+        if (DisplayValueMLU != NULL) {
+            cmsMLUfree(ContextID, DisplayValueMLU);
+            DisplayValueMLU = NULL;
+        }
 
         if (!rc) goto Error;
     }
@@ -5575,6 +5587,10 @@ void *Type_Dictionary_Read(cmsContext ContextID, struct _cms_typehandler_struct*
 Error:
    FreeArray(ContextID, &a);
    if (hDict != NULL) cmsDictFree(ContextID, hDict);
+   if (NameWCS != NULL) _cmsFree(ContextID, NameWCS);
+   if (ValueWCS != NULL) _cmsFree(ContextID, ValueWCS);
+   if (DisplayNameMLU != NULL) cmsMLUfree(ContextID, DisplayNameMLU);
+   if (DisplayValueMLU != NULL) cmsMLUfree(ContextID, DisplayValueMLU);
    return NULL;
 }
 
