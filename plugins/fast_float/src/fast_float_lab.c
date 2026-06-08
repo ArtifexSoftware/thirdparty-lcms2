@@ -408,7 +408,7 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
 
     // Allocate data
     pfloat = LabCLUTAlloc(ContextID, data ->Params);
-    if (pfloat == NULL) return FALSE;
+    if (pfloat == NULL) goto Error;
 
     container.data = pfloat;
     container.original = OriginalLut;
@@ -428,6 +428,8 @@ cmsBool OptimizeCLUTLabTransform(cmsContext ContextID,
 
 Error:
 
+    // We return leaving *Lut pointing to OriginalLut. Caller is
+    // responsible for freeing it. Is this intended?
     if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
 
     return FALSE;

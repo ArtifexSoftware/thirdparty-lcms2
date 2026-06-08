@@ -338,7 +338,7 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
     data = (_cmsStageCLutData*) cmsStageData(ContextID, OptimizedCLUTmpe);
 
     pfloat = FloatCLUTAlloc(ContextID, data ->Params);
-    if (pfloat == NULL) return FALSE;
+    if (pfloat == NULL) goto Error;
 
     // And return the obtained LUT
     cmsPipelineFree(ContextID, OriginalLut);
@@ -352,6 +352,8 @@ cmsBool OptimizeCLUTRGBTransform(cmsContext ContextID,
 
 Error:
 
+    // We return leaving *Lut pointing to OriginalLut. Caller is
+    // responsible for freeing it. Is this intended?
     if (OptimizedLUT != NULL) cmsPipelineFree(ContextID, OptimizedLUT);
 
     return FALSE;
