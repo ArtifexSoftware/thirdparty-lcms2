@@ -5408,6 +5408,7 @@ cmsBool ReadOneWChar(cmsContext ContextID, cmsIOHANDLER* io,  _cmsDICelem* e, cm
 
       if (!_cmsReadWCharArray(ContextID, io, nChars, *wcstr)) {
           _cmsFree(ContextID, *wcstr);
+          *wcstr = NULL;
           return FALSE;
       }
 
