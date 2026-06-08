@@ -5244,6 +5244,7 @@ cmsBool AllocElem(cmsContext ContextID, _cmsDICelem* e,  cmsUInt32Number Count)
     if (e->Sizes == NULL) {
 
         _cmsFree(ContextID, e -> Offsets);
+        e->Offsets = NULL;
         return FALSE;
     }
 
