@@ -1503,7 +1503,7 @@ cmsPipeline* CMSEXPORT cmsPipelineDup(cmsContext ContextID, const cmsPipeline* l
 
     if (!BlessLUT(ContextID, NewLUT))
     {
-        _cmsFree(ContextID, NewLUT);
+        cmsPipelineFree(ContextID, NewLUT);
         return NULL;
     }
 
