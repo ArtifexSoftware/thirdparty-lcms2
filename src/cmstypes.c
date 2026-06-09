@@ -1178,6 +1178,7 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
 
     if (!_cmsReadWCharArray(ContextID, io, UnicodeCount, UnicodeString)) {
         _cmsFree(ContextID, (void*)UnicodeString);
+        UnicodeString = NULL;
         goto Done;
     }
 
@@ -1185,6 +1186,7 @@ void *Type_Text_Description_Read(cmsContext ContextID, struct _cms_typehandler_s
 
     if (!cmsMLUsetWide(ContextID, mlu, cmsV2Unicode, cmsV2Unicode, UnicodeString)) {
         _cmsFree(ContextID, (void*)UnicodeString);
+        UnicodeString = NULL;
         goto Done;
     }
 
