@@ -103,7 +103,7 @@ extern "C" {
 
 // We expect any LCMS2MT release to fall within the
 // following range.
-#define LCMS2MT_VERSION_MIN (0)
+#define LCMS2MT_VERSION_MIN (90)
 #define LCMS2MT_VERSION_MAX (999)
 
 // I will give the chance of redefining basic types for compilers that are not fully C99 compliant
@@ -711,9 +711,6 @@ typedef int                  cmsBool;
 #define _cmsGetContext                           LCMS2MT_PREF(_cmsGetContext)
 #define _cmsGetTime                              LCMS2MT_PREF(_cmsGetTime)
 #define _cmsPluginMalloc                         LCMS2MT_PREF(_cmsPluginMalloc)
-#define IsIdentity                               LCMS2MT_PREF(IsIdentity)
-#define Type_MHC2_Dup                            LCMS2MT_PREF(Type_MHC2_Dup)
-#define Type_VideoSignal_Dup                     LCMS2MT_PREF(Type_VideoSignal_Dup)
 #define _cmsAllocMPETypePluginChunk              LCMS2MT_PREF(_cmsAllocMPETypePluginChunk)
 #define _cmsAllocTagPluginChunk                  LCMS2MT_PREF(_cmsAllocTagPluginChunk)
 #define _cmsAllocTagTypePluginChunk              LCMS2MT_PREF(_cmsAllocTagTypePluginChunk)
@@ -2017,6 +2014,7 @@ CMSAPI void              CMSEXPORT cmsGetHeaderProfileID(cmsContext ContextID, c
 CMSAPI cmsBool           CMSEXPORT cmsGetHeaderCreationDateTime(cmsContext ContextID, cmsHPROFILE hProfile, struct tm *Dest);
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetHeaderRenderingIntent(cmsContext ContextID, cmsHPROFILE hProfile);
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetHeaderCMM(cmsContext ContextID, cmsHPROFILE hProfile);
+void CMSEXPORT _cmsSetHeaderCMM(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number CMM);
 
 CMSAPI void              CMSEXPORT cmsSetHeaderFlags(cmsContext ContextID, cmsHPROFILE hProfile, cmsUInt32Number Flags);
 CMSAPI cmsUInt32Number   CMSEXPORT cmsGetHeaderManufacturer(cmsContext ContextID, cmsHPROFILE hProfile);

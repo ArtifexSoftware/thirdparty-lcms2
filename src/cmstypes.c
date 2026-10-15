@@ -5733,6 +5733,7 @@ cmsBool Type_VideoSignal_Write(cmsContext ContextID, struct _cms_typehandler_str
     cmsUNUSED_PARAMETER(nItems);
 }
 
+static
 void* Type_VideoSignal_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
     return _cmsDupMem(ContextID, Ptr, sizeof(cmsVideoSignalType));
@@ -5766,6 +5767,7 @@ cmsBool CloseEnough(cmsFloat64Number a, cmsFloat64Number b)
     return fabs(b - a) < (1.0 / 65535.0);
 }
 
+static
 cmsBool IsIdentity(cmsFloat64Number XYZ2XYZmatrix[3][4])
 {
     cmsFloat64Number Identity[3][4];
@@ -5792,6 +5794,7 @@ void Type_MHC2_Free(cmsContext ContextID, struct _cms_typehandler_struct* self, 
     _cmsFree(ContextID, Ptr);
 }
 
+static
 void* Type_MHC2_Dup(cmsContext ContextID, struct _cms_typehandler_struct* self, const void* Ptr, cmsUInt32Number n)
 {
     cmsMHC2Type* mhc2 = (cmsMHC2Type*)_cmsDupMem(ContextID, Ptr, sizeof(cmsMHC2Type));
